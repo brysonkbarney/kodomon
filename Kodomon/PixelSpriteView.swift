@@ -10,15 +10,16 @@ enum P: Int {
     case C = 5  // crack line
     case W = 6  // white (eye highlight)
 
-    var color: Color {
+    // Base colors (default peach) — use color(hue:) for tinted version
+    func color(hue: Double = 0.07) -> Color {
         switch self {
         case .n: return .clear
-        case .B: return Color(red: 0.85, green: 0.68, blue: 0.55)
-        case .D: return Color(red: 0.62, green: 0.45, blue: 0.35)
         case .E: return Color(red: 0.08, green: 0.08, blue: 0.08)
-        case .L: return Color(red: 0.92, green: 0.78, blue: 0.66)
-        case .C: return Color(red: 0.50, green: 0.36, blue: 0.27)
         case .W: return Color(red: 0.95, green: 0.95, blue: 0.95)
+        case .B: return Color(hue: hue, saturation: 0.50, brightness: 0.82)
+        case .D: return Color(hue: hue, saturation: 0.55, brightness: 0.50)
+        case .L: return Color(hue: hue, saturation: 0.35, brightness: 0.92)
+        case .C: return Color(hue: hue, saturation: 0.55, brightness: 0.40)
         }
     }
 }
@@ -217,20 +218,24 @@ struct PixelSpriteView: View {
     let stage: Stage
     let pixelSize: CGFloat
     let evolveProgress: Double
+    let petHue: Double
 
     @State private var wiggleAngle: Double = 0
     @State private var bobOffset: CGFloat = 0
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0) {
+    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07) {
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
+        self.petHue = petHue
     }
 
     var body: some View {
         let grid = SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
+        // Eggs stay default peach (0.07), hatched creatures get their unique hue
+        let activeHue = stage == .tamago ? 0.07 : petHue
 
         Canvas { context, _ in
             for row in 0..<rows {
@@ -244,7 +249,7 @@ struct PixelSpriteView: View {
                         width: pixelSize,
                         height: pixelSize
                     )
-                    context.fill(Path(rect), with: .color(pixel.color))
+                    context.fill(Path(rect), with: .color(pixel.color(hue: activeHue)))
                 }
             }
         }

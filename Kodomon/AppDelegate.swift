@@ -28,7 +28,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPanel() {
         window = NSWindow(
-            contentRect: NSRect(x: 200, y: 200, width: 200, height: 260),
+            contentRect: NSRect(x: 200, y: 200, width: 220, height: 320),
             styleMask: [.fullSizeContentView, .borderless],
             backing: .buffered,
             defer: false
@@ -77,6 +77,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for (title, pct) in xpItems {
             let item = NSMenuItem(title: title, action: #selector(setDebugXP(_:)), keyEquivalent: "")
             item.representedObject = pct
+            debugMenu.addItem(item)
+        }
+        debugMenu.addItem(NSMenuItem.separator())
+        for bg in BackgroundTheme.allCases {
+            let item = NSMenuItem(title: "BG: \(bg.displayName)", action: #selector(setDebugBackground(_:)), keyEquivalent: "")
+            item.representedObject = bg.rawValue
             debugMenu.addItem(item)
         }
         debugMenu.addItem(NSMenuItem.separator())
@@ -159,6 +165,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine.state.totalXP += 100
         engine.state.todayXP += 100
         engine.state.lifetimeXP += 100
+        StateStore.save(engine.state)
+    }
+
+    @objc private func setDebugBackground(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String else { return }
+        engine.state.activeBackground = rawValue
         StateStore.save(engine.state)
     }
 

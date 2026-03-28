@@ -83,6 +83,7 @@ enum NeglectState: String, Codable {
 
 struct PetState: Codable {
     var petName: String
+    var petHue: Double  // 0.0-1.0, random at creation, permanent
     var daysAlive: Int
     var activeDays: Int
     var createdAt: Date
@@ -110,10 +111,33 @@ struct PetState: Codable {
     var activeEvent: RandomEvent?
     var activeEventExpiry: Date?
 
+    /// Pick a random hue that produces a good, readable pet color
+    static func randomGoodHue() -> Double {
+        // Good hue ranges that look great and contrast well:
+        // 0.0-0.05  = red/scarlet
+        // 0.08-0.12 = orange (default peach area)
+        // 0.30-0.45 = green/teal
+        // 0.55-0.65 = blue
+        // 0.70-0.80 = purple/violet
+        // 0.85-0.95 = pink/magenta
+        // Avoid: 0.13-0.20 (muddy yellow), 0.45-0.55 (cyan that blends with backgrounds)
+        let ranges: [(Double, Double)] = [
+            (0.0, 0.05),   // red
+            (0.08, 0.12),  // orange
+            (0.30, 0.42),  // green
+            (0.57, 0.65),  // blue
+            (0.72, 0.80),  // purple
+            (0.88, 0.97),  // pink
+        ]
+        let range = ranges.randomElement()!
+        return Double.random(in: range.0...range.1)
+    }
+
     static func initial() -> PetState {
         let now = Date()
         return PetState(
             petName: "",
+            petHue: PetState.randomGoodHue(),
             daysAlive: 0,
             activeDays: 0,
             createdAt: now,
@@ -128,7 +152,7 @@ struct PetState: Codable {
             neglectState: .none,
             equippedAccessories: [],
             unlockedItems: [],
-            activeBackground: "tokyo_night",
+            activeBackground: "tokyoNight",
             totalCommits: 0,
             totalLinesWritten: 0,
             biggestCommitLines: 0,

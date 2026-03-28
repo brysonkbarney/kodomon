@@ -50,19 +50,52 @@ struct PetWidgetView: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(KodomonColors.background)
 
-            // Red accent stripe at top
             VStack(spacing: 0) {
-                KodomonColors.accent
-                    .frame(height: 4)
-                Spacer()
-            }
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+                // Scene area — background + sprite
+                ZStack(alignment: .bottom) {
+                    // Fill any gap with a matching color
+                    Color.black.opacity(0.3)
+                    // Background — uses image asset if available, falls back to code-drawn
+                    if let bgImage = NSImage(named: engine.state.activeBackground) {
+                        Image(nsImage: bgImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 220, height: 190)
+                            .clipped()
+                    } else if let theme = BackgroundTheme(rawValue: engine.state.activeBackground) {
+                        PixelBackgroundView(theme: theme, width: 220, height: 190)
+                    } else {
+                        KodomonColors.background
+                    }
 
-            VStack(spacing: 0) {
-                // Header
+                    // Pet sprite — with shadow for contrast against any background
+                    PixelSpriteView(
+                        stage: engine.state.stage,
+                        pixelSize: 4,
+                        evolveProgress: xpProgress,
+                        petHue: engine.state.petHue
+                    )
+                    .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
+                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
+                    .padding(.bottom, 4)
+                }
+                .frame(width: 220, height: 190)
+                .clipped()
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 12, bottomLeadingRadius: 0,
+                        bottomTrailingRadius: 0, topTrailingRadius: 12
+                    )
+                )
+
+                // Red accent stripe between scene and stats
+                KodomonColors.accent
+                    .frame(height: 2)
+
+                // Header row — sits between scene and stats
                 HStack {
                     Text(engine.state.petName.isEmpty ? "KODOMON" : engine.state.petName)
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.accent)
                     Spacer()
                     HStack(spacing: 2) {
@@ -74,23 +107,8 @@ struct PetWidgetView: View {
                             .foregroundColor(KodomonColors.textSecondary)
                     }
                 }
-                .padding(.horizontal, 14)
-                .padding(.top, 14)
-
-                Spacer()
-
-                // Pet sprite — sitting on the divider
-                PixelSpriteView(
-                    stage: engine.state.stage,
-                    pixelSize: 4,
-                    evolveProgress: xpProgress
-                )
-
-                // Divider (floor)
-                Rectangle()
-                    .fill(KodomonColors.border)
-                    .frame(height: 1)
-                    .padding(.horizontal, 14)
+                .padding(.horizontal, 12)
+                .padding(.top, 6)
 
                 // Stats area
                 VStack(spacing: 6) {
@@ -159,7 +177,7 @@ struct PetWidgetView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(KodomonColors.border, lineWidth: 1)
         )
-        .frame(width: 200, height: 260)
+        .frame(width: 220, height: 320)
     }
 }
 
