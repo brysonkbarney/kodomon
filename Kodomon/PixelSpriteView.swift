@@ -58,8 +58,8 @@ struct SpriteData {
         [x,x,x,x,x,D,D,D,D,D,D,x,x,x,x,x],
     ]
 
-    // Cracking egg — >50% toward Kobito
-    static let tamagoCracking: [[P]] = [
+    // Crack stage 1 (50-65%) — small horizontal crack on the right side
+    static let tamagoCrack1: [[P]] = [
         [x,x,x,x,x,x,D,D,D,D,x,x,x,x,x,x],
         [x,x,x,x,D,D,L,L,L,L,D,D,x,x,x,x],
         [x,x,x,D,L,L,L,L,L,L,L,L,D,x,x,x],
@@ -67,11 +67,11 @@ struct SpriteData {
         [x,x,D,L,B,B,B,B,B,B,B,B,L,D,x,x],
         [x,D,L,B,B,B,B,B,B,B,B,B,B,L,D,x],
         [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
-        [x,D,B,B,B,B,B,B,B,C,B,B,B,B,D,x],
-        [D,B,B,B,B,B,B,B,C,B,B,B,B,B,B,D],
-        [D,B,B,B,B,B,B,C,B,B,B,B,B,B,B,D],
-        [D,B,B,B,B,B,C,B,C,B,B,B,B,B,B,D],
-        [D,B,B,B,B,C,B,B,B,C,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [D,B,B,B,B,B,B,B,C,C,C,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,C,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,C,C,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
         [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
         [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
         [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
@@ -82,22 +82,70 @@ struct SpriteData {
         [x,x,x,x,x,D,D,D,D,D,D,x,x,x,x,x],
     ]
 
-    // Heavy cracks — >80% toward Kobito
-    static let tamagoHatching: [[P]] = [
+    // Crack stage 2 (65-80%) — right crack + new crack branching left
+    static let tamagoCrack2: [[P]] = [
         [x,x,x,x,x,x,D,D,D,D,x,x,x,x,x,x],
-        [x,x,x,x,D,D,L,L,C,L,D,D,x,x,x,x],
-        [x,x,x,D,L,L,L,C,L,L,L,L,D,x,x,x],
-        [x,x,D,L,L,B,C,B,B,C,B,L,L,D,x,x],
-        [x,x,D,L,B,C,B,B,C,B,B,B,L,D,x,x],
-        [x,D,L,B,C,B,B,C,B,B,B,B,B,L,D,x],
-        [x,D,B,B,B,B,C,B,B,B,C,B,B,B,D,x],
-        [x,D,B,B,B,B,B,B,B,C,B,B,B,B,D,x],
-        [D,B,B,B,C,B,B,B,C,B,B,C,B,B,B,D],
-        [D,B,B,C,B,B,B,C,B,B,C,B,B,B,B,D],
-        [D,B,B,B,B,B,C,B,C,B,B,B,B,B,B,D],
-        [D,B,B,B,B,C,B,B,B,C,B,B,C,B,B,D],
-        [D,B,B,B,C,B,B,B,B,B,C,B,B,B,B,D],
+        [x,x,x,x,D,D,L,L,L,L,D,D,x,x,x,x],
+        [x,x,x,D,L,L,L,L,L,L,L,L,D,x,x,x],
+        [x,x,D,L,L,B,B,B,B,B,B,L,L,D,x,x],
+        [x,x,D,L,B,B,B,B,B,B,B,B,L,D,x,x],
+        [x,D,L,B,B,B,B,B,B,B,B,B,B,L,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [D,B,B,B,B,B,B,C,C,C,C,B,B,B,B,D],
+        [D,B,B,B,B,B,C,B,B,B,B,C,B,B,B,D],
+        [D,B,B,B,B,C,C,B,B,B,B,B,C,C,B,D],
+        [D,B,B,B,C,B,B,B,B,B,B,B,B,B,B,D],
+        [D,B,B,C,C,B,B,B,B,B,B,B,B,B,B,D],
         [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x],
+        [x,x,x,D,D,D,B,B,B,B,D,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Crack stage 3 (80-90%) — cracks reach edges, new crack up top
+    static let tamagoCrack3: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,L,L,L,L,D,D,x,x,x,x],
+        [x,x,x,D,L,L,L,L,L,L,L,L,D,x,x,x],
+        [x,x,D,L,L,B,B,B,B,B,B,L,L,D,x,x],
+        [x,x,D,L,B,B,B,B,B,B,B,B,L,D,x,x],
+        [x,D,L,B,B,B,B,C,C,C,B,B,B,L,D,x],
+        [x,D,B,B,B,B,B,B,B,B,C,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,C,C,B,D,x],
+        [D,B,B,B,B,B,C,C,C,C,C,B,B,B,B,D],
+        [D,B,B,B,B,C,B,B,B,B,B,C,B,B,B,D],
+        [D,B,B,B,C,C,B,B,B,B,B,B,C,C,B,D],
+        [D,B,B,C,B,B,B,B,B,B,B,B,B,B,C,D],
+        [D,B,C,C,B,B,B,B,B,B,B,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x],
+        [x,x,x,D,D,D,B,B,B,B,D,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Crack stage 4 (90%+) — shell breaking apart, chip missing at top
+    static let tamagoCrack4: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,L,L,x,x,D,D,x,x,x,x],
+        [x,x,x,D,L,L,L,C,x,x,C,L,D,x,x,x],
+        [x,x,D,L,L,B,C,B,B,B,B,L,L,D,x,x],
+        [x,x,D,L,B,C,B,B,B,B,B,B,L,D,x,x],
+        [x,D,L,B,B,B,B,C,C,C,B,B,B,L,D,x],
+        [x,D,B,B,B,B,B,B,B,B,C,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,C,C,B,D,x],
+        [D,B,B,B,B,B,C,C,C,C,C,B,B,B,B,D],
+        [D,B,B,B,B,C,B,B,B,B,B,C,B,B,B,D],
+        [D,B,B,B,C,C,B,B,B,B,B,B,C,C,B,D],
+        [D,B,B,C,B,B,B,B,B,B,B,B,B,B,C,D],
+        [D,B,C,C,B,B,B,B,B,B,B,B,B,B,B,D],
+        [D,C,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
         [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
         [x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
         [x,x,D,B,B,B,B,B,B,B,B,B,B,D,x,x],
@@ -153,8 +201,10 @@ struct SpriteData {
     static func sprite(for stage: Stage, evolveProgress: Double = 0) -> [[P]] {
         switch stage {
         case .tamago:
-            if evolveProgress > 0.8 { return tamagoHatching }
-            if evolveProgress > 0.5 { return tamagoCracking }
+            if evolveProgress > 0.9 { return tamagoCrack4 }
+            if evolveProgress > 0.8 { return tamagoCrack3 }
+            if evolveProgress > 0.65 { return tamagoCrack2 }
+            if evolveProgress > 0.5 { return tamagoCrack1 }
             return tamago
         case .kobito: return kobito
         case .kani: return kani
@@ -226,13 +276,33 @@ struct PixelSpriteView: View {
     }
 
     private func animateTamago() {
-        if evolveProgress > 0.8 {
+        if evolveProgress > 0.9 {
+            // Frantic — about to hatch
+            withAnimation(.easeInOut(duration: 0.08).repeatForever(autoreverses: true)) {
+                wiggleAngle = 6
+            }
+        } else if evolveProgress > 0.8 {
+            // Heavy shaking
             withAnimation(.easeInOut(duration: 0.12).repeatForever(autoreverses: true)) {
-                wiggleAngle = 5
+                wiggleAngle = 4
+            }
+        } else if evolveProgress > 0.65 {
+            // Steady rocking
+            withAnimation(.easeInOut(duration: 0.2).repeatForever(autoreverses: true)) {
+                wiggleAngle = 3
             }
         } else if evolveProgress > 0.5 {
-            withAnimation(.easeInOut(duration: 0.25).repeatForever(autoreverses: true)) {
-                wiggleAngle = 3
+            // Occasional rock
+            Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = 2.5 }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = -2 }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                            withAnimation(.easeInOut(duration: 0.2)) { wiggleAngle = 0 }
+                        }
+                    }
+                }
             }
         } else if evolveProgress > 0.2 {
             Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
