@@ -45,22 +45,15 @@ struct PetWidgetView: View {
     }
 
     var body: some View {
-        ZStack {
-            // Card background
-            RoundedRectangle(cornerRadius: 12)
-                .fill(KodomonColors.background)
-
-            VStack(spacing: 0) {
-                // Scene area — background + sprite
-                ZStack(alignment: .bottom) {
-                    // Fill any gap with a matching color
-                    Color.black.opacity(0.3)
+        VStack(spacing: 0) {
+            // Scene area — background + sprite
+            ZStack(alignment: .bottom) {
                     // Background — uses image asset if available, falls back to code-drawn
                     if let bgImage = NSImage(named: engine.state.activeBackground) {
                         Image(nsImage: bgImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
-                            .frame(width: 220, height: 190)
+                            .frame(width: 240, height: 240)
                             .clipped()
                     } else if let theme = BackgroundTheme(rawValue: engine.state.activeBackground) {
                         PixelBackgroundView(theme: theme, width: 220, height: 190)
@@ -79,7 +72,7 @@ struct PetWidgetView: View {
                     .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
                     .padding(.bottom, 4)
                 }
-                .frame(width: 220, height: 190)
+                .frame(width: 240, height: 240)
                 .clipped()
                 .clipShape(
                     UnevenRoundedRectangle(
@@ -88,96 +81,98 @@ struct PetWidgetView: View {
                     )
                 )
 
-                // Red accent stripe between scene and stats
-                KodomonColors.accent
-                    .frame(height: 2)
+                // Stats panel with cream background
+                VStack(spacing: 0) {
+                    // Red accent stripe
+                    KodomonColors.accent
+                        .frame(height: 2)
 
-                // Header row — sits between scene and stats
-                HStack {
-                    Text(engine.state.petName.isEmpty ? "KODOMON" : engine.state.petName)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(KodomonColors.accent)
-                    Spacer()
-                    HStack(spacing: 2) {
-                        Text("♥")
-                            .font(.system(size: 9))
-                            .foregroundColor(moodColor)
-                        Text("\(Int(engine.state.mood))")
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
-                            .foregroundColor(KodomonColors.textSecondary)
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.top, 6)
-
-                // Stats area
-                VStack(spacing: 6) {
-                    // Stage name
-                    Text(engine.state.stage.displayName)
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary)
-
-                    // XP bar
-                    VStack(spacing: 3) {
-                        PixelXPBar(progress: xpProgress, color: stageColor)
-
+                    VStack(spacing: 6) {
+                        // Header row
                         HStack {
-                            Text("\(Int(engine.state.totalXP)) XP")
-                                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                .foregroundColor(KodomonColors.textSecondary)
-                            Spacer()
-                            if let next = engine.state.stage.nextStage {
-                                Text("\(Int(next.xpThreshold))")
-                                    .font(.system(size: 8, weight: .medium, design: .monospaced))
-                                    .foregroundColor(KodomonColors.border)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 2)
-
-                    // Bottom stats row
-                    HStack {
-                        // Streak
-                        HStack(spacing: 3) {
-                            Text("▲")
-                                .font(.system(size: 8))
-                                .foregroundColor(KodomonColors.coral)
-                            Text("\(engine.state.currentStreak)d streak")
-                                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                .foregroundColor(KodomonColors.textSecondary)
-                        }
-
-                        Spacer()
-
-                        // Day count
-                        Text("Day \(engine.state.daysAlive)")
-                            .font(.system(size: 9, weight: .medium, design: .monospaced))
-                            .foregroundColor(KodomonColors.textSecondary)
-                    }
-
-                    // Active event
-                    if let event = engine.state.activeEvent {
-                        HStack {
-                            Rectangle()
-                                .fill(KodomonColors.accent)
-                                .frame(width: 3)
-                            Text(event.displayName)
-                                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                            Text(engine.state.petName.isEmpty ? "KODOMON" : engine.state.petName)
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
                                 .foregroundColor(KodomonColors.accent)
                             Spacer()
+                            HStack(spacing: 2) {
+                                Text("♥")
+                                    .font(.system(size: 9))
+                                    .foregroundColor(moodColor)
+                                Text("\(Int(engine.state.mood))")
+                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary)
+                            }
                         }
-                        .frame(height: 16)
+
+                        // Stage name
+                        Text(engine.state.stage.displayName)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+
+                        // XP bar
+                        VStack(spacing: 3) {
+                            PixelXPBar(progress: xpProgress, color: stageColor)
+
+                            HStack {
+                                Text("\(Int(engine.state.totalXP)) XP")
+                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary)
+                                Spacer()
+                                if let next = engine.state.stage.nextStage {
+                                    Text("\(Int(next.xpThreshold))")
+                                        .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                        .foregroundColor(KodomonColors.border)
+                                }
+                            }
+                        }
+
+                        // Bottom stats row
+                        HStack {
+                            HStack(spacing: 3) {
+                                Text("▲")
+                                    .font(.system(size: 8))
+                                    .foregroundColor(KodomonColors.coral)
+                                Text("\(engine.state.currentStreak)d streak")
+                                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary)
+                            }
+                            Spacer()
+                            Text("Day \(engine.state.daysAlive)")
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .foregroundColor(KodomonColors.textSecondary)
+                        }
+
+                        // Active event
+                        if let event = engine.state.activeEvent {
+                            HStack {
+                                Rectangle()
+                                    .fill(KodomonColors.accent)
+                                    .frame(width: 3)
+                                Text(event.displayName)
+                                    .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.accent)
+                                Spacer()
+                            }
+                            .frame(height: 16)
+                        }
                     }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
+                .background(KodomonColors.background)
+                .clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 0, bottomLeadingRadius: 12,
+                        bottomTrailingRadius: 12, topTrailingRadius: 0
+                    )
+                )
             }
-        }
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(KodomonColors.border, lineWidth: 1)
         )
-        .frame(width: 220, height: 320)
+        .frame(width: 240, height: 380)
     }
 }
 

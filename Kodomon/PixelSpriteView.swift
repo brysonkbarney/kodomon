@@ -156,6 +156,7 @@ struct SpriteData {
     ]
 
     // ── Kobito (blob with big eyes) ~20x14 ──
+    // Eyes center
     static let kobito: [[P]] = [
         [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
         [x,x,x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x,x,x],
@@ -171,6 +172,96 @@ struct SpriteData {
         [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
         [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
         [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Eyes looking left
+    static let kobitoLeft: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,D,x],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,W,E,E,B,B,B,B,W,E,E,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Eyes looking right
+    static let kobitoRight: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,D,x],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,E,E,W,B,B,B,B,E,E,W,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Eyes looking up
+    static let kobitoUp: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,E,W,E,B,B,B,B,E,W,E,B,B,B,D,x],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Blink — eyes closed
+    static let kobitoBlink: [[P]] = [
+        [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,D,D,B,B,B,B,B,B,B,B,D,D,x,x,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+    ]
+
+    // Squished (landing from hop)
+    static let kobitoSquish: [[P]] = [
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x],
+        [x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D],
+        [D,B,B,B,B,E,W,E,B,B,B,B,E,W,E,B,B,B,B,D],
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,D,D,B,B,B,B,B,B,B,B,D,D,D,x,x,x],
+        [x,x,x,x,x,x,D,D,D,D,D,D,D,D,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
     ]
 
     // ── Kani (crab with claws and legs) ~20x20 ──
@@ -222,6 +313,9 @@ struct PixelSpriteView: View {
 
     @State private var wiggleAngle: Double = 0
     @State private var bobOffset: CGFloat = 0
+    @State private var scaleX: CGFloat = 1.0
+    @State private var scaleY: CGFloat = 1.0
+    @State private var currentFrame: [[P]]? = nil
 
     init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07) {
         self.stage = stage
@@ -231,10 +325,9 @@ struct PixelSpriteView: View {
     }
 
     var body: some View {
-        let grid = SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        let grid = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
-        // Eggs stay default peach (0.07), hatched creatures get their unique hue
         let activeHue = stage == .tamago ? 0.07 : petHue
 
         Canvas { context, _ in
@@ -257,6 +350,7 @@ struct PixelSpriteView: View {
             width: CGFloat(cols) * pixelSize,
             height: CGFloat(rows) * pixelSize
         )
+        .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
         .rotationEffect(.degrees(wiggleAngle))
         .offset(y: bobOffset)
         .onAppear { startAnimations() }
@@ -325,12 +419,56 @@ struct PixelSpriteView: View {
     }
 
     private func animateKobito() {
-        // Hop: quick up then down
-        Timer.scheduledTimer(withTimeInterval: 2.5, repeats: true) { _ in
+        currentFrame = SpriteData.kobito
+
+        // Look around randomly
+        Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { _ in
             DispatchQueue.main.async {
-                withAnimation(.easeOut(duration: 0.12)) { bobOffset = -6 }
+                let frames: [[[P]]] = [
+                    SpriteData.kobito,
+                    SpriteData.kobitoLeft,
+                    SpriteData.kobitoRight,
+                    SpriteData.kobitoUp,
+                    SpriteData.kobito,
+                ]
+                currentFrame = frames.randomElement()!
+            }
+        }
+
+        // Blink every 3-5 seconds
+        Timer.scheduledTimer(withTimeInterval: 3.5, repeats: true) { _ in
+            DispatchQueue.main.async {
+                currentFrame = SpriteData.kobitoBlink
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                    withAnimation(.easeIn(duration: 0.12)) { bobOffset = 0 }
+                    currentFrame = SpriteData.kobito
+                }
+            }
+        }
+
+        // Hop + squish every 4 seconds
+        Timer.scheduledTimer(withTimeInterval: 4.0, repeats: true) { _ in
+            DispatchQueue.main.async {
+                // Jump up
+                withAnimation(.easeOut(duration: 0.15)) { bobOffset = -8 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    // Fall down
+                    withAnimation(.easeIn(duration: 0.1)) { bobOffset = 0 }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        // Squish on landing
+                        currentFrame = SpriteData.kobitoSquish
+                        withAnimation(.easeOut(duration: 0.08)) {
+                            scaleX = 1.1
+                            scaleY = 0.9
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                            // Bounce back
+                            currentFrame = SpriteData.kobito
+                            withAnimation(.easeInOut(duration: 0.1)) {
+                                scaleX = 1.0
+                                scaleY = 1.0
+                            }
+                        }
+                    }
                 }
             }
         }

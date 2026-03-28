@@ -28,7 +28,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupPanel() {
         window = NSWindow(
-            contentRect: NSRect(x: 200, y: 200, width: 220, height: 320),
+            contentRect: NSRect(x: 200, y: 200, width: 240, height: 380),
             styleMask: [.fullSizeContentView, .borderless],
             backing: .buffered,
             defer: false
