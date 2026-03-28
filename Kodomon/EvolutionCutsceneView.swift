@@ -20,6 +20,7 @@ struct EvolutionCutsceneView: View {
         ZStack {
             // Dim background
             Color.black.opacity(bgDim)
+                .frame(width: 240, height: 380)
 
             // Old sprite shaking (phase 0)
             if phase == 0 {
@@ -34,6 +35,7 @@ struct EvolutionCutsceneView: View {
 
             // White flash
             Color.white.opacity(flashOpacity)
+                .frame(width: 240, height: 380)
 
             // New sprite appearing (phase 2+)
             if phase >= 2 {
@@ -77,6 +79,10 @@ struct EvolutionCutsceneView: View {
                 .opacity(textOpacity)
             }
         }
+        .frame(width: 240, height: 380)
+        .clipped()
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .allowsHitTesting(false)
         .onAppear { startCutscene() }
     }
 
@@ -94,7 +100,7 @@ struct EvolutionCutsceneView: View {
         sparkles = (0..<12).map { _ in
             (
                 x: CGFloat.random(in: 40...200),
-                y: CGFloat.random(in: 40...200),
+                y: CGFloat.random(in: 80...280),
                 delay: Double.random(in: 0...0.3)
             )
         }

@@ -29,7 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupPanel() {
         window = NSWindow(
             contentRect: NSRect(x: 200, y: 200, width: 240, height: 380),
-            styleMask: [.fullSizeContentView, .borderless],
+            styleMask: [.borderless],
             backing: .buffered,
             defer: false
         )
@@ -38,9 +38,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isMovableByWindowBackground = true
         window.backgroundColor = .clear
         window.isOpaque = false
-        window.hasShadow = false
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
+        window.hasShadow = true
+        window.setContentSize(NSSize(width: 240, height: 380))
+        window.minSize = NSSize(width: 240, height: 380)
+        window.maxSize = NSSize(width: 240, height: 380)
 
         if let x = UserDefaults.standard.object(forKey: "panelX") as? CGFloat,
            let y = UserDefaults.standard.object(forKey: "panelY") as? CGFloat {
@@ -49,7 +50,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let contentView = PetWidgetView()
             .environmentObject(engine!)
-        window.contentView = NSHostingView(rootView: contentView)
+        let hostingView = NSHostingView(rootView: contentView)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        hostingView.layer?.isOpaque = false
+        hostingView.layer?.masksToBounds = true
+        hostingView.layer?.cornerRadius = 12
+        window.contentView = hostingView
         window.orderFront(nil)
     }
 

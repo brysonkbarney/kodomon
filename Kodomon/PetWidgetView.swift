@@ -171,7 +171,9 @@ struct PetWidgetView: View {
                 )
             }
 
-            // Evolution cutscene overlay
+        }
+        .frame(width: 240, height: 380)
+        .overlay {
             if let evo = engine.evolutionEvent {
                 EvolutionCutsceneView(
                     fromStage: evo.from,
@@ -183,11 +185,7 @@ struct PetWidgetView: View {
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(KodomonColors.border, lineWidth: 1)
-        )
-        .frame(width: 240, height: 380)
+        .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
     }
 }
 
