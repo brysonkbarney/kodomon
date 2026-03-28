@@ -87,6 +87,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             debugMenu.addItem(item)
         }
         debugMenu.addItem(NSMenuItem.separator())
+        let noneItem = NSMenuItem(title: "BG: None", action: #selector(setDebugBackground(_:)), keyEquivalent: "")
+        noneItem.representedObject = "none"
+        debugMenu.addItem(noneItem)
         for bg in BackgroundTheme.allCases {
             let item = NSMenuItem(title: "BG: \(bg.displayName)", action: #selector(setDebugBackground(_:)), keyEquivalent: "")
             item.representedObject = bg.rawValue

@@ -84,12 +84,36 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 ## What's Left
 
 ### Must Have (v1.0)
-- [ ] **Fix evolution cutscene overflow** — the card expands during cutscene
+
+#### Bugs
+- [ ] **Fix evolution cutscene overflow** — the card visually expands during cutscene. Tried clipShape, masksToBounds, overlay, fixed frame — none worked.
+
+#### Neglect State Visuals (from GDD — none implemented)
+- [ ] **Hungry** (2h no activity) — droopy eyes, slow blink, slight desaturation
+- [ ] **Tired** (8h no activity) — yawning pose, grey tint
+- [ ] **Sad** (1 missed day) — slouched, occasional sigh
+- [ ] **Sick** (3 missed days) — grey/desaturated, shivering, X eyes, pixel sweat drops
+- [ ] **Critical** (7+ missed days) — nearly greyscale, flat on ground, barely twitching
+- [ ] **Ran away** (14 missed days) — pet gone, empty widget, farewell note 「さようなら…」, XP bar removed
+
+#### Mood Visuals (from GDD — none implemented)
+- [ ] **Ecstatic** (80-100) — bouncing, pixel sparkles
+- [ ] **Happy** (60-79) — relaxed wiggle
+- [ ] **Stressed** (20-39) — twitchy, side-eyes
+- [ ] **Miserable** (0-19) — grey, slumped
+
+#### Reactive Animations (from GDD — none implemented)
+- [ ] **Commit received** — jump + land reaction when git commit event fires
+- [ ] **XP gain** — tiny pixel numbers float upward (+25 XP)
+- [ ] **De-evolution** — sad animation when stage drops
+
+#### Other Must-Haves
 - [ ] **Kamisama sprite** — god crab design (currently placeholder, same as Kani)
 - [ ] **Notifications** — macOS UserNotifications for hungry, streak warnings, evolution alerts (Japanese text first, English context)
 - [ ] **Install script** — `curl -fsSL https://kodomon.app/install.sh | bash` for distribution
 - [ ] **Kani animations** — currently only waddles, could do more (claw snaps, looking around)
 - [ ] **App icon** — currently using default macOS app icon
+- [ ] **Blank background as default** — done (set to "none")
 
 ### Nice to Have (v1.1+)
 - [ ] Share card PNG export (Kodomon Wrapped) — SwiftUI ImageRenderer
@@ -101,6 +125,7 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [ ] Leaderboard (opt-in, ranked by days alive)
 - [ ] Revival mechanic (30 min coding to bring back ran-away pet)
 - [ ] Sound toggle (optional chirp sounds)
+- [ ] Pixel speech bubble for events/notifications on the widget
 
 ## File Structure
 ```

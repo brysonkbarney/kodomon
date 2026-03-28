@@ -152,7 +152,7 @@ struct PetState: Codable {
             neglectState: .none,
             equippedAccessories: [],
             unlockedItems: [],
-            activeBackground: "tokyoNight",
+            activeBackground: "none",
             totalCommits: 0,
             totalLinesWritten: 0,
             biggestCommitLines: 0,
