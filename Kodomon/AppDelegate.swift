@@ -87,6 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Add 100 XP", action: #selector(addDebugXP), keyEquivalent: ""))
+        debugMenu.addItem(NSMenuItem(title: "Test Evolution", action: #selector(testEvolution), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem(title: "Reset State", action: #selector(resetDebugState), keyEquivalent: ""))
 
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
@@ -172,6 +173,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let rawValue = sender.representedObject as? String else { return }
         engine.state.activeBackground = rawValue
         StateStore.save(engine.state)
+    }
+
+    @objc private func testEvolution() {
+        let from = engine.state.stage
+        let to = from.nextStage ?? .kamisama
+        engine.evolutionEvent = (from: from, to: to)
     }
 
     @objc private func resetDebugState() {

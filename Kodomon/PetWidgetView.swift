@@ -45,6 +45,7 @@ struct PetWidgetView: View {
     }
 
     var body: some View {
+        ZStack {
         VStack(spacing: 0) {
             // Scene area — background + sprite
             ZStack(alignment: .bottom) {
@@ -61,16 +62,18 @@ struct PetWidgetView: View {
                         KodomonColors.background
                     }
 
-                    // Pet sprite — with shadow for contrast against any background
-                    PixelSpriteView(
-                        stage: engine.state.stage,
-                        pixelSize: 4,
-                        evolveProgress: xpProgress,
-                        petHue: engine.state.petHue
-                    )
-                    .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
-                    .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
-                    .padding(.bottom, 4)
+                    // Pet sprite — hidden during evolution cutscene
+                    if engine.evolutionEvent == nil {
+                        PixelSpriteView(
+                            stage: engine.state.stage,
+                            pixelSize: 4,
+                            evolveProgress: xpProgress,
+                            petHue: engine.state.petHue
+                        )
+                        .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
+                        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
+                        .padding(.bottom, 4)
+                    }
                 }
                 .frame(width: 240, height: 240)
                 .clipped()
@@ -167,6 +170,18 @@ struct PetWidgetView: View {
                     )
                 )
             }
+
+            // Evolution cutscene overlay
+            if let evo = engine.evolutionEvent {
+                EvolutionCutsceneView(
+                    fromStage: evo.from,
+                    toStage: evo.to,
+                    petHue: engine.state.petHue
+                ) {
+                    engine.clearEvolutionEvent()
+                }
+            }
+        }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
             RoundedRectangle(cornerRadius: 12)

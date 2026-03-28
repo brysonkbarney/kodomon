@@ -4,6 +4,7 @@ import Combine
 @MainActor
 class PetEngine: ObservableObject {
     @Published var state: PetState
+    @Published var evolutionEvent: (from: Stage, to: Stage)? = nil
     private let watcher: ActivityWatcher
     private var cancellables = Set<AnyCancellable>()
     private var midnightTimer: Timer?
@@ -185,11 +186,17 @@ class PetEngine: ObservableObject {
         if state.totalXP >= next.xpThreshold
             && state.activeDays >= next.requiredActiveDays
             && state.currentStreak >= next.requiredStreak {
+            let from = state.stage
             state.stage = next
             state.stageReachedDate = Date()
             state.mood = min(100, state.mood + 30)
+            evolutionEvent = (from: from, to: next)
             NSLog("[Kodomon] EVOLVED to %@!", next.displayName)
         }
+    }
+
+    func clearEvolutionEvent() {
+        evolutionEvent = nil
     }
 
     private func checkDeEvolution() {
