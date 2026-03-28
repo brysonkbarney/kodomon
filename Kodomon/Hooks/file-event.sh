@@ -1,14 +1,16 @@
 #!/bin/bash
 # Kodomon — Claude Code PostToolUse hook (Write/Edit)
-# Writes a file_write event to the shared JSONL file
+# Reads JSON from stdin, writes file_write event to JSONL
 
 KODOMON_DIR="$HOME/.kodomon"
 EVENT_FILE="$KODOMON_DIR/events.jsonl"
-
 mkdir -p "$KODOMON_DIR"
 
-# Tool input is passed via CLAUDE_TOOL_INPUT env var
-FILE_PATH="${CLAUDE_TOOL_INPUT_FILE_PATH:-unknown}"
+INPUT=$(cat)
+FILE_PATH=$(echo "$INPUT" | /usr/bin/jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "unknown")
+TOOL_NAME=$(echo "$INPUT" | /usr/bin/jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
 TS=$(date +%s)
 
-echo "{\"type\":\"file_write\",\"ts\":$TS,\"file\":\"$FILE_PATH\"}" >> "$EVENT_FILE"
+if [ -n "$FILE_PATH" ]; then
+  echo "{\"type\":\"file_write\",\"ts\":$TS,\"file\":\"$FILE_PATH\",\"tool\":\"$TOOL_NAME\"}" >> "$EVENT_FILE"
+fi

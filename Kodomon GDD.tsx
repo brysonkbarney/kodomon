@@ -168,19 +168,19 @@ const pages = {
         },
         {
           name: "Kobito", kanji: "小人", stage: "Stage 1", color: "#1D9E75",
-          xp: "500 XP", days: "5 active days", streak: "3-day streak at time of evolve",
+          xp: "3000 XP", days: "5 active days", streak: "3-day streak at time of evolve",
           desc: "A tiny baby crab hatches. Wiggles its claws. Reacts to commits with happy animation.",
           anim: "idle wiggle, claw snap on commit", unlock: "First hat unlocks. Can now show coding streak badge."
         },
         {
           name: "Kani", kanji: "蟹", stage: "Stage 2", color: "#D85A30",
-          xp: "4000 XP", days: "21 active days", streak: "7-day streak at time of evolve",
+          xp: "20000 XP", days: "21 active days", streak: "7-day streak at time of evolve",
           desc: "Full crab. Confident, expressive. Dances on big commits. Shows stress when neglected.",
           anim: "dance, stress twitching, sleep animation", unlock: "Background themes, accessories. Stats panel."
         },
         {
           name: "Kamisama", kanji: "神様", stage: "Stage 3", color: "#7F77DD",
-          xp: "18000 XP", days: "60 active days", streak: "14-day streak at time of evolve",
+          xp: "100000 XP", days: "60 active days", streak: "14-day streak at time of evolve",
           desc: "God crab. Floats slightly. Glows. Radiates calm power. Rare idle animations. Legendary.",
           anim: "float loop, particle aura, rare dances", unlock: "All cosmetics. Kamisama badge. Profile sharing card."
         },
@@ -229,7 +229,7 @@ const pages = {
           <li>If XP drops below the <strong>entry threshold</strong> of your current stage, de-evolution triggers.</li>
           <li>De-evolution plays a sad animation — this should feel genuinely bad.</li>
           <li>You keep your calendar day count. You don't lose everything. But you must re-earn the XP.</li>
-          <li>Kamisama → Kani requires dropping below 12,000 XP (not 18,000 — a grace buffer).</li>
+          <li>Kamisama → Kani requires dropping below 70,000 XP (not 100,000 — a grace buffer).</li>
           <li>There is a <strong>3-day grace period</strong> after reaching a new stage before de-evolution can occur.</li>
         </ul>
       </Card>
@@ -449,13 +449,13 @@ const pages = {
         <Table
           heads={["Period", "Milestone", "XP range", "Notes"]}
           rows={[
-            ["Day 1–3", "Egg period", "0–150 XP", "gets acquainted, first animations"],
-            ["Day 5–7", "Egg hatches → Kobito", "500 XP", "requires 5 active days + 3-day streak"],
-            ["Week 3–4", "Kobito thriving", "1000–2000 XP", "streak multiplier kicking in"],
-            ["Week 6", "Kani evolution", "4000 XP", "requires 21 active days + 7-day streak"],
-            ["Month 2", "Kani growing", "6000–10000 XP", "accessories unlocking, events firing"],
-            ["Month 2.5–3", "Approaching Kamisama", "14000+ XP", "streak multiplier at 1.8–2x"],
-            ["~Day 75–90", "Kamisama", "18000 XP", "requires 60 active days + 14-day streak"],
+            ["Day 1–3", "Egg period", "0–400 XP", "gets acquainted, first animations"],
+            ["Day 5–7", "Egg hatches → Kobito", "3000 XP", "requires 5 active days + 3-day streak"],
+            ["Week 3–5", "Kobito thriving", "5000–10000 XP", "streak multiplier kicking in"],
+            ["Week 6–8", "Kani evolution", "20000 XP", "requires 21 active days + 7-day streak"],
+            ["Month 2–4", "Kani growing", "30000–60000 XP", "accessories unlocking, events firing"],
+            ["Month 4–6", "Approaching Kamisama", "80000+ XP", "streak multiplier at 1.8–2x"],
+            ["~Day 150–200", "Kamisama", "100000 XP", "requires 60 active days + 14-day streak"],
           ]}
           accents={["#888780","#1D9E75","#1D9E75","#D85A30","#D85A30","#7F77DD","#7F77DD"]}
         />
@@ -464,9 +464,9 @@ const pages = {
         <Table
           heads={["Milestone", "Estimated time"]}
           rows={[
-            ["Kobito hatch", "~2 weeks"],
-            ["Kani", "~3 months"],
-            ["Kamisama", "5–6 months"],
+            ["Kobito hatch", "~3–4 weeks"],
+            ["Kani", "~5–6 months"],
+            ["Kamisama", "10–12 months"],
           ]}
         />
       </Card>

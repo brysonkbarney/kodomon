@@ -16,6 +16,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupPanel()
         setupMenuBar()
+        setupSleepWakeObservers()
     }
 
     private func setupPanel() {
@@ -57,6 +58,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         statusItem.menu = menu
+    }
+
+    private func setupSleepWakeObservers() {
+        let wsc = NSWorkspace.shared.notificationCenter
+        wsc.addObserver(
+            self,
+            selector: #selector(handleWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func handleWake() {
+        NSLog("[Kodomon] System woke — checking missed midnights and decay")
+        engine.handleWake()
     }
 
     @objc private func showPanel() {

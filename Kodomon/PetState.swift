@@ -18,9 +18,9 @@ enum Stage: String, Codable, CaseIterable {
     var xpThreshold: Double {
         switch self {
         case .tamago: return 0
-        case .kobito: return 500
-        case .kani: return 4000
-        case .kamisama: return 18000
+        case .kobito: return 3000
+        case .kani: return 20000
+        case .kamisama: return 100000
         }
     }
 
@@ -46,9 +46,9 @@ enum Stage: String, Codable, CaseIterable {
     var deEvolveFloor: Double {
         switch self {
         case .tamago: return 0
-        case .kobito: return 300
-        case .kani: return 2500
-        case .kamisama: return 12000
+        case .kobito: return 1500
+        case .kani: return 12000
+        case .kamisama: return 70000
         }
     }
 
@@ -104,7 +104,10 @@ struct PetState: Codable {
     var stageReachedDate: Date?
     var lastMidnightReset: Date
     var todayFileTypes: Set<String>
+    var todayFilesWritten: Set<String>
     var todayIsActive: Bool
+    var activeEvent: RandomEvent?
+    var activeEventExpiry: Date?
 
     static func initial() -> PetState {
         let now = Date()
@@ -131,7 +134,10 @@ struct PetState: Codable {
             stageReachedDate: now,
             lastMidnightReset: Calendar.current.startOfDay(for: now),
             todayFileTypes: [],
-            todayIsActive: false
+            todayFilesWritten: [],
+            todayIsActive: false,
+            activeEvent: nil,
+            activeEventExpiry: nil
         )
     }
 }

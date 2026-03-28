@@ -8,6 +8,7 @@ class PetEngine: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var midnightTimer: Timer?
     private var decayTimer: Timer?
+    private var activeSessions: [String: Date] = [:]
 
     init(watcher: ActivityWatcher) {
         self.watcher = watcher
@@ -24,8 +25,18 @@ class PetEngine: ObservableObject {
             }
             .store(in: &cancellables)
 
+        clearExpiredEvent()
         scheduleMidnightReset()
         startDecayTimer()
+    }
+
+    // MARK: - Wake from sleep
+
+    func handleWake() {
+        checkMissedMidnights()
+        clearExpiredEvent()
+        updateNeglectState()
+        scheduleMidnightReset()
     }
 
     // MARK: - Event Handling
@@ -34,9 +45,10 @@ class PetEngine: ObservableObject {
         NSLog("[Kodomon] Handling event")
 
         switch event {
-        case .sessionStart(_, _, _):
+        case .sessionStart(let sessionId, _, let timestamp):
             markActive()
-            addMood(15)
+            activeSessions[sessionId] = timestamp
+
             if !state.todayIsActive {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 10,
@@ -46,20 +58,38 @@ class PetEngine: ObservableObject {
                     todayXP: state.todayXP
                 )
                 addXP(xp)
+                addMood(15)
                 state.todayIsActive = true
             }
 
-        case .sessionStop(_, _):
-            break
+        case .sessionStop(let sessionId, let timestamp):
+            if let startTime = activeSessions.removeValue(forKey: sessionId) {
+                let minutes = Int(timestamp.timeIntervalSince(startTime) / 60)
+                let cappedMins = max(0, min(minutes, 120 - state.todaySessionMins))
+                state.todaySessionMins += cappedMins
+
+                let rawXP = XPCalculator.sessionXP(minutes: cappedMins)
+                let xp = XPCalculator.applyMultipliers(
+                    rawXP: rawXP,
+                    todaySessionMins: state.todaySessionMins,
+                    streak: state.currentStreak,
+                    mood: state.mood,
+                    todayXP: state.todayXP
+                )
+                addXP(xp)
+                NSLog("[Kodomon] Session %@ ended — %d min, +%.0f XP", sessionId, cappedMins, xp)
+            }
 
         case .fileWrite(let path, _):
             markActive()
 
+            // Track file type for variety bonus
             let ext = (path as NSString).pathExtension.lowercased()
             if !ext.isEmpty {
                 state.todayFileTypes.insert(ext)
             }
 
+            // Variety bonus: first time hitting 3+ file types today
             if state.todayFileTypes.count == 3 {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 20,
@@ -72,15 +102,21 @@ class PetEngine: ObservableObject {
                 addMood(6)
             }
 
-            let xp = XPCalculator.applyMultipliers(
-                rawXP: 10,
-                todaySessionMins: state.todaySessionMins,
-                streak: state.currentStreak,
-                mood: state.mood,
-                todayXP: state.todayXP
-            )
-            addXP(xp)
-            addMood(8)
+            // Only give XP for unique files per day
+            let isNewFile = !state.todayFilesWritten.contains(path)
+            state.todayFilesWritten.insert(path)
+
+            if isNewFile {
+                let xp = XPCalculator.applyMultipliers(
+                    rawXP: 3,
+                    todaySessionMins: state.todaySessionMins,
+                    streak: state.currentStreak,
+                    mood: state.mood,
+                    todayXP: state.todayXP
+                )
+                addXP(xp)
+            }
+            addMood(isNewFile ? 4 : 1)
 
         case .gitCommit(_, let added, let removed, _, _):
             markActive()
@@ -113,9 +149,23 @@ class PetEngine: ObservableObject {
 
     private func addXP(_ amount: Double) {
         guard amount > 0 else { return }
-        state.totalXP += amount
-        state.todayXP += amount
-        state.lifetimeXP += amount
+        var xp = amount
+
+        // Active event modifiers
+        if let event = state.activeEvent,
+           let expiry = state.activeEventExpiry,
+           Date() < expiry {
+            switch event {
+            case .codingStorm: xp *= 2.0
+            case .kaniFestival: xp *= 3.0
+            case .codeDrought: xp *= 0.5
+            default: break
+            }
+        }
+
+        state.totalXP += xp
+        state.todayXP += xp
+        state.lifetimeXP += xp
         checkEvolution()
     }
 
@@ -202,12 +252,36 @@ class PetEngine: ObservableObject {
         state.todayXP = 0
         state.todaySessionMins = 0
         state.todayFileTypes = []
+        state.todayFilesWritten = []
         state.todayIsActive = false
 
         let moodDelta = (50 - state.mood) * 0.3
         state.mood += moodDelta
 
         state.lastMidnightReset = Calendar.current.startOfDay(for: Date())
+
+        // Clear yesterday's event, roll for today
+        state.activeEvent = nil
+        state.activeEventExpiry = nil
+        if let event = RandomEventEngine.rollDailyEvent(
+            currentStreak: state.currentStreak,
+            stage: state.stage
+        ) {
+            state.activeEvent = event
+            // Most events last all day, timed ones get specific expiry
+            switch event {
+            case .codingStorm:
+                state.activeEventExpiry = Date().addingTimeInterval(3600) // 60 min
+            case .flowState:
+                state.activeEventExpiry = Date().addingTimeInterval(2700) // 45 min
+            default:
+                state.activeEventExpiry = Calendar.current.date(
+                    byAdding: .day, value: 1,
+                    to: Calendar.current.startOfDay(for: Date())
+                )
+            }
+            RandomEventEngine.applyEvent(event, to: &state)
+        }
 
         checkDeEvolution()
         save()
@@ -268,6 +342,26 @@ class PetEngine: ObservableObject {
 
         state.totalXP = max(0, state.totalXP)
         addMood(-15)
+    }
+
+    // MARK: - Events
+
+    private func clearExpiredEvent() {
+        if let expiry = state.activeEventExpiry, Date() >= expiry {
+            state.activeEvent = nil
+            state.activeEventExpiry = nil
+            save()
+        }
+    }
+
+    // MARK: - JSONL log rotation
+
+    private func rotateEventsLog() {
+        let path = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".kodomon/events.jsonl")
+        // Truncate after processing — events are already consumed
+        try? "".write(to: path, atomically: true, encoding: .utf8)
+        NSLog("[Kodomon] Events log rotated")
     }
 
     // MARK: - Persistence

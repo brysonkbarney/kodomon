@@ -239,9 +239,9 @@ All gates require BOTH the XP threshold AND the minimum active days AND the stre
 | Stage | XP needed | Active days | Streak required |
 |---|---|---|---|
 | Tamago (egg) | 0 | day 0 | — |
-| Kobito (baby crab) | 500 XP | 5 days | 3-day streak |
-| Kani (full crab) | 4000 XP | 21 days | 7-day streak |
-| Kamisama (god crab) | 18000 XP | 60 days | 14-day streak |
+| Kobito (baby crab) | 3,000 XP | 5 days | 3-day streak |
+| Kani (full crab) | 20,000 XP | 21 days | 7-day streak |
+| Kamisama (god crab) | 100,000 XP | 60 days | 14-day streak |
 
 ### Decay and neglect
 - Miss 1 day → -3% total XP, pet looks sad
