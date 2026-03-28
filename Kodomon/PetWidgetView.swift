@@ -1,16 +1,21 @@
 import SwiftUI
 
+// Style guide colors
+struct KodomonColors {
+    static let background = Color(red: 0.96, green: 0.94, blue: 0.88)  // #F5F0E1 warm cream
+    static let accent = Color(red: 0.85, green: 0.21, blue: 0.20)      // #D83632 torii red
+    static let textPrimary = Color(red: 0.16, green: 0.16, blue: 0.16) // #2A2A2A
+    static let textSecondary = Color(red: 0.42, green: 0.40, blue: 0.38) // #6B6560
+    static let border = Color(red: 0.84, green: 0.82, blue: 0.77)      // #D6D0C4
+    static let purple = Color(red: 0.50, green: 0.47, blue: 0.87)      // #7F77DD
+    static let teal = Color(red: 0.11, green: 0.62, blue: 0.46)        // #1D9E75
+    static let coral = Color(red: 0.85, green: 0.35, blue: 0.19)       // #D85A30
+    static let amber = Color(red: 0.73, green: 0.46, blue: 0.09)       // #BA7517
+    static let red = Color(red: 0.89, green: 0.29, blue: 0.29)         // #E24B4A
+}
+
 struct PetWidgetView: View {
     @EnvironmentObject var engine: PetEngine
-
-    private var spriteEmoji: String {
-        switch engine.state.stage {
-        case .tamago: return "🥚"
-        case .kobito: return "🦀"
-        case .kani: return "🦞"
-        case .kamisama: return "👑"
-        }
-    }
 
     private var xpProgress: Double {
         guard let next = engine.state.stage.nextStage else { return 1.0 }
@@ -22,68 +27,157 @@ struct PetWidgetView: View {
 
     private var moodColor: Color {
         switch engine.state.mood {
-        case 80...100: return Color(red: 0.5, green: 0.47, blue: 0.87)
-        case 60..<80: return Color(red: 0.11, green: 0.62, blue: 0.46)
-        case 40..<60: return Color(red: 0.55, green: 0.55, blue: 0.5)
-        case 20..<40: return Color(red: 0.73, green: 0.46, blue: 0.09)
-        default: return Color(red: 0.89, green: 0.29, blue: 0.29)
+        case 80...100: return KodomonColors.purple
+        case 60..<80: return KodomonColors.teal
+        case 40..<60: return KodomonColors.textSecondary
+        case 20..<40: return KodomonColors.amber
+        default: return KodomonColors.red
+        }
+    }
+
+    private var stageColor: Color {
+        switch engine.state.stage {
+        case .tamago: return KodomonColors.textSecondary
+        case .kobito: return KodomonColors.teal
+        case .kani: return KodomonColors.coral
+        case .kamisama: return KodomonColors.purple
         }
     }
 
     var body: some View {
         ZStack {
-            Color.clear
+            // Card background
+            RoundedRectangle(cornerRadius: 12)
+                .fill(KodomonColors.background)
 
-            VStack(spacing: 6) {
-                // Mood dot
+            // Red accent stripe at top
+            VStack(spacing: 0) {
+                KodomonColors.accent
+                    .frame(height: 4)
+                Spacer()
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+
+            VStack(spacing: 0) {
+                // Header
                 HStack {
+                    Text(engine.state.petName.isEmpty ? "KODOMON" : engine.state.petName)
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.accent)
                     Spacer()
-                    Circle()
-                        .fill(moodColor)
-                        .frame(width: 8, height: 8)
-                }
-                .padding(.horizontal, 12)
-
-                // Pet sprite
-                Text(spriteEmoji)
-                    .font(.system(size: 56))
-
-                // Stage name
-                Text(engine.state.stage.displayName)
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.7))
-
-                // XP info
-                Text("\(Int(engine.state.totalXP)) XP")
-                    .font(.system(size: 9, weight: .regular, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.4))
-
-                // XP bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color.white.opacity(0.15))
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(Color(red: 0.5, green: 0.47, blue: 0.87))
-                            .frame(width: geo.size.width * xpProgress, height: 6)
-                            .animation(.easeInOut(duration: 0.5), value: xpProgress)
+                    HStack(spacing: 2) {
+                        Text("♥")
+                            .font(.system(size: 9))
+                            .foregroundColor(moodColor)
+                        Text("\(Int(engine.state.mood))")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
                     }
                 }
-                .frame(height: 6)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 14)
+                .padding(.top, 14)
 
-                // Streak
-                if engine.state.currentStreak > 0 {
-                    Text("🔥 \(engine.state.currentStreak)d streak")
-                        .font(.system(size: 9, weight: .medium, design: .monospaced))
-                        .foregroundColor(.white.opacity(0.5))
+                Spacer()
+
+                // Pet sprite — sitting on the divider
+                PixelSpriteView(
+                    stage: engine.state.stage,
+                    pixelSize: 4,
+                    evolveProgress: xpProgress
+                )
+
+                // Divider (floor)
+                Rectangle()
+                    .fill(KodomonColors.border)
+                    .frame(height: 1)
+                    .padding(.horizontal, 14)
+
+                // Stats area
+                VStack(spacing: 6) {
+                    // Stage name
+                    Text(engine.state.stage.displayName)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+
+                    // XP bar
+                    VStack(spacing: 3) {
+                        PixelXPBar(progress: xpProgress, color: stageColor)
+
+                        HStack {
+                            Text("\(Int(engine.state.totalXP)) XP")
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .foregroundColor(KodomonColors.textSecondary)
+                            Spacer()
+                            if let next = engine.state.stage.nextStage {
+                                Text("\(Int(next.xpThreshold))")
+                                    .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.border)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 2)
+
+                    // Bottom stats row
+                    HStack {
+                        // Streak
+                        HStack(spacing: 3) {
+                            Text("▲")
+                                .font(.system(size: 8))
+                                .foregroundColor(KodomonColors.coral)
+                            Text("\(engine.state.currentStreak)d streak")
+                                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                                .foregroundColor(KodomonColors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        // Day count
+                        Text("Day \(engine.state.daysAlive)")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                    }
+
+                    // Active event
+                    if let event = engine.state.activeEvent {
+                        HStack {
+                            Rectangle()
+                                .fill(KodomonColors.accent)
+                                .frame(width: 3)
+                            Text(event.displayName)
+                                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                .foregroundColor(KodomonColors.accent)
+                            Spacer()
+                        }
+                        .frame(height: 16)
+                    }
                 }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 4)
         }
-        .frame(width: 160, height: 180)
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(KodomonColors.border, lineWidth: 1)
+        )
+        .frame(width: 200, height: 260)
+    }
+}
+
+// Pixel-segmented XP bar
+struct PixelXPBar: View {
+    let progress: Double
+    let color: Color
+    let segments: Int = 20
+
+    var body: some View {
+        HStack(spacing: 1) {
+            ForEach(0..<segments, id: \.self) { i in
+                let filled = Double(i) / Double(segments) < progress
+                Rectangle()
+                    .fill(filled ? color : KodomonColors.border.opacity(0.5))
+                    .frame(height: 4)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: progress)
     }
 }

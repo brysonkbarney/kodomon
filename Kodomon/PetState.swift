@@ -82,6 +82,7 @@ enum NeglectState: String, Codable {
 }
 
 struct PetState: Codable {
+    var petName: String
     var daysAlive: Int
     var activeDays: Int
     var createdAt: Date
@@ -112,6 +113,7 @@ struct PetState: Codable {
     static func initial() -> PetState {
         let now = Date()
         return PetState(
+            petName: "",
             daysAlive: 0,
             activeDays: 0,
             createdAt: now,
