@@ -17,6 +17,14 @@ struct KodomonColors {
 struct PetWidgetView: View {
     @EnvironmentObject var engine: PetEngine
 
+    private var spritePixelSize: CGFloat {
+        switch engine.state.stage {
+        case .tamago: return 4
+        case .kobito: return 4
+        case .kani, .kamisama: return 4
+        }
+    }
+
     private var xpProgress: Double {
         guard let next = engine.state.stage.nextStage else { return 1.0 }
         let current = engine.state.stage.xpThreshold
@@ -66,7 +74,7 @@ struct PetWidgetView: View {
                     if engine.evolutionEvent == nil {
                         PixelSpriteView(
                             stage: engine.state.stage,
-                            pixelSize: 4,
+                            pixelSize: spritePixelSize,
                             evolveProgress: xpProgress,
                             petHue: engine.state.petHue
                         )
