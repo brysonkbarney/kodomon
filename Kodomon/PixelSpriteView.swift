@@ -384,8 +384,42 @@ struct SpriteData {
         [x,x,x,x,x,x,D,D,D,D,x,x,x,x,D,D,D,D,x,x,x,x,x,x],
     ]
 
-    // ── Kamisama (placeholder — same as Kani for now, user said TBD) ──
-    static let kamisama: [[P]] = kani
+    // ── Kamisama — god form: horns, third eye, long body, 6 arms (33 wide) ──
+    static let kamisama: [[P]] = [
+        [x,x,x,x,D,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,D,x,x,x,x],
+        [x,x,x,x,x,D,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,D,x,x,x,x,x],
+        [x,x,x,x,x,D,B,D,x,x,D,D,D,D,D,D,D,D,D,D,D,D,D,x,x,D,B,D,x,x,x,x,x],
+        [x,x,x,x,x,x,D,B,D,D,B,B,B,B,B,B,B,B,B,B,B,B,B,D,D,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,W,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,W,E,W,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,W,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,D,B,B,B,B,E,E,E,B,B,B,B,B,B,B,E,E,E,B,B,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,D,B,B,B,B,E,E,E,B,B,B,B,B,B,B,E,E,E,B,B,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,D,B,B,B,B,E,W,E,B,B,B,B,B,B,B,E,W,E,B,B,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,D,D,D,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [D,B,D,D,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,D,D,B,D,x],
+        [D,B,B,B,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,B,B,B,D,x],
+        [x,D,B,D,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,D,B,D,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [D,B,D,D,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,D,D,B,D,x],
+        [D,B,B,B,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,B,B,B,D,x],
+        [x,D,B,D,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,D,B,D,x,x],
+        [x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x],
+        [D,B,D,D,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,D,D,B,D,x],
+        [D,B,B,B,B,B,B,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,B,B,B,B,B,B,D,x],
+        [x,D,B,D,x,x,x,x,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x,x,D,B,D,x,x],
+        [x,x,x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,D,B,B,B,B,D,D,D,D,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,D,B,B,B,D,D,x,x,x,x,D,D,B,B,B,D,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,x,x,x],
+    ]
 
     static func sprite(for stage: Stage, evolveProgress: Double = 0) -> [[P]] {
         switch stage {
@@ -593,6 +627,28 @@ struct PixelSpriteView: View {
     }
 
     private func animateKamisama() {
-        withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) { bobOffset = -4 }
+        currentFrame = SpriteData.kamisama
+
+        // Slow majestic float
+        withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bobOffset = -6 }
+
+        // Occasional slow look around
+        addTimer(4.0) {
+            // Reuse kani eye frames concept — but kamisama is calm, mostly center
+            let roll = Int.random(in: 0...4)
+            if roll == 0 {
+                // Brief glance then back
+                withAnimation(.easeInOut(duration: 0.3)) { slideOffset = 3 }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    withAnimation(.easeInOut(duration: 0.3)) { slideOffset = 0 }
+                }
+            }
+        }
+
+        // Subtle breathing scale
+        withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
+            scaleX = 1.02
+            scaleY = 1.02
+        }
     }
 }

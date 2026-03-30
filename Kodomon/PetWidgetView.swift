@@ -21,7 +21,8 @@ struct PetWidgetView: View {
         switch engine.state.stage {
         case .tamago: return 4
         case .kobito: return 4
-        case .kani, .kamisama: return 4
+        case .kani: return 4
+        case .kamisama: return 4
         }
     }
 
