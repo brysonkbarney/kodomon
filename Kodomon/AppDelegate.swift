@@ -64,7 +64,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "tortoise.fill", accessibilityDescription: "Kodomon")
+            button.image = NSImage(named: "menubarIcon")
+            button.image?.isTemplate = true
         }
 
         let menu = NSMenu()
