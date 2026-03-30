@@ -3,6 +3,7 @@
 ## What's Built
 
 ### Phase 1 — App Skeleton (DONE)
+
 - NSWindow with borderless, transparent background
 - Menubar icon (tortoise)
 - Dock icon
@@ -10,6 +11,7 @@
 - No title bar, clean floating card
 
 ### Phase 2 — Hooks + Event Watcher (DONE)
+
 - Shell hooks read JSON from stdin (session-start, file-event, session-stop, git-commit)
 - Hooks installed into `~/.claude/settings.json`
 - `ActivityWatcher` monitors `~/.kodomon/events.jsonl` via DispatchSource
@@ -17,6 +19,7 @@
 - Publishes via Combine
 
 ### Phase 3 — Pet Engine (DONE)
+
 - `PetState` — single Codable struct, persisted to `~/.kodomon/state.json`
 - `XPCalculator` — commit tiers, daily cap (900), diminishing returns, streak/mood multipliers
 - `PetEngine` — consumes events, applies XP, manages streaks, decay, evolution checks
@@ -29,6 +32,7 @@
 - Pet naming (prompted on first launch, rename from menubar)
 
 ### Phase 4 — Sprites + UI (DONE)
+
 - Pixel art sprites at ~20px resolution: Tamago (egg), Kobito (blob), Kani (crab)
 - Kamisama placeholder (uses Kani sprite)
 - Random pet hue assigned at birth — eggs stay peach, hatched creatures get unique color
@@ -45,18 +49,21 @@
 - Drop shadow on sprite for contrast against backgrounds
 
 ### Phase 4.5 — Backgrounds (DONE)
+
 - 4 pixel art backgrounds as PNG image assets: Tokyo Night, Sakura, Mount Fuji, Torii Gate
 - Image asset loading system with fallback to code-drawn backgrounds
 - Background switching via Debug menu
 - Backgrounds fill edge-to-edge (no cream gap at top)
 
 ### Phase 5 — Evolution Cutscene (DONE, has a bug)
+
 - Violent shake of old sprite → white flash → new sprite springs in → stage name + sparkles
 - 4-second choreographed sequence
 - Debug menu: Test Evolution button
 - **BUG: cutscene content overflows the card bounds during animation — tried clipShape, masksToBounds, overlay, fixed frame, none worked. Needs investigation.**
 
 ### Dev Tools + Infrastructure (DONE)
+
 - `.gitignore` for Swift/Xcode
 - `.swiftlint.yml` + `.swiftformat` configs
 - SwiftLint, SwiftFormat, xcbeautify installed
@@ -69,16 +76,17 @@
 
 ## XP Balance (Current)
 
-| Stage | XP Needed | Active Days | Streak Required |
-|---|---|---|---|
-| Tamago (egg) | 0 | 0 | — |
-| Kobito (blob) | 3,000 | 5 | 3-day |
-| Kani (crab) | 20,000 | 21 | 7-day |
-| Kamisama (god) | 100,000 | 60 | 14-day |
+| Stage          | XP Needed | Active Days | Streak Required |
+| -------------- | --------- | ----------- | --------------- |
+| Tamago (egg)   | 0         | 0           | —               |
+| Kobito (blob)  | 3,000     | 5           | 3-day           |
+| Kani (crab)    | 20,000    | 21          | 7-day           |
+| Kamisama (god) | 100,000   | 60          | 14-day          |
 
 Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 
 ## Known Bugs
+
 1. **Evolution cutscene overflows card** — the animation (sparkles, text, sprites) visually extends beyond the card's rounded rectangle during the cutscene. Multiple clipping approaches haven't fixed it.
 
 ## What's Left
@@ -86,9 +94,11 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 ### Must Have (v1.0)
 
 #### Bugs
+
 - [ ] **Fix evolution cutscene overflow** — the card visually expands during cutscene. Tried clipShape, masksToBounds, overlay, fixed frame — none worked.
 
 #### Neglect State Visuals (from GDD — none implemented)
+
 - [ ] **Hungry** (2h no activity) — droopy eyes, slow blink, slight desaturation
 - [ ] **Tired** (8h no activity) — yawning pose, grey tint
 - [ ] **Sad** (1 missed day) — slouched, occasional sigh
@@ -97,17 +107,20 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [ ] **Ran away** (14 missed days) — pet gone, empty widget, farewell note 「さようなら…」, XP bar removed
 
 #### Mood Visuals (from GDD — none implemented)
+
 - [ ] **Ecstatic** (80-100) — bouncing, pixel sparkles
 - [ ] **Happy** (60-79) — relaxed wiggle
 - [ ] **Stressed** (20-39) — twitchy, side-eyes
 - [ ] **Miserable** (0-19) — grey, slumped
 
 #### Reactive Animations (from GDD — none implemented)
+
 - [ ] **Commit received** — jump + land reaction when git commit event fires
 - [ ] **XP gain** — tiny pixel numbers float upward (+25 XP)
 - [ ] **De-evolution** — sad animation when stage drops
 
 #### Other Must-Haves
+
 - [x] ~~**Kamisama sprite** — god crab design~~ DONE: horns, third eye, 6 arms, long body
 - [x] ~~**Kani animations**~~ DONE: eyes look around, blink, wave arm, waddle-walk side to side
 - [x] ~~**Blank background as default**~~ DONE
@@ -119,6 +132,7 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [ ] **Menubar icon** — custom pixel crab icon instead of system tortoise
 
 ### Nice to Have (v1.1+)
+
 - [ ] Share card PNG export (Kodomon Wrapped) — SwiftUI ImageRenderer
 - [ ] Settings panel — background picker, quiet hours, theme selection
 - [ ] Sparkle auto-update integration
@@ -131,6 +145,7 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [ ] Pixel speech bubble for events/notifications on the widget
 
 ## File Structure
+
 ```
 kodomon/
   CLAUDE.md                    # Project context for Claude Code
@@ -174,6 +189,7 @@ kodomon/
 ```
 
 ## Git History
+
 - `f00e515` Initial commit
 - `61ce391` Add working Kodomon app — Phases 1-3 complete
 - `6df3246` Rebalance XP, fix hooks, add session tracking and random events
