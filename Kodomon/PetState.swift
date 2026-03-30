@@ -18,27 +18,27 @@ enum Stage: String, Codable, CaseIterable {
     var xpThreshold: Double {
         switch self {
         case .tamago: return 0
-        case .kobito: return 3000
-        case .kani: return 20000
-        case .kamisama: return 100000
+        case .kobito: return 800
+        case .kani: return 5000
+        case .kamisama: return 15000
         }
     }
 
     var requiredActiveDays: Int {
         switch self {
         case .tamago: return 0
-        case .kobito: return 5
-        case .kani: return 21
-        case .kamisama: return 60
+        case .kobito: return 2
+        case .kani: return 10
+        case .kamisama: return 21
         }
     }
 
     var requiredStreak: Int {
         switch self {
         case .tamago: return 0
-        case .kobito: return 3
-        case .kani: return 7
-        case .kamisama: return 14
+        case .kobito: return 2
+        case .kani: return 5
+        case .kamisama: return 10
         }
     }
 
@@ -46,9 +46,9 @@ enum Stage: String, Codable, CaseIterable {
     var deEvolveFloor: Double {
         switch self {
         case .tamago: return 0
-        case .kobito: return 1500
-        case .kani: return 12000
-        case .kamisama: return 70000
+        case .kobito: return 400
+        case .kani: return 3000
+        case .kamisama: return 10000
         }
     }
 

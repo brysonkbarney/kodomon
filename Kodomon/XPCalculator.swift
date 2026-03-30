@@ -1,7 +1,6 @@
 import Foundation
 
 struct XPCalculator {
-    static let dailyCap: Double = 900
 
     /// XP for a git commit based on total lines changed
     static func commitXP(linesAdded: Int, linesRemoved: Int) -> Double {
@@ -57,7 +56,7 @@ struct XPCalculator {
         }
     }
 
-    /// Apply all multipliers and cap
+    /// Apply all multipliers (no daily cap — diminishing returns handle the curve)
     static func applyMultipliers(
         rawXP: Double,
         todaySessionMins: Int,
@@ -69,9 +68,6 @@ struct XPCalculator {
         xp *= diminishingReturns(todaySessionMins: todaySessionMins)
         xp *= streakMultiplier(streak: streak)
         xp *= moodMultiplier(mood: mood)
-
-        // Don't exceed daily cap
-        let remaining = max(0, dailyCap - todayXP)
-        return min(xp, remaining)
+        return xp
     }
 }

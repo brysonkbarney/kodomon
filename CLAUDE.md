@@ -60,9 +60,9 @@ Kodomon/
 
 - **Consistency beats intensity.** Day gates cannot be bypassed. Commits are the primary XP driver, not lines of code.
 - **Lines of code are nearly negligible as XP** — Claude Code writes thousands of lines per session. Raw line count gives ~1 XP per 50 lines. Commits represent intentional decisions.
-- **Daily XP cap: 900.** Diminishing returns after 90 min (60% rate), then 25% after 180 min.
+- **No daily XP cap.** Diminishing returns after 90 min (60% rate), then 25% after 180 min. Heavy coders earn more — day gates prevent rushing.
 - **Streak multiplier:** 1.0x → 1.2x (3d) → 1.5x (7d) → 1.8x (14d) → 2.0x (30+d). Breaks on zero-activity day.
-- **Evolution stages:** Tamago (0 XP) → Kobito (3000 XP, 5 days, 3-day streak) → Kani (20000 XP, 21 days, 7-day streak) → Kamisama (100000 XP, 60 days, 14-day streak).
+- **Evolution stages:** Tamago (0 XP) → Kobito (800 XP, 2 days, 2-day streak) → Kani (5000 XP, 10 days, 5-day streak) → Kamisama (15000 XP, 21 days, 10-day streak).
 - **File write XP:** only unique files per day get +3 XP. Repeated edits to the same file give no XP (just +1 mood). This prevents Claude Code's rapid edits from inflating XP.
 - **Session time XP:** +2 XP per active minute, capped at 120 min/day (240 XP max). Calculated from SessionStart/Stop hook timestamps.
 - **Decay:** miss 1 day = -3% XP. 3 days = -8%/day. 7+ = -15%/day. 14 days = pet runs away (revival mechanic available).

@@ -79,9 +79,9 @@
 | Stage          | XP Needed | Active Days | Streak Required |
 | -------------- | --------- | ----------- | --------------- |
 | Tamago (egg)   | 0         | 0           | —               |
-| Kobito (blob)  | 3,000     | 5           | 3-day           |
-| Kani (crab)    | 20,000    | 21          | 7-day           |
-| Kamisama (god) | 100,000   | 60          | 14-day          |
+| Kobito (blob)  | 800       | 2           | 2-day           |
+| Kani (crab)    | 5,000     | 10          | 5-day           |
+| Kamisama (god) | 15,000    | 21          | 10-day          |
 
 Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 
@@ -124,12 +124,13 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [x] ~~**Kamisama sprite** — god crab design~~ DONE: horns, third eye, 6 arms, long body
 - [x] ~~**Kani animations**~~ DONE: eyes look around, blink, wave arm, waddle-walk side to side
 - [x] ~~**Blank background as default**~~ DONE
+- [x] ~~**Random name generator**~~ DONE: 90 names, pick-from-three UI, reroll, custom input
+- [x] ~~**Welcome flow**~~ DONE: two-page onboarding (welcome → name picker), styled SwiftUI window, loading screen
+- [x] ~~**App icon**~~ DONE: pixel art Kobito face, chunky circle
+- [x] ~~**Menubar icon**~~ DONE: pixel Kobito silhouette template image
 - [ ] **Kamisama animations** — eye tracking, blink, arm wave, float + sparkle particles
-- [ ] **Random name generator** — pick from a list of names on first launch instead of typing
 - [ ] **Notifications** — macOS UserNotifications for hungry, streak warnings, evolution alerts (Japanese text first, English context)
 - [ ] **Install script** — `curl -fsSL https://kodomon.app/install.sh | bash` for distribution
-- [ ] **App icon** — custom pixel art icon for dock and app
-- [ ] **Menubar icon** — custom pixel crab icon instead of system tortoise
 
 ### Nice to Have (v1.1+)
 
