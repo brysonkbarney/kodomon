@@ -136,14 +136,79 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private func promptForName() {
         let alert = NSAlert()
         alert.messageText = "Name your Kodomon"
-        alert.informativeText = "Give your pet a name."
+        alert.informativeText = "Pick a name or type your own."
         alert.addButton(withTitle: "OK")
         alert.alertStyle = .informational
 
-        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
-        input.stringValue = engine.state.petName
-        input.placeholderString = "e.g. Kuro, Mochi, Pixel..."
-        alert.accessoryView = input
+        // Container view
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 120))
+
+        // Three random name buttons
+        var currentOptions = NameGenerator.randomThree()
+        let buttonStack = NSStackView(frame: NSRect(x: 0, y: 80, width: 260, height: 30))
+        buttonStack.orientation = .horizontal
+        buttonStack.spacing = 8
+        buttonStack.distribution = .fillEqually
+
+        // Text input
+        let input = NSTextField(frame: NSRect(x: 0, y: 45, width: 260, height: 24))
+        input.stringValue = engine.state.petName.isEmpty ? currentOptions[0] : engine.state.petName
+        input.placeholderString = "Type a name..."
+
+        let nameButtons: [NSButton] = (0..<3).map { i in
+            let btn = NSButton(title: currentOptions[i], target: nil, action: nil)
+            btn.bezelStyle = .rounded
+            btn.setButtonType(.momentaryPushIn)
+            btn.tag = i
+            btn.target = nil
+            btn.action = nil
+            return btn
+        }
+
+        // Click handler — set input text to button title
+        class NameButtonHandler: NSObject {
+            let input: NSTextField
+            init(input: NSTextField) { self.input = input }
+            @objc func clicked(_ sender: NSButton) { input.stringValue = sender.title }
+        }
+        let handler = NameButtonHandler(input: input)
+        for btn in nameButtons {
+            btn.target = handler
+            btn.action = #selector(NameButtonHandler.clicked(_:))
+            buttonStack.addArrangedSubview(btn)
+        }
+
+        // Reroll button
+        class RerollHandler: NSObject {
+            let buttons: [NSButton]
+            let input: NSTextField
+            var excluded: [String] = []
+            init(buttons: [NSButton], input: NSTextField) {
+                self.buttons = buttons
+                self.input = input
+            }
+            @objc func reroll(_ sender: NSButton) {
+                excluded.append(contentsOf: buttons.map { $0.title })
+                let newNames = NameGenerator.reroll(excluding: excluded)
+                for (i, btn) in buttons.enumerated() {
+                    if i < newNames.count { btn.title = newNames[i] }
+                }
+                input.stringValue = newNames[0]
+            }
+        }
+        let rerollHandler = RerollHandler(buttons: nameButtons, input: input)
+        let rerollBtn = NSButton(title: "↻ More names", target: rerollHandler, action: #selector(RerollHandler.reroll(_:)))
+        rerollBtn.bezelStyle = .rounded
+        rerollBtn.frame = NSRect(x: 70, y: 10, width: 120, height: 24)
+
+        container.addSubview(buttonStack)
+        container.addSubview(input)
+        container.addSubview(rerollBtn)
+        alert.accessoryView = container
+
+        // Keep handlers alive
+        objc_setAssociatedObject(alert, "handler", handler, .OBJC_ASSOCIATION_RETAIN)
+        objc_setAssociatedObject(alert, "rerollHandler", rerollHandler, .OBJC_ASSOCIATION_RETAIN)
 
         alert.runModal()
 
