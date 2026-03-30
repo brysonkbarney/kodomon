@@ -14,15 +14,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine = PetEngine(watcher: watcher)
         watcher.startWatching()
 
-        setupPanel()
         setupMenuBar()
         setupSleepWakeObservers()
 
-        // Prompt for name on first launch
         if engine.state.petName.isEmpty {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            // First launch — show welcome, don't show game card yet
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.promptForName()
             }
+        } else {
+            // Returning user — show game card directly
+            setupPanel()
         }
     }
 
@@ -125,98 +127,78 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine.handleWake()
     }
 
-    @objc private func showPanel() {
-        window.orderFront(nil)
+    private func showLoadingScreen() {
+        let loadingView = LoadingView()
+        let w = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 240, height: 300),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        w.backgroundColor = .clear
+        w.isOpaque = false
+        w.hasShadow = true
+        w.level = .floating
+        w.center()
+        let hostingView = NSHostingView(rootView: loadingView)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        w.contentView = hostingView
+        w.makeKeyAndOrderFront(nil)
+
+        // After 1.5 seconds, close loading and show game card
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            w.orderOut(nil)
+            self?.setupPanel()
+        }
     }
+
+    @objc private func showPanel() {
+        if window != nil {
+            window.orderFront(nil)
+        } else {
+            setupPanel()
+        }
+    }
+
+    var welcomeWindow: NSWindow?
 
     @objc private func renamePet() {
         promptForName()
     }
 
     private func promptForName() {
-        let alert = NSAlert()
-        alert.messageText = "Name your Kodomon"
-        alert.informativeText = "Pick a name or type your own."
-        alert.addButton(withTitle: "OK")
-        alert.alertStyle = .informational
-
-        // Container view
-        let container = NSView(frame: NSRect(x: 0, y: 0, width: 260, height: 120))
-
-        // Three random name buttons
-        var currentOptions = NameGenerator.randomThree()
-        let buttonStack = NSStackView(frame: NSRect(x: 0, y: 80, width: 260, height: 30))
-        buttonStack.orientation = .horizontal
-        buttonStack.spacing = 8
-        buttonStack.distribution = .fillEqually
-
-        // Text input
-        let input = NSTextField(frame: NSRect(x: 0, y: 45, width: 260, height: 24))
-        input.stringValue = engine.state.petName.isEmpty ? currentOptions[0] : engine.state.petName
-        input.placeholderString = "Type a name..."
-
-        let nameButtons: [NSButton] = (0..<3).map { i in
-            let btn = NSButton(title: currentOptions[i], target: nil, action: nil)
-            btn.bezelStyle = .rounded
-            btn.setButtonType(.momentaryPushIn)
-            btn.tag = i
-            btn.target = nil
-            btn.action = nil
-            return btn
-        }
-
-        // Click handler — set input text to button title
-        class NameButtonHandler: NSObject {
-            let input: NSTextField
-            init(input: NSTextField) { self.input = input }
-            @objc func clicked(_ sender: NSButton) { input.stringValue = sender.title }
-        }
-        let handler = NameButtonHandler(input: input)
-        for btn in nameButtons {
-            btn.target = handler
-            btn.action = #selector(NameButtonHandler.clicked(_:))
-            buttonStack.addArrangedSubview(btn)
-        }
-
-        // Reroll button
-        class RerollHandler: NSObject {
-            let buttons: [NSButton]
-            let input: NSTextField
-            var excluded: [String] = []
-            init(buttons: [NSButton], input: NSTextField) {
-                self.buttons = buttons
-                self.input = input
-            }
-            @objc func reroll(_ sender: NSButton) {
-                excluded.append(contentsOf: buttons.map { $0.title })
-                let newNames = NameGenerator.reroll(excluding: excluded)
-                for (i, btn) in buttons.enumerated() {
-                    if i < newNames.count { btn.title = newNames[i] }
-                }
-                input.stringValue = newNames[0]
+        let welcomeView = WelcomeView { [weak self] name in
+            guard let self = self else { return }
+            self.engine.state.petName = name
+            StateStore.save(self.engine.state)
+            // Show loading screen, then transition to game card
+            DispatchQueue.main.async {
+                self.welcomeWindow?.orderOut(nil)
+                self.welcomeWindow = nil
+                self.showLoadingScreen()
             }
         }
-        let rerollHandler = RerollHandler(buttons: nameButtons, input: input)
-        let rerollBtn = NSButton(title: "↻ More names", target: rerollHandler, action: #selector(RerollHandler.reroll(_:)))
-        rerollBtn.bezelStyle = .rounded
-        rerollBtn.frame = NSRect(x: 70, y: 10, width: 120, height: 24)
 
-        container.addSubview(buttonStack)
-        container.addSubview(input)
-        container.addSubview(rerollBtn)
-        alert.accessoryView = container
+        let w = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 440),
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        w.backgroundColor = .clear
+        w.isOpaque = false
+        w.hasShadow = true
+        w.level = .floating
+        w.center()
 
-        // Keep handlers alive
-        objc_setAssociatedObject(alert, "handler", handler, .OBJC_ASSOCIATION_RETAIN)
-        objc_setAssociatedObject(alert, "rerollHandler", rerollHandler, .OBJC_ASSOCIATION_RETAIN)
+        let hostingView = NSHostingView(rootView: welcomeView)
+        hostingView.wantsLayer = true
+        hostingView.layer?.backgroundColor = NSColor.clear.cgColor
+        w.contentView = hostingView
+        w.makeKeyAndOrderFront(nil)
 
-        alert.runModal()
-
-        let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !name.isEmpty {
-            engine.state.petName = name
-            StateStore.save(engine.state)
-        }
+        welcomeWindow = w
     }
 
     @objc private func setDebugStage(_ sender: NSMenuItem) {
@@ -264,8 +246,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         watcher.stopWatching()
-        let frame = window.frame
-        UserDefaults.standard.set(frame.origin.x, forKey: "panelX")
-        UserDefaults.standard.set(frame.origin.y, forKey: "panelY")
+        if let w = window {
+            let frame = w.frame
+            UserDefaults.standard.set(frame.origin.x, forKey: "panelX")
+            UserDefaults.standard.set(frame.origin.y, forKey: "panelY")
+        }
     }
 }
