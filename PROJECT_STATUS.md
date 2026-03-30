@@ -108,12 +108,15 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [ ] **De-evolution** — sad animation when stage drops
 
 #### Other Must-Haves
-- [ ] **Kamisama sprite** — god crab design (currently placeholder, same as Kani)
+- [x] ~~**Kamisama sprite** — god crab design~~ DONE: horns, third eye, 6 arms, long body
+- [x] ~~**Kani animations**~~ DONE: eyes look around, blink, wave arm, waddle-walk side to side
+- [x] ~~**Blank background as default**~~ DONE
+- [ ] **Kamisama animations** — eye tracking, blink, arm wave, float + sparkle particles
+- [ ] **Random name generator** — pick from a list of names on first launch instead of typing
 - [ ] **Notifications** — macOS UserNotifications for hungry, streak warnings, evolution alerts (Japanese text first, English context)
 - [ ] **Install script** — `curl -fsSL https://kodomon.app/install.sh | bash` for distribution
-- [ ] **Kani animations** — currently only waddles, could do more (claw snaps, looking around)
-- [ ] **App icon** — currently using default macOS app icon
-- [ ] **Blank background as default** — done (set to "none")
+- [ ] **App icon** — custom pixel art icon for dock and app
+- [ ] **Menubar icon** — custom pixel crab icon instead of system tortoise
 
 ### Nice to Have (v1.1+)
 - [ ] Share card PNG export (Kodomon Wrapped) — SwiftUI ImageRenderer
