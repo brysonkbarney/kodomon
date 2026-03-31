@@ -36,15 +36,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupPanel() {
-        window = ClickThroughWindow(
+        window = NSWindow(
             contentRect: NSRect(x: 200, y: 200, width: 240, height: 380),
-            styleMask: [.borderless],
+            styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.level = .normal
         window.collectionBehavior = [.managed]
         window.isMovableByWindowBackground = true
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.standardWindowButton(.closeButton)?.isHidden = true
+        window.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        window.standardWindowButton(.zoomButton)?.isHidden = true
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = true
@@ -61,7 +66,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.openMenuPanel()
             })
             .environmentObject(engine!)
-        let hostingView = ClickThroughHostingView(rootView: contentView)
+        let hostingView = NSHostingView(rootView: contentView)
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         hostingView.layer?.isOpaque = false
