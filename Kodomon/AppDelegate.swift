@@ -1,6 +1,7 @@
 import AppKit
 import SwiftUI
 import Combine
+import UserNotifications
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!
@@ -13,6 +14,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         engine = PetEngine(watcher: watcher)
         watcher.startWatching()
+
+        // Request notification permission
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            NSLog("[Kodomon] Notifications permission: %@", granted ? "granted" : "denied")
+        }
+        _ = NotificationManager.shared
 
         setupMenuBar()
         setupSleepWakeObservers()
@@ -29,7 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupPanel() {
-        window = NSWindow(
+        window = ClickThroughWindow(
             contentRect: NSRect(x: 200, y: 200, width: 240, height: 380),
             styleMask: [.borderless],
             backing: .buffered,
@@ -50,9 +57,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             window.setFrameOrigin(NSPoint(x: x, y: y))
         }
 
-        let contentView = PetWidgetView()
+        let contentView = PetWidgetView(onMenuTap: { [weak self] in
+                self?.openMenuPanel()
+            })
             .environmentObject(engine!)
-        let hostingView = NSHostingView(rootView: contentView)
+        let hostingView = ClickThroughHostingView(rootView: contentView)
         hostingView.wantsLayer = true
         hostingView.layer?.backgroundColor = NSColor.clear.cgColor
         hostingView.layer?.isOpaque = false
@@ -101,6 +110,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Add 100 XP", action: #selector(addDebugXP), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem(title: "Test Evolution", action: #selector(testEvolution), keyEquivalent: ""))
+        debugMenu.addItem(NSMenuItem.separator())
+
+        // Neglect state testing
+        let neglectMenu = NSMenu()
+        for state in [NeglectState.none, .hungry, .tired, .sad, .sick, .critical, .ranAway] {
+            let item = NSMenuItem(title: "Neglect: \(state.rawValue)", action: #selector(setDebugNeglect(_:)), keyEquivalent: "")
+            item.representedObject = state.rawValue
+            neglectMenu.addItem(item)
+        }
+        let neglectItem = NSMenuItem(title: "Neglect States", action: nil, keyEquivalent: "")
+        neglectItem.submenu = neglectMenu
+        debugMenu.addItem(neglectItem)
+
+        // Notification testing
+        let notifMenu = NSMenu()
+        notifMenu.addItem(NSMenuItem(title: "Test: Hungry", action: #selector(testNotifHungry), keyEquivalent: ""))
+        notifMenu.addItem(NSMenuItem(title: "Test: Tired", action: #selector(testNotifTired), keyEquivalent: ""))
+        notifMenu.addItem(NSMenuItem(title: "Test: Streak Warning", action: #selector(testNotifStreak), keyEquivalent: ""))
+        notifMenu.addItem(NSMenuItem(title: "Test: Evolution Ready", action: #selector(testNotifEvolution), keyEquivalent: ""))
+        notifMenu.addItem(NSMenuItem(title: "Test: Ran Away", action: #selector(testNotifRanAway), keyEquivalent: ""))
+        let notifItem = NSMenuItem(title: "Notifications", action: nil, keyEquivalent: "")
+        notifItem.submenu = notifMenu
+        debugMenu.addItem(notifItem)
+
+        debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Reset State", action: #selector(resetDebugState), keyEquivalent: ""))
 
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
@@ -125,6 +159,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func handleWake() {
         NSLog("[Kodomon] System woke — checking missed midnights and decay")
         engine.handleWake()
+    }
+
+    private func openMenuPanel() {
+        if let existing = menuWindow {
+            existing.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        let isShowing = Binding<Bool>(
+            get: { true },
+            set: { [weak self] val in
+                if !val {
+                    self?.menuWindow?.close()
+                    self?.menuWindow = nil
+                }
+            }
+        )
+
+        let menuView = MenuPanelView(engine: engine, isShowing: isShowing)
+
+        let w = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 420),
+            styleMask: [.titled, .closable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        w.title = "Kodomon"
+        w.titlebarAppearsTransparent = true
+        w.backgroundColor = NSColor(red: 0.96, green: 0.94, blue: 0.88, alpha: 1)
+        w.center()
+
+        let hostingView = NSHostingView(rootView: menuView)
+        w.contentView = hostingView
+        w.makeKeyAndOrderFront(nil)
+
+        menuWindow = w
     }
 
     private func showLoadingScreen() {
@@ -162,6 +232,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     var welcomeWindow: NSWindow?
+    var menuWindow: NSWindow?
 
     @objc private func renamePet() {
         promptForName()
@@ -239,6 +310,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine.evolutionEvent = (from: from, to: to)
     }
 
+    @objc private func setDebugNeglect(_ sender: NSMenuItem) {
+        guard let rawValue = sender.representedObject as? String,
+              let state = NeglectState(rawValue: rawValue) else { return }
+        engine.state.neglectState = state
+        StateStore.save(engine.state)
+    }
+
+    @objc private func testNotifHungry() {
+        NotificationManager.shared.sendHungryNotification(petName: engine.state.petName)
+    }
+
+    @objc private func testNotifTired() {
+        NotificationManager.shared.sendTiredNotification(petName: engine.state.petName)
+    }
+
+    @objc private func testNotifStreak() {
+        // Fire immediately for testing (normally scheduled for 11:30pm)
+        NotificationManager.shared.sendStreakWarningNow(petName: engine.state.petName)
+    }
+
+    @objc private func testNotifEvolution() {
+        NotificationManager.shared.sendEvolutionReadyNotification(petName: engine.state.petName)
+    }
+
+    @objc private func testNotifRanAway() {
+        NotificationManager.shared.sendPetRanAwayNotification(petName: engine.state.petName)
+    }
+
     @objc private func resetDebugState() {
         engine.state = PetState.initial()
         StateStore.save(engine.state)
@@ -253,3 +352,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 }
+
+// NSWindow subclass that accepts first mouse click without needing to focus first
+class ClickThroughWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+}
+
+class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+

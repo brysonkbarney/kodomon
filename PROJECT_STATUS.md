@@ -83,7 +83,7 @@
 | Kani (crab)    | 5,000     | 10          | 5-day           |
 | Kamisama (god) | 15,000    | 21          | 10-day          |
 
-Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
+No daily cap. Diminishing returns after 90 min. Typical day (~2hr coding): 300-500 XP.
 
 ## Known Bugs
 
@@ -97,14 +97,14 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 
 - [ ] **Fix evolution cutscene overflow** — the card visually expands during cutscene. Tried clipShape, masksToBounds, overlay, fixed frame — none worked.
 
-#### Neglect State Visuals (from GDD — none implemented)
+#### Neglect State Visuals
 
-- [ ] **Hungry** (2h no activity) — droopy eyes, slow blink, slight desaturation
-- [ ] **Tired** (8h no activity) — yawning pose, grey tint
-- [ ] **Sad** (1 missed day) — slouched, occasional sigh
-- [ ] **Sick** (3 missed days) — grey/desaturated, shivering, X eyes, pixel sweat drops
-- [ ] **Critical** (7+ missed days) — nearly greyscale, flat on ground, barely twitching
-- [ ] **Ran away** (14 missed days) — pet gone, empty widget, farewell note 「さようなら…」, XP bar removed
+- [x] ~~**Desaturation system**~~ DONE: sprite desaturates progressively (hungry→tired→sad→sick→critical)
+- [x] ~~**Ran away**~~ DONE: pet gone, farewell text 「さようなら…」 (now 7 days instead of 14)
+- [ ] **Hungry** — droopy eyes sprite frame
+- [ ] **Tired** — yawning sprite frame
+- [ ] **Sick** — X eyes, shivering sprite frame
+- [ ] **Critical** — flat on ground sprite frame
 
 #### Mood Visuals (from GDD — none implemented)
 
@@ -115,8 +115,7 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 
 #### Reactive Animations (from GDD — none implemented)
 
-- [ ] **Commit received** — jump + land reaction when git commit event fires
-- [ ] **XP gain** — tiny pixel numbers float upward (+25 XP)
+- [x] ~~**XP gain**~~ DONE: "+XP" floats upward when XP earned
 - [ ] **De-evolution** — sad animation when stage drops
 
 #### Other Must-Haves
@@ -128,17 +127,26 @@ Daily cap: 900 XP. Typical day (~2hr coding): 300-500 XP.
 - [x] ~~**Welcome flow**~~ DONE: two-page onboarding (welcome → name picker), styled SwiftUI window, loading screen
 - [x] ~~**App icon**~~ DONE: pixel art Kobito face, chunky circle
 - [x] ~~**Menubar icon**~~ DONE: pixel Kobito silhouette template image
+- [x] ~~**Notifications**~~ DONE: hungry, tired, streak warning (11:30pm), evolution ready, ran away. Pet name + Japanese text.
+- [x] ~~**Install script**~~ DONE: `scripts/install.sh` — downloads DMG, installs Claude Code hooks
+- [x] ~~**Welcome flow**~~ DONE: 3 pages (welcome → how it works → name picker), loading screen
+- [x] ~~**Menu panel**~~ DONE: separate window with Stats/Style/Info tabs, XP bar, background picker
 - [ ] **Kamisama animations** — eye tracking, blink, arm wave, float + sparkle particles
-- [ ] **Notifications** — macOS UserNotifications for hungry, streak warnings, evolution alerts (Japanese text first, English context)
-- [ ] **Install script** — `curl -fsSL https://kodomon.app/install.sh | bash` for distribution
+
+#### Unlockables
+
+- [x] ~~**Unlock system data model**~~ DONE: backgrounds + accessories with XP thresholds
+- [x] ~~**Background picker**~~ DONE: in Style tab, locked items show XP required
+- [ ] **Accessories (hats)** — pixel art hats/items rendered on top of sprite
+- [ ] **Accessory picker** — UI to equip/unequip earned accessories
 
 ### Nice to Have (v1.1+)
 
 - [ ] Share card PNG export (Kodomon Wrapped) — SwiftUI ImageRenderer
-- [ ] Settings panel — background picker, quiet hours, theme selection
+- [ ] Settings panel — quiet hours, theme selection
 - [ ] Sparkle auto-update integration
 - [ ] More backgrounds (Terminal Green, Cyberpunk City, Tatami Room, Deep Sea)
-- [ ] Accessories/unlockables system (hats, sunglasses, etc.)
+- [ ] More accessories (sunglasses, capes, weapons, etc.)
 - [ ] Achievement badges
 - [ ] Leaderboard (opt-in, ranked by days alive)
 - [ ] Revival mechanic (30 min coding to bring back ran-away pet)

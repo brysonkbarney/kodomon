@@ -18,6 +18,9 @@ struct WelcomeView: View {
             if page == 0 {
                 WelcomePage { page = 1 }
                     .transition(.opacity)
+            } else if page == 1 {
+                HowItWorksPage { page = 2 }
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
             } else {
                 NamePage(onConfirm: onConfirm)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
@@ -96,7 +99,113 @@ struct WelcomePage: View {
     }
 }
 
-// MARK: - Page 2: Name picker
+// MARK: - Page 2: How It Works
+
+struct HowItWorksPage: View {
+    let onNext: () -> Void
+    @State private var opacity: Double = 0
+
+    private let bullets: [(icon: String, text: String)] = [
+        ("▲", "Code with Claude to earn XP and streaks"),
+        ("★", "Help your Kodomon evolve"),
+        ("◆", "Work together to unlock new rewards"),
+        ("✦", "Stop coding and your pet gets sad"),
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 24)
+
+            Text("How It Works")
+                .font(.system(size: 18, weight: .bold, design: .monospaced))
+                .foregroundColor(dark)
+
+            Spacer().frame(height: 24)
+
+            VStack(alignment: .leading, spacing: 14) {
+                ForEach(0..<bullets.count, id: \.self) { i in
+                    HStack(alignment: .top, spacing: 10) {
+                        Text(bullets[i].icon)
+                            .font(.system(size: 12))
+                            .foregroundColor(red)
+                            .frame(width: 16)
+                        Text(bullets[i].text)
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundColor(dark)
+                    }
+                }
+            }
+            .padding(.horizontal, 30)
+
+            Spacer().frame(height: 16)
+
+            // Evolution preview — silhouettes
+            HStack(spacing: 14) {
+                VStack(spacing: 4) {
+                    PixelSpriteView(stage: .tamago, pixelSize: 2, isStatic: true)
+                    Text("Egg")
+                        .font(.system(size: 8, weight: .medium, design: .monospaced))
+                        .foregroundColor(grey)
+                }
+                Text("→").foregroundColor(grey)
+                VStack(spacing: 4) {
+                    PixelSpriteView(stage: .kobito, pixelSize: 2, isStatic: true)
+                        .colorMultiply(.black).opacity(0.3)
+                    Text("???")
+                        .font(.system(size: 8, weight: .medium, design: .monospaced))
+                        .foregroundColor(grey)
+                }
+                Text("→").foregroundColor(grey)
+                VStack(spacing: 4) {
+                    PixelSpriteView(stage: .kani, pixelSize: 2, isStatic: true)
+                        .colorMultiply(.black).opacity(0.3)
+                    Text("???")
+                        .font(.system(size: 8, weight: .medium, design: .monospaced))
+                        .foregroundColor(grey)
+                }
+                Text("→").foregroundColor(grey)
+                VStack(spacing: 4) {
+                    PixelSpriteView(stage: .kamisama, pixelSize: 1.5, isStatic: true)
+                        .colorMultiply(.black).opacity(0.3)
+                    Text("???")
+                        .font(.system(size: 8, weight: .medium, design: .monospaced))
+                        .foregroundColor(grey)
+                }
+            }
+
+            Spacer()
+
+            Text("Tap ≡ on the card anytime for stats and tips")
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundColor(grey)
+                .multilineTextAlignment(.center)
+
+            Spacer().frame(height: 8)
+
+            Button(action: onNext) {
+                Text("Got it!")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 50)
+                    .padding(.vertical, 10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(red)
+                    )
+            }
+            .buttonStyle(.plain)
+
+            Spacer().frame(height: 24)
+        }
+        .padding(.horizontal, 16)
+        .opacity(opacity)
+        .onAppear {
+            withAnimation(.easeOut(duration: 0.4)) { opacity = 1 }
+        }
+    }
+}
+
+// MARK: - Page 3: Name picker
 
 struct NamePage: View {
     @State private var options: [String] = NameGenerator.randomThree()

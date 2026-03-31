@@ -16,6 +16,31 @@ struct KodomonColors {
 
 struct PetWidgetView: View {
     @EnvironmentObject var engine: PetEngine
+    var onMenuTap: (() -> Void)?
+    @State private var showXPPopup: Bool = false
+    @State private var xpPopupOffset: CGFloat = 0
+    @State private var xpPopupOpacity: Double = 0
+    @State private var lastXP: Double = 0
+
+    private var neglectSaturation: Double {
+        switch engine.state.neglectState {
+        case .none: return 1.0
+        case .hungry: return 0.85
+        case .tired: return 0.6
+        case .sad: return 0.5
+        case .sick: return 0.3
+        case .critical: return 0.1
+        case .ranAway: return 0.0
+        }
+    }
+
+    private var neglectOpacity: Double {
+        switch engine.state.neglectState {
+        case .critical: return 0.7
+        case .sick: return 0.8
+        default: return 1.0
+        }
+    }
 
     private var spritePixelSize: CGFloat {
         switch engine.state.stage {
@@ -73,15 +98,39 @@ struct PetWidgetView: View {
 
                     // Pet sprite — hidden during evolution cutscene
                     if engine.evolutionEvent == nil {
-                        PixelSpriteView(
-                            stage: engine.state.stage,
-                            pixelSize: spritePixelSize,
-                            evolveProgress: xpProgress,
-                            petHue: engine.state.petHue
-                        )
-                        .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
-                        .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
-                        .padding(.bottom, 4)
+                        if engine.state.neglectState == .ranAway {
+                            // Empty — pet is gone
+                            VStack(spacing: 8) {
+                                Text("「さようなら…」")
+                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary)
+                                Text("Kodomon has left.")
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                            }
+                        } else {
+                            PixelSpriteView(
+                                stage: engine.state.stage,
+                                pixelSize: spritePixelSize,
+                                evolveProgress: xpProgress,
+                                petHue: engine.state.petHue
+                            )
+                            .saturation(neglectSaturation)
+                            .opacity(neglectOpacity)
+                            .shadow(color: .black.opacity(0.5), radius: 3, x: 0, y: 2)
+                            .shadow(color: .black.opacity(0.3), radius: 8, x: 0, y: 0)
+                            .padding(.bottom, 4)
+                            .overlay(alignment: .top) {
+                                // XP popup
+                                if showXPPopup {
+                                    Text("+XP")
+                                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                        .foregroundColor(KodomonColors.teal)
+                                        .offset(y: xpPopupOffset)
+                                        .opacity(xpPopupOpacity)
+                                }
+                            }
+                        }
                     }
                 }
                 .frame(width: 240, height: 240)
@@ -149,9 +198,12 @@ struct PetWidgetView: View {
                                     .foregroundColor(KodomonColors.textSecondary)
                             }
                             Spacer()
-                            Text("Day \(engine.state.daysAlive)")
-                                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                                .foregroundColor(KodomonColors.textSecondary)
+                            Button(action: { onMenuTap?() }) {
+                                Text("≡")
+                                    .font(.system(size: 16, weight: .bold, design: .monospaced))
+                                    .foregroundColor(KodomonColors.textSecondary)
+                            }
+                            .buttonStyle(.plain)
                         }
 
                         // Active event
@@ -195,6 +247,29 @@ struct PetWidgetView: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+        .onChange(of: engine.state.totalXP) {
+            if engine.state.totalXP > lastXP && lastXP > 0 {
+                triggerXPPopup()
+            }
+            lastXP = engine.state.totalXP
+        }
+        .onAppear { lastXP = engine.state.totalXP }
+    }
+
+    private func triggerXPPopup() {
+        showXPPopup = true
+        xpPopupOffset = 0
+        xpPopupOpacity = 1.0
+
+        withAnimation(.easeOut(duration: 0.8)) {
+            xpPopupOffset = -20
+        }
+        withAnimation(.easeIn(duration: 0.4).delay(0.5)) {
+            xpPopupOpacity = 0
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            showXPPopup = false
+        }
     }
 }
 

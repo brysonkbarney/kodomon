@@ -175,6 +175,7 @@ class PetEngine: ObservableObject {
     }
 
     private func markActive() {
+        NotificationManager.shared.cancelStreakWarning()
         state.lastActiveDate = Date()
     }
 
@@ -267,6 +268,11 @@ class PetEngine: ObservableObject {
 
         state.lastMidnightReset = Calendar.current.startOfDay(for: Date())
 
+        // Schedule streak warning if applicable
+        if state.currentStreak >= 3 {
+            NotificationManager.shared.scheduleStreakWarning(currentStreak: state.currentStreak, petName: state.petName)
+        }
+
         // Clear yesterday's event, roll for today
         state.activeEvent = nil
         state.activeEventExpiry = nil
@@ -307,11 +313,23 @@ class PetEngine: ObservableObject {
     private func updateNeglectState() {
         let elapsed = Date().timeIntervalSince(state.lastActiveDate)
         let hours = elapsed / 3600
+        let oldState = state.neglectState
 
         if hours >= 2 && hours < 8 {
             state.neglectState = .hungry
         } else if hours >= 8 {
             state.neglectState = .tired
+        }
+
+        // Send notifications on state transitions
+        if state.neglectState != oldState {
+            switch state.neglectState {
+            case .hungry:
+                NotificationManager.shared.sendHungryNotification(petName: state.petName)
+            case .tired:
+                NotificationManager.shared.sendTiredNotification(petName: state.petName)
+            default: break
+            }
         }
 
         let hour = Calendar.current.component(.hour, from: Date())
@@ -332,17 +350,18 @@ class PetEngine: ObservableObject {
             state.totalXP *= 0.97
             state.neglectState = .sad
             addMood(-20)
-        case 2...6:
+        case 2...4:
             state.totalXP *= 0.92
             state.neglectState = .sick
             addMood(-25)
-        case 7...13:
+        case 5...6:
             state.totalXP *= 0.85
             state.neglectState = .critical
             addMood(-30)
-        case 14...:
+        case 7...:
             state.neglectState = .ranAway
             state.mood = 0
+            NotificationManager.shared.sendPetRanAwayNotification(petName: state.petName)
         default:
             break
         }

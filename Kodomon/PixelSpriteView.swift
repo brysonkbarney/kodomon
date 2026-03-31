@@ -441,6 +441,7 @@ struct PixelSpriteView: View {
     let pixelSize: CGFloat
     let evolveProgress: Double
     let petHue: Double
+    let isStatic: Bool
 
     @State private var wiggleAngle: Double = 0
     @State private var bobOffset: CGFloat = 0
@@ -450,11 +451,12 @@ struct PixelSpriteView: View {
     @State private var currentFrame: [[P]]? = nil
     @State private var animationTimers: [Timer] = []
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07) {
+    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false) {
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
         self.petHue = petHue
+        self.isStatic = isStatic
     }
 
     var body: some View {
@@ -486,9 +488,9 @@ struct PixelSpriteView: View {
         .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
         .rotationEffect(.degrees(wiggleAngle))
         .offset(x: slideOffset, y: bobOffset)
-        .onAppear { startAnimations() }
-        .onChange(of: evolveProgress) { startAnimations() }
-        .onChange(of: stage) { startAnimations() }
+        .onAppear { if !isStatic { startAnimations() } }
+        .onChange(of: evolveProgress) { if !isStatic { startAnimations() } }
+        .onChange(of: stage) { if !isStatic { startAnimations() } }
     }
 
     private func startAnimations() {

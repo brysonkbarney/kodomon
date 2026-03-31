@@ -1,0 +1,316 @@
+import SwiftUI
+
+struct MenuPanelView: View {
+    @ObservedObject var engine: PetEngine
+    @Binding var isShowing: Bool
+    @State private var tab: MenuTab = .stats
+
+    enum MenuTab: String, CaseIterable {
+        case stats = "Stats"
+        case customize = "Style"
+        case info = "Info"
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Tab bar — full area clickable
+            HStack(spacing: 0) {
+                ForEach(MenuTab.allCases, id: \.self) { t in
+                    Text(t.rawValue)
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .foregroundColor(tab == t ? .white : KodomonColors.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 32)
+                        .background(tab == t ? KodomonColors.accent : Color.clear)
+                        .contentShape(Rectangle())
+                        .onTapGesture { tab = t }
+                }
+            }
+            .background(KodomonColors.border.opacity(0.3))
+            .clipShape(RoundedRectangle(cornerRadius: 6))
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            // Content
+            ScrollView {
+                switch tab {
+                case .stats:
+                    StatsTab(engine: engine)
+                case .customize:
+                    CustomizeTab(engine: engine)
+                case .info:
+                    InfoTab()
+                }
+            }
+            .padding(.top, 8)
+        }
+    }
+}
+
+// MARK: - Stats Tab
+
+struct StatsTab: View {
+    @ObservedObject var engine: PetEngine
+
+    private var xpProgress: Double {
+        guard let next = engine.state.stage.nextStage else { return 1.0 }
+        let current = engine.state.stage.xpThreshold
+        let needed = next.xpThreshold - current
+        let progress = (engine.state.totalXP - current) / needed
+        return min(max(progress, 0), 1.0)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Pet name + stage
+            HStack {
+                Text(engine.state.petName.isEmpty ? "Kodomon" : engine.state.petName)
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.accent)
+                Spacer()
+                Text(engine.state.stage.displayName)
+                    .font(.system(size: 10, weight: .medium, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+            }
+
+            // XP bar
+            VStack(spacing: 4) {
+                PixelXPBar(
+                    progress: xpProgress,
+                    color: KodomonColors.purple
+                )
+                HStack {
+                    Text("\(Int(engine.state.totalXP)) XP")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textPrimary)
+                    Spacer()
+                    if let next = engine.state.stage.nextStage {
+                        Text("\(Int(next.xpThreshold)) to \(next.displayName)")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                    } else {
+                        Text("MAX")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(KodomonColors.purple)
+                    }
+                }
+            }
+
+            Divider()
+
+            statRow("Days Alive", "\(engine.state.daysAlive)")
+            statRow("Code Streak", "\(engine.state.currentStreak)d")
+            statRow("Best Streak", "\(engine.state.longestStreak)d")
+            statRow("Mood", "\(Int(engine.state.mood))/100")
+
+            Divider()
+
+            Text("Mood affects XP rate")
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+
+            VStack(alignment: .leading, spacing: 3) {
+                moodRow("80-100", "1.3x XP", "Ecstatic")
+                moodRow("60-79", "1.15x XP", "Happy")
+                moodRow("40-59", "1.0x XP", "Neutral")
+                moodRow("20-39", "0.85x XP", "Stressed")
+                moodRow("0-19", "0.6x XP", "Miserable")
+            }
+
+            if let event = engine.state.activeEvent {
+                Divider()
+                HStack {
+                    Text("Active Event")
+                        .font(.system(size: 9, weight: .medium, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+                    Spacer()
+                    Text(event.displayName)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.accent)
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+
+    private func statRow(_ label: String, _ value: String) -> some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+            Spacer()
+            Text(value)
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+        }
+    }
+
+    private func moodRow(_ range: String, _ multiplier: String, _ label: String) -> some View {
+        HStack {
+            Text(range)
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+                .frame(width: 40, alignment: .leading)
+            Text(multiplier)
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+                .frame(width: 50, alignment: .leading)
+            Text(label)
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+        }
+    }
+}
+
+// MARK: - Customize Tab
+
+struct CustomizeTab: View {
+    @ObservedObject var engine: PetEngine
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Backgrounds
+            Text("Backgrounds")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            ForEach(UnlockSystem.backgrounds) { bg in
+                let unlocked = bg.xpRequired <= engine.state.lifetimeXP
+                let selected = engine.state.activeBackground == bg.id
+
+                Button(action: {
+                    if unlocked {
+                        engine.state.activeBackground = bg.id
+                        StateStore.save(engine.state)
+                    }
+                }) {
+                    HStack {
+                        Text(bg.displayName)
+                            .font(.system(size: 10, weight: selected ? .bold : .medium, design: .monospaced))
+                            .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
+                        Spacer()
+                        if selected {
+                            Text("✓")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(KodomonColors.accent)
+                        } else if !unlocked {
+                            Text("\(Int(bg.xpRequired)) XP")
+                                .font(.system(size: 8, design: .monospaced))
+                                .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                        }
+                    }
+                    .padding(.vertical, 4)
+                    .padding(.horizontal, 8)
+                    .background(
+                        selected ? KodomonColors.accent.opacity(0.1) : Color.clear
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+                .buttonStyle(.plain)
+                .disabled(!unlocked)
+            }
+
+            Divider()
+
+            // Accessories
+            Text("Accessories")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            Text("Coming soon...")
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+}
+
+// MARK: - Info Tab
+
+struct InfoTab: View {
+    private let rules: [(icon: String, text: String)] = [
+        ("▲", "Code with Claude to earn XP"),
+        ("♥", "Code daily to build your streak"),
+        ("★", "Evolve through 4 stages"),
+        ("◆", "Unlock backgrounds and accessories with XP"),
+        ("✦", "Stop coding and your pet gets sad"),
+        ("◆", "Miss 7+ days and your pet runs away"),
+        ("♥", "Streaks multiply your XP earnings"),
+        ("★", "Mood affects your XP rate"),
+    ]
+
+    private let xpSources: [(source: String, xp: String)] = [
+        ("Unique file edit", "+3 XP"),
+        ("Session time", "+2 XP/min"),
+        ("First code of day", "+10 XP"),
+        ("Variety bonus (3+ types)", "+20 XP"),
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("How It Works")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            ForEach(0..<rules.count, id: \.self) { i in
+                HStack(alignment: .top, spacing: 8) {
+                    Text(rules[i].icon)
+                        .font(.system(size: 10))
+                        .foregroundColor(KodomonColors.accent)
+                        .frame(width: 14)
+                    Text(rules[i].text)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundColor(KodomonColors.textPrimary)
+                }
+            }
+
+            Divider()
+
+            Text("XP Sources")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            ForEach(0..<xpSources.count, id: \.self) { i in
+                HStack {
+                    Text(xpSources[i].source)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+                    Spacer()
+                    Text(xpSources[i].xp)
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.teal)
+                }
+            }
+
+            Divider()
+
+            Text("Streak Multiplier")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: 3) {
+                streakRow("1-2 days", "1.0x")
+                streakRow("3-6 days", "1.2x")
+                streakRow("7-13 days", "1.5x")
+                streakRow("14-29 days", "1.8x")
+                streakRow("30+ days", "2.0x")
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+
+    private func streakRow(_ days: String, _ mult: String) -> some View {
+        HStack {
+            Text(days)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+            Spacer()
+            Text(mult)
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.purple)
+        }
+    }
+}
