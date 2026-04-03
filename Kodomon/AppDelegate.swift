@@ -36,7 +36,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupPanel() {
-        window = NSWindow(
+        window = PetWindow(
             contentRect: NSRect(x: 200, y: 200, width: 240, height: 380),
             styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
             backing: .buffered,
@@ -442,6 +442,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             UserDefaults.standard.set(frame.origin.x, forKey: "panelX")
             UserDefaults.standard.set(frame.origin.y, forKey: "panelY")
         }
+    }
+}
+
+// Window subclass that accepts first mouse click without needing to focus first
+class PetWindow: NSWindow {
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .leftMouseDown {
+            makeKeyAndOrderFront(nil)
+        }
+        super.sendEvent(event)
     }
 }
 
