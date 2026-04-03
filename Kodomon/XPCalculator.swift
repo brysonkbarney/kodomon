@@ -20,17 +20,18 @@ struct XPCalculator {
         return Double(min(minutes, 120)) * 2
     }
 
-    /// XP for writing lines of code (nearly negligible)
+    /// XP for writing lines of code
     static func linesXP(linesWritten: Int) -> Double {
-        return Double(linesWritten / 50)
+        return Double(linesWritten / 10)
     }
 
     /// Diminishing returns multiplier based on session time today
     static func diminishingReturns(todaySessionMins: Int) -> Double {
         switch todaySessionMins {
         case 0..<90: return 1.0
-        case 90..<180: return 0.6
-        default: return 0.25
+        case 90..<180: return 0.75
+        case 180..<270: return 0.5
+        default: return 0.35
         }
     }
 

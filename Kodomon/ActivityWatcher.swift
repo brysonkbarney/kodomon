@@ -10,8 +10,9 @@ nonisolated(unsafe) let kodomonEventsPath: String = {
 class ActivityWatcher: ObservableObject {
     private var fileDescriptor: Int32 = -1
     private var source: DispatchSourceFileSystemObject?
-    private nonisolated(unsafe) var lastReadOffset: UInt64 = 0
-    private nonisolated(unsafe) var lineBuffer: String = ""
+    private var lastReadOffset: UInt64 = 0
+    private var lineBuffer: String = ""
+    private var isReading = false
 
     let eventPublisher = PassthroughSubject<ActivityEvent, Never>()
 
@@ -64,7 +65,15 @@ class ActivityWatcher: ObservableObject {
         source = nil
     }
 
+    func resetOffset() {
+        lastReadOffset = 0
+        lineBuffer = ""
+    }
+
     private func readNewLines() {
+        guard !isReading else { return }
+        isReading = true
+        defer { isReading = false }
         let path = kodomonEventsPath
         guard let fileHandle = FileHandle(forReadingAtPath: path) else {
             NSLog("[Kodomon] Cannot open events file for reading")

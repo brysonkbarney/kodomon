@@ -3,8 +3,8 @@ import Foundation
 enum ActivityEvent {
     case sessionStart(sessionId: String, cwd: String, timestamp: Date)
     case sessionStop(sessionId: String, timestamp: Date)
-    case fileWrite(filePath: String, timestamp: Date)
-    case gitCommit(hash: String, linesAdded: Int, linesRemoved: Int, files: Int, timestamp: Date)
+    case fileWrite(filePath: String, linesWritten: Int, timestamp: Date)
+    case gitCommit(linesAdded: Int, linesRemoved: Int, filesChanged: Int, timestamp: Date)
 }
 
 struct RawEvent: Codable {
@@ -13,6 +13,7 @@ struct RawEvent: Codable {
     let session_id: String?
     let cwd: String?
     let file: String?
+    let lines: Int?
     let hash: String?
     let lines_added: Int?
     let lines_removed: Int?
@@ -38,17 +39,18 @@ extension RawEvent {
         case "file_write":
             return .fileWrite(
                 filePath: file ?? "unknown",
+                linesWritten: lines ?? 0,
                 timestamp: date
             )
         case "git_commit":
             return .gitCommit(
-                hash: hash ?? "unknown",
                 linesAdded: lines_added ?? 0,
                 linesRemoved: lines_removed ?? 0,
-                files: files ?? 0,
+                filesChanged: files ?? 0,
                 timestamp: date
             )
         default:
+            NSLog("[Kodomon] Unknown event type: %@", type)
             return nil
         }
     }

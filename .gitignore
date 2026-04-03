@@ -34,3 +34,7 @@ Package.resolved
 .vscode/
 *.swp
 *~
+
+# Kodomon runtime data (user-specific, not tracked)
+state.json
+events.jsonl

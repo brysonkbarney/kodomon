@@ -70,17 +70,13 @@ struct RandomEventEngine {
         // Filter eligible events
         var pool: [RandomEvent] = []
 
-        // Positive events
+        // Positive events (only include fully implemented ones)
         pool.append(.codingStorm)
-        pool.append(.luckyCommit)
-        pool.append(.flowState)
         if currentStreak >= 3 {
             pool.append(.goodVibes)
         }
 
-        // Challenge events
-        pool.append(.bugInvasion)
-        pool.append(.homesick)
+        // Challenge events (only include fully implemented ones)
         pool.append(.codeDrought)
         pool.append(.restlessNight)
 

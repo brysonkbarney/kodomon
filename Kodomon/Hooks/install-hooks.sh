@@ -11,12 +11,14 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Installing Kodomon hooks..."
 
-# Create directories
+# Create directories with restricted permissions
 mkdir -p "$HOOKS_DIR"
+chmod 700 "$KODOMON_DIR"
 
 # Copy hook scripts (Claude Code only — no git hooks)
 cp "$SCRIPT_DIR/session-start.sh" "$HOOKS_DIR/"
 cp "$SCRIPT_DIR/file-event.sh" "$HOOKS_DIR/"
+cp "$SCRIPT_DIR/bash-event.sh" "$HOOKS_DIR/"
 cp "$SCRIPT_DIR/session-stop.sh" "$HOOKS_DIR/"
 
 # Make executable
@@ -58,6 +60,15 @@ else
           {
             "type": "command",
             "command": "~/.kodomon/hooks/file-event.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.kodomon/hooks/bash-event.sh"
           }
         ]
       }

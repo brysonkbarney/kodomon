@@ -33,6 +33,8 @@ struct UnlockSystem {
         UnlockableAccessory(id: "propeller_hat", displayName: "Propeller Hat", xpRequired: 10000, slot: "head", description: "Wheeee"),
         UnlockableAccessory(id: "top_hat", displayName: "Top Hat", xpRequired: 12000, slot: "head", description: "Classy"),
         UnlockableAccessory(id: "katana", displayName: "Katana", xpRequired: 15000, slot: "side", description: "A warrior's blade"),
+        UnlockableAccessory(id: "sneakers", displayName: "Sneakers", xpRequired: 1000, slot: "feet", description: "Fresh kicks"),
+        UnlockableAccessory(id: "boots", displayName: "Boots", xpRequired: 3000, slot: "feet", description: "Sturdy boots"),
     ]
 
     /// Returns all backgrounds the player has unlocked based on lifetime XP

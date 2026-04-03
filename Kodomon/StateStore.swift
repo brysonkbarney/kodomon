@@ -19,8 +19,12 @@ class StateStore {
         let dir = stateURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
-        guard let data = try? JSONEncoder.kodomon.encode(state) else { return }
-        try? data.write(to: stateURL, options: .atomic)
+        do {
+            let data = try JSONEncoder.kodomon.encode(state)
+            try data.write(to: stateURL, options: .atomic)
+        } catch {
+            NSLog("[Kodomon] Failed to save state: %@", error.localizedDescription)
+        }
     }
 }
 

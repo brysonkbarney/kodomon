@@ -11,4 +11,9 @@ SESSION_ID=$(echo "$INPUT" | /usr/bin/jq -r '.session_id // "unknown"' 2>/dev/nu
 CWD=$(echo "$INPUT" | /usr/bin/jq -r '.cwd // "unknown"' 2>/dev/null || echo "unknown")
 TS=$(date +%s)
 
-echo "{\"type\":\"session_start\",\"ts\":$TS,\"session_id\":\"$SESSION_ID\",\"cwd\":\"$CWD\"}" >> "$EVENT_FILE"
+/usr/bin/jq -n \
+  --arg type "session_start" \
+  --argjson ts "$TS" \
+  --arg sid "$SESSION_ID" \
+  --arg cwd "$CWD" \
+  '{type: $type, ts: $ts, session_id: $sid, cwd: $cwd}' >> "$EVENT_FILE"

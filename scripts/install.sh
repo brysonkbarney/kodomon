@@ -86,7 +86,7 @@ if [[ -f "$CLAUDE_SETTINGS" ]]; then
         # Use jq if available, otherwise warn
         if command -v jq &>/dev/null; then
             TMP=$(mktemp)
-            jq '.hooks.SessionStart += [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-start.sh"}]}] | .hooks.PostToolUse += [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/file-event.sh"}]}] | .hooks.Stop += [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-stop.sh"}]}]' "$CLAUDE_SETTINGS" > "$TMP" && mv "$TMP" "$CLAUDE_SETTINGS"
+            jq '.hooks.SessionStart += [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-start.sh"}]}] | .hooks.PostToolUse += [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/file-event.sh"}]}, {"matcher": "Bash", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/bash-event.sh"}]}] | .hooks.Stop += [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-stop.sh"}]}]' "$CLAUDE_SETTINGS" > "$TMP" && mv "$TMP" "$CLAUDE_SETTINGS"
             echo "  ${GREEN}Claude Code hooks added${RESET}"
         else
             echo "  Please add Kodomon hooks to ~/.claude/settings.json manually."
@@ -99,7 +99,10 @@ else
 {
   "hooks": {
     "SessionStart": [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-start.sh"}]}],
-    "PostToolUse": [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/file-event.sh"}]}],
+    "PostToolUse": [
+      {"matcher": "Write|Edit|MultiEdit", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/file-event.sh"}]},
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/bash-event.sh"}]}
+    ],
     "Stop": [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-stop.sh"}]}]
   }
 }

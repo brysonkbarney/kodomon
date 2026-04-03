@@ -73,7 +73,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         content.body = "「がんばって！」 Your coding streak ends at midnight! Keep going for \(name)!"
         content.sound = .default
 
-        var dateComponents = DateComponents()
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: Date())
         dateComponents.hour = 23
         dateComponents.minute = 30
 

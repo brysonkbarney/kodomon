@@ -42,8 +42,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.level = .normal
-        window.collectionBehavior = [.managed]
+        window.level = .floating
+        window.collectionBehavior = [.managed, .canJoinAllSpaces, .transient]
         window.isMovableByWindowBackground = true
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
@@ -59,7 +59,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         if let x = UserDefaults.standard.object(forKey: "panelX") as? CGFloat,
            let y = UserDefaults.standard.object(forKey: "panelY") as? CGFloat {
-            window.setFrameOrigin(NSPoint(x: x, y: y))
+            let point = NSPoint(x: x, y: y)
+            // Validate position is on a connected screen
+            let onScreen = NSScreen.screens.contains { $0.frame.contains(point) }
+            if onScreen {
+                window.setFrameOrigin(point)
+            } else {
+                window.center()
+            }
         }
 
         let contentView = PetWidgetView(onMenuTap: { [weak self] in
@@ -91,6 +98,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Check for Updates", action: #selector(checkUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
 
+        #if DEBUG
         // Debug menu
         let debugMenu = NSMenu()
         for stage in Stage.allCases {
@@ -148,6 +156,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
         debugItem.submenu = debugMenu
         menu.addItem(debugItem)
+        #endif
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
@@ -162,11 +171,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSWorkspace.didWakeNotification,
             object: nil
         )
+        wsc.addObserver(
+            self,
+            selector: #selector(handleSleep),
+            name: NSWorkspace.willSleepNotification,
+            object: nil
+        )
     }
 
     @objc private func handleWake() {
         NSLog("[Kodomon] System woke — checking missed midnights and decay")
         engine.handleWake()
+    }
+
+    @objc private func handleSleep() {
+        StateStore.save(engine.state)
     }
 
     private func openMenuPanel() {
@@ -232,9 +251,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showPanel() {
-        if window != nil {
-            window.orderFront(nil)
+        if let w = window, w.isVisible || w.contentView != nil {
+            w.orderFront(nil)
         } else {
+            window = nil
             setupPanel()
         }
     }
@@ -313,6 +333,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         welcomeWindow = w
     }
 
+    #if DEBUG
     @objc private func setDebugStage(_ sender: NSMenuItem) {
         guard let rawValue = sender.representedObject as? String,
               let stage = Stage(rawValue: rawValue) else { return }
@@ -320,6 +341,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine.state.totalXP = stage.xpThreshold
         engine.state.activeDays = stage.requiredActiveDays
         engine.state.currentStreak = stage.requiredStreak
+        engine.state.stageReachedDate = Date()
+        engine.state.neglectState = .none
         StateStore.save(engine.state)
     }
 
@@ -328,7 +351,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let next = engine.state.stage.nextStage else { return }
         let current = engine.state.stage.xpThreshold
         let range = next.xpThreshold - current
-        engine.state.totalXP = current + (range * pct)
+        engine.state.totalXP = current + (range * max(0, min(1, pct)))
         StateStore.save(engine.state)
     }
 
@@ -359,6 +382,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         engine.state.totalXP = to.xpThreshold
         engine.state.activeDays = to.requiredActiveDays
         engine.state.currentStreak = to.requiredStreak
+        engine.state.stageReachedDate = Date()
         StateStore.save(engine.state)
         engine.evolutionEvent = (from: from, to: to)
     }
@@ -368,6 +392,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         guard let to = from.previousStage else { return }
         engine.state.stage = to
         engine.state.totalXP = to.xpThreshold
+        engine.state.activeDays = to.requiredActiveDays
+        engine.state.currentStreak = to.requiredStreak
+        engine.state.stageReachedDate = Date()
         StateStore.save(engine.state)
         engine.deEvolutionEvent = (from: from, to: to)
     }
@@ -384,7 +411,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func testNotifStreak() {
-        // Fire immediately for testing (normally scheduled for 11:30pm)
         NotificationManager.shared.sendStreakWarningNow(petName: engine.state.petName)
     }
 
@@ -397,9 +423,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resetDebugState() {
+        let alert = NSAlert()
+        alert.messageText = "Reset all pet data?"
+        alert.informativeText = "This cannot be undone. Your pet and all progress will be lost."
+        alert.alertStyle = .critical
+        alert.addButton(withTitle: "Reset")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
         engine.state = PetState.initial()
         StateStore.save(engine.state)
     }
+    #endif
 
     func applicationWillTerminate(_ notification: Notification) {
         watcher.stopWatching()

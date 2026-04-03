@@ -10,4 +10,8 @@ INPUT=$(cat)
 SESSION_ID=$(echo "$INPUT" | /usr/bin/jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")
 TS=$(date +%s)
 
-echo "{\"type\":\"session_stop\",\"ts\":$TS,\"session_id\":\"$SESSION_ID\"}" >> "$EVENT_FILE"
+/usr/bin/jq -n \
+  --arg type "session_stop" \
+  --argjson ts "$TS" \
+  --arg sid "$SESSION_ID" \
+  '{type: $type, ts: $ts, session_id: $sid}' >> "$EVENT_FILE"

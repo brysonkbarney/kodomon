@@ -12,6 +12,11 @@ class PetEngine: ObservableObject {
     private var decayTimer: Timer?
     private var activeSessions: [String: Date] = [:]
 
+    deinit {
+        midnightTimer?.invalidate()
+        decayTimer?.invalidate()
+    }
+
     init(watcher: ActivityWatcher) {
         self.watcher = watcher
         self.state = StateStore.load()
@@ -98,8 +103,9 @@ class PetEngine: ObservableObject {
                 NSLog("[Kodomon] Session %@ ended — %d min, +%.0f XP", sessionId, cappedMins, xp)
             }
 
-        case .fileWrite(let path, _):
+        case .fileWrite(let path, let linesWritten, _):
             markActive()
+            state.totalLinesWritten += linesWritten
 
             // Track file type for variety bonus
             let ext = (path as NSString).pathExtension.lowercased()
@@ -136,10 +142,32 @@ class PetEngine: ObservableObject {
             }
             addMood(isNewFile ? 4 : 1)
 
-        case .gitCommit(_, let added, let removed, _, _):
-            markActive()
+            // Lines of code XP (nearly negligible — ~1 XP per 50 lines)
+            let linesRawXP = XPCalculator.linesXP(linesWritten: linesWritten)
+            if linesRawXP > 0 {
+                let linesXP = XPCalculator.applyMultipliers(
+                    rawXP: linesRawXP,
+                    todaySessionMins: state.todaySessionMins,
+                    streak: state.currentStreak,
+                    mood: state.mood,
+                    todayXP: state.todayXP
+                )
+                addXP(linesXP)
+            }
 
-            let rawXP = XPCalculator.commitXP(linesAdded: added, linesRemoved: removed)
+        case .gitCommit(let linesAdded, let linesRemoved, _, _):
+            markActive()
+            state.totalCommits += 1
+
+            let totalLines = linesAdded + linesRemoved
+            state.biggestCommitLines = max(state.biggestCommitLines, totalLines)
+
+            addMood(8)
+
+            // Tiered commit XP based on size; flat 25 if no diff stats available
+            let rawXP = totalLines > 0
+                ? XPCalculator.commitXP(linesAdded: linesAdded, linesRemoved: linesRemoved)
+                : 25.0
             let xp = XPCalculator.applyMultipliers(
                 rawXP: rawXP,
                 todaySessionMins: state.todaySessionMins,
@@ -148,14 +176,6 @@ class PetEngine: ObservableObject {
                 todayXP: state.todayXP
             )
             addXP(xp)
-            addMood(8)
-
-            state.totalCommits += 1
-            let totalLines = added + removed
-            state.totalLinesWritten += added
-            if totalLines > state.biggestCommitLines {
-                state.biggestCommitLines = totalLines
-            }
         }
 
         state.neglectState = .none
@@ -181,14 +201,26 @@ class PetEngine: ObservableObject {
             }
         }
 
+        let oldLifetimeXP = state.lifetimeXP
         state.totalXP += xp
         state.todayXP += xp
         state.lifetimeXP += xp
         checkEvolution()
+        checkNewUnlocks(oldXP: oldLifetimeXP, newXP: state.lifetimeXP)
     }
 
     private func addMood(_ amount: Double) {
         state.mood = min(100, max(0, state.mood + amount))
+    }
+
+    private func checkNewUnlocks(oldXP: Double, newXP: Double) {
+        let unlocks = UnlockSystem.checkNewUnlocks(oldXP: oldXP, newXP: newXP)
+        for bg in unlocks.backgrounds {
+            state.unlockedItems.insert(bg.id)
+        }
+        for acc in unlocks.accessories {
+            state.unlockedItems.insert(acc.id)
+        }
     }
 
     private func markActive() {
@@ -234,6 +266,7 @@ class PetEngine: ObservableObject {
             midXP = returnStage.xpThreshold
         }
 
+        let fromStage = state.stage
         state.stage = returnStage
         state.totalXP = midXP
         state.neglectState = .none
@@ -242,9 +275,10 @@ class PetEngine: ObservableObject {
         state.hasRevived = true
         state.mood = 50
         state.currentStreak = 0
+        state.lastActiveDate = Date()
 
         // Show evolution event (revival feels like a rebirth)
-        evolutionEvent = (from: .tamago, to: returnStage)
+        evolutionEvent = (from: fromStage, to: returnStage)
 
         NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
         NSLog("[Kodomon] Pet revived as %@! XP: %.0f", returnStage.displayName, midXP)
@@ -265,7 +299,7 @@ class PetEngine: ObservableObject {
             let from = state.stage
             state.stage = prev
             state.stageReachedDate = Date()
-            state.mood = max(0, state.mood - 20)
+            addMood(-20)
             deEvolutionEvent = (from: from, to: prev)
             NSLog("[Kodomon] DE-EVOLVED to %@", prev.displayName)
         }
@@ -380,7 +414,17 @@ class PetEngine: ObservableObject {
         let hours = elapsed / 3600
         let oldState = state.neglectState
 
-        if hours >= 8 {
+        let daysMissed = Calendar.current.dateComponents([.day], from: state.lastActiveDate, to: Date()).day ?? 0
+        if daysMissed >= 7 {
+            state.neglectState = .ranAway
+            state.mood = 0
+        } else if daysMissed >= 5 {
+            state.neglectState = .critical
+        } else if daysMissed >= 2 {
+            state.neglectState = .sick
+        } else if daysMissed >= 1 {
+            state.neglectState = .sad
+        } else if hours >= 8 {
             state.neglectState = .tired
         }
 
@@ -393,7 +437,7 @@ class PetEngine: ObservableObject {
 
         let hour = Calendar.current.component(.hour, from: Date())
         if hour >= 9 && hour <= 22 && hours >= 1 {
-            addMood(-2)
+            addMood(-1)
         }
 
         save()
@@ -444,8 +488,8 @@ class PetEngine: ObservableObject {
     private func rotateEventsLog() {
         let path = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".kodomon/events.jsonl")
-        // Truncate after processing — events are already consumed
         try? "".write(to: path, atomically: true, encoding: .utf8)
+        watcher.resetOffset()
         NSLog("[Kodomon] Events log rotated")
     }
 
