@@ -99,14 +99,37 @@ struct PetWidgetView: View {
                     // Pet sprite — hidden during cutscenes
                     if engine.evolutionEvent == nil && engine.deEvolutionEvent == nil {
                         if engine.state.neglectState == .ranAway {
-                            // Empty — pet is gone
-                            VStack(spacing: 8) {
-                                Text("「さようなら…」")
-                                    .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                    .foregroundColor(KodomonColors.textSecondary)
-                                Text("Kodomon has left.")
-                                    .font(.system(size: 10, design: .monospaced))
-                                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                            if engine.state.isReviving {
+                                // Revival in progress
+                                VStack(spacing: 8) {
+                                    PixelSpriteView(stage: .tamago, pixelSize: 3, isStatic: true)
+                                        .opacity(0.5)
+                                    Text("Reviving...")
+                                        .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                        .foregroundColor(KodomonColors.accent)
+                                    if let start = engine.state.revivalSessionStart {
+                                        let elapsed = Int(Date().timeIntervalSince(start) / 60)
+                                        Text("\(min(elapsed, 30))/30 min")
+                                            .font(.system(size: 10, design: .monospaced))
+                                            .foregroundColor(KodomonColors.textSecondary)
+                                    }
+                                    Text("Keep coding!")
+                                        .font(.system(size: 9, design: .monospaced))
+                                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                                }
+                            } else {
+                                // Pet is gone
+                                VStack(spacing: 8) {
+                                    Text("「さようなら…」")
+                                        .font(.system(size: 12, weight: .medium, design: .monospaced))
+                                        .foregroundColor(KodomonColors.textSecondary)
+                                    Text("Kodomon has left.")
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                                    Text("Code for 30 min to bring it back")
+                                        .font(.system(size: 9, design: .monospaced))
+                                        .foregroundColor(KodomonColors.accent.opacity(0.7))
+                                }
                             }
                         } else {
                             PixelSpriteView(

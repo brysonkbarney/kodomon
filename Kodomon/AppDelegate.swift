@@ -87,6 +87,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show Kodomon", action: #selector(showPanel), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Rename Pet", action: #selector(renamePet), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Check for Updates", action: #selector(checkUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
 
         // Debug menu
@@ -240,6 +241,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     var welcomeWindow: NSWindow?
     var menuWindow: NSWindow?
+
+    @objc private func checkUpdates() {
+        UpdateChecker.shared.checkForUpdates()
+    }
 
     @objc private func renamePet() {
         promptForName()

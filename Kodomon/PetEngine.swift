@@ -46,6 +46,22 @@ class PetEngine: ObservableObject {
     private func handleEvent(_ event: ActivityEvent) {
         NSLog("[Kodomon] Handling event")
 
+        // Revival mechanic — if pet ran away, start revival session
+        if state.neglectState == .ranAway {
+            if !state.isReviving {
+                state.isReviving = true
+                state.revivalSessionStart = Date()
+                NSLog("[Kodomon] Revival session started — code for 30 min to bring pet back")
+            } else if let start = state.revivalSessionStart {
+                let minutes = Date().timeIntervalSince(start) / 60
+                if minutes >= 30 {
+                    revivePet()
+                }
+            }
+            save()
+            return  // Don't process normal XP while reviving
+        }
+
         switch event {
         case .sessionStart(let sessionId, _, let timestamp):
             markActive()
@@ -203,6 +219,36 @@ class PetEngine: ObservableObject {
 
     func clearDeEvolutionEvent() {
         deEvolutionEvent = nil
+    }
+
+    private func revivePet() {
+        // Come back one stage lower
+        let previousStage = state.stage.previousStage ?? .tamago
+        let returnStage = previousStage.previousStage ?? .tamago
+
+        // Set XP to midpoint of return stage's range
+        let midXP: Double
+        if let next = returnStage.nextStage {
+            midXP = (returnStage.xpThreshold + next.xpThreshold) / 2
+        } else {
+            midXP = returnStage.xpThreshold
+        }
+
+        state.stage = returnStage
+        state.totalXP = midXP
+        state.neglectState = .none
+        state.isReviving = false
+        state.revivalSessionStart = nil
+        state.hasRevived = true
+        state.mood = 50
+        state.currentStreak = 0
+
+        // Show evolution event (revival feels like a rebirth)
+        evolutionEvent = (from: .tamago, to: returnStage)
+
+        NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
+        NSLog("[Kodomon] Pet revived as %@! XP: %.0f", returnStage.displayName, midXP)
+        save()
     }
 
     private func checkDeEvolution() {

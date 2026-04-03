@@ -138,7 +138,7 @@ No daily cap. Diminishing returns after 90 min. Typical day (~2hr coding): 300-5
 - [x] ~~**Unlock system data model**~~ DONE: backgrounds + accessories with XP thresholds
 - [x] ~~**Background picker**~~ DONE: in Style tab, locked items show XP required
 - [x] ~~**Accessory picker**~~ DONE: equip/unequip, one-per-slot, full row clickable
-- [ ] **Accessories (hats)** — pixel art hats/items rendered on top of sprite (design needed)
+- [x] ~~**Accessories**~~ DONE: 8 items (headband, sunglasses, devil horns, golden crown, rice hat, propeller hat, top hat, katana)
 
 ### Nice to Have (v1.1+)
 

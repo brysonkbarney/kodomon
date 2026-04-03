@@ -110,6 +110,9 @@ struct PetState: Codable {
     var todayIsActive: Bool
     var activeEvent: RandomEvent?
     var activeEventExpiry: Date?
+    var isReviving: Bool
+    var revivalSessionStart: Date?
+    var hasRevived: Bool  // survivor badge
 
     /// Pick a random hue that produces a good, readable pet color
     static func randomGoodHue() -> Double {
@@ -163,7 +166,10 @@ struct PetState: Codable {
             todayFilesWritten: [],
             todayIsActive: false,
             activeEvent: nil,
-            activeEventExpiry: nil
+            activeEventExpiry: nil,
+            isReviving: false,
+            revivalSessionStart: nil,
+            hasRevived: false
         )
     }
 }
