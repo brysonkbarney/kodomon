@@ -3,7 +3,7 @@ import SwiftUI
 import Combine
 import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var window: NSWindow!
     var statusItem: NSStatusItem!
     let watcher = ActivityWatcher()
@@ -189,6 +189,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func openMenuPanel() {
+        guard let engine = engine else { return }
+
         if let existing = menuWindow, existing.isVisible {
             existing.makeKeyAndOrderFront(nil)
             return
@@ -214,6 +216,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
+        w.isReleasedWhenClosed = false
+        w.delegate = self
         w.title = "Kodomon"
         w.titlebarAppearsTransparent = true
         w.backgroundColor = NSColor(red: 0.96, green: 0.94, blue: 0.88, alpha: 1)
@@ -224,6 +228,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         w.makeKeyAndOrderFront(nil)
 
         menuWindow = w
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        if let closingWindow = notification.object as? NSWindow, closingWindow === menuWindow {
+            menuWindow = nil
+        }
     }
 
     private func showLoadingScreen() {
