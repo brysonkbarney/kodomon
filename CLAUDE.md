@@ -65,7 +65,7 @@ Kodomon/
 - **Evolution stages:** Tamago (0 XP) → Kobito (800 XP, 2 days, 2-day streak) → Kani (5000 XP, 10 days, 5-day streak) → Kamisama (15000 XP, 21 days, 10-day streak).
 - **File write XP:** only unique files per day get +3 XP. Repeated edits to the same file give no XP (just +1 mood). This prevents Claude Code's rapid edits from inflating XP.
 - **Session time XP:** +2 XP per active minute, capped at 120 min/day (240 XP max). Calculated from SessionStart/Stop hook timestamps.
-- **Decay:** miss 1 day = -3% XP. 3 days = -8%/day. 7+ = -15%/day. 14 days = pet runs away (revival mechanic available).
+- **Decay:** miss 1 day = -3% XP. 2-4 days = -8%. 5-6 days = -15%. 7+ days = pet runs away (revival mechanic: code 30 min to bring it back one stage lower).
 
 ## Data flow
 

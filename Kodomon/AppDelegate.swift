@@ -262,7 +262,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func renamePet() {
-        promptForName()
+        let alert = NSAlert()
+        alert.messageText = "Rename your Kodomon"
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Cancel")
+        alert.alertStyle = .informational
+        let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
+        input.stringValue = engine.state.petName
+        alert.accessoryView = input
+        if alert.runModal() == .alertFirstButtonReturn {
+            let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !name.isEmpty {
+                engine.state.petName = name
+                StateStore.save(engine.state)
+            }
+        }
     }
 
     private func promptForName() {

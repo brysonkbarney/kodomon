@@ -20,7 +20,6 @@ struct EvolutionCutsceneView: View {
         ZStack {
             // Dim background
             Color.black.opacity(bgDim)
-                .frame(width: 240, height: 380)
 
             // Old sprite shaking (phase 0)
             if phase == 0 {
@@ -35,7 +34,6 @@ struct EvolutionCutsceneView: View {
 
             // White flash
             Color.white.opacity(flashOpacity)
-                .frame(width: 240, height: 380)
 
             // New sprite appearing (phase 2+)
             if phase >= 2 {
@@ -48,14 +46,18 @@ struct EvolutionCutsceneView: View {
                 .opacity(spriteOpacity)
             }
 
-            // Sparkle particles
+            // Sparkle particles — contained in fixed frame
             if phase >= 3 {
-                ForEach(0..<sparkles.count, id: \.self) { i in
-                    let s = sparkles[i]
-                    SparklePixel(hue: petHue)
-                        .position(x: s.x, y: s.y)
-                        .opacity(sparkleOpacity)
+                ZStack {
+                    ForEach(0..<sparkles.count, id: \.self) { i in
+                        let s = sparkles[i]
+                        SparklePixel(hue: petHue)
+                            .position(x: s.x, y: s.y)
+                            .opacity(sparkleOpacity)
+                    }
                 }
+                .frame(width: 240, height: 380)
+                .clipped()
             }
 
             // Stage name text

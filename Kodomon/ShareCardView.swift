@@ -42,7 +42,7 @@ struct ShareCardView: View {
                 .padding(.bottom, 12)
 
                 // Sprite area with background image
-                ZStack {
+                ZStack(alignment: .bottom) {
                     // Background image or dark fill
                     if let bgImage = NSImage(named: state.activeBackground) {
                         Image(nsImage: bgImage)
@@ -64,6 +64,7 @@ struct ShareCardView: View {
                         equippedAccessories: state.equippedAccessories
                     )
                     .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
+                    .padding(.bottom, 8)
                 }
                 .frame(height: 320)
                 .clipShape(RoundedRectangle(cornerRadius: 12))

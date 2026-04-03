@@ -256,9 +256,7 @@ struct PetWidgetView: View {
                 )
             }
 
-        }
-        .frame(width: 240, height: 380)
-        .overlay {
+            // Evolution cutscenes — inside the main container
             if let evo = engine.evolutionEvent {
                 EvolutionCutsceneView(
                     fromStage: evo.from,
@@ -267,6 +265,7 @@ struct PetWidgetView: View {
                 ) {
                     engine.clearEvolutionEvent()
                 }
+                .frame(width: 240, height: 380)
             }
             if let deEvo = engine.deEvolutionEvent {
                 DeEvolutionView(
@@ -276,8 +275,11 @@ struct PetWidgetView: View {
                 ) {
                     engine.clearDeEvolutionEvent()
                 }
+                .frame(width: 240, height: 380)
             }
         }
+        .frame(width: 240, height: 380)
+        .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
         .onChange(of: engine.state.totalXP) {

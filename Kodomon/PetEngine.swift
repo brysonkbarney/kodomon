@@ -209,6 +209,7 @@ class PetEngine: ObservableObject {
             state.stageReachedDate = Date()
             state.mood = min(100, state.mood + 30)
             evolutionEvent = (from: from, to: next)
+            NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
             NSLog("[Kodomon] EVOLVED to %@!", next.displayName)
         }
     }
@@ -223,8 +224,7 @@ class PetEngine: ObservableObject {
 
     private func revivePet() {
         // Come back one stage lower
-        let previousStage = state.stage.previousStage ?? .tamago
-        let returnStage = previousStage.previousStage ?? .tamago
+        let returnStage = state.stage.previousStage ?? .tamago
 
         // Set XP to midpoint of return stage's range
         let midXP: Double
@@ -294,8 +294,19 @@ class PetEngine: ObservableObject {
         let missedDays = cal.dateComponents([.day], from: lastReset, to: today).day ?? 0
         if missedDays <= 0 { return }
 
-        for _ in 0..<missedDays {
-            performMidnightReset()
+        // Apply decay once based on total missed days, not per-day loop
+        if missedDays > 0 {
+            state.daysAlive += missedDays
+            state.currentStreak = 0
+            applyDecay()
+            state.todayXP = 0
+            state.todaySessionMins = 0
+            state.todayFileTypes = []
+            state.todayFilesWritten = []
+            state.todayIsActive = false
+            state.lastMidnightReset = today
+            checkDeEvolution()
+            save()
         }
     }
 
@@ -350,6 +361,7 @@ class PetEngine: ObservableObject {
         }
 
         checkDeEvolution()
+        rotateEventsLog()
         save()
 
         NSLog("[Kodomon] Midnight reset — Day %d, Streak: %d", state.daysAlive, state.currentStreak)
@@ -415,7 +427,6 @@ class PetEngine: ObservableObject {
         }
 
         state.totalXP = max(0, state.totalXP)
-        addMood(-15)
     }
 
     // MARK: - Events
