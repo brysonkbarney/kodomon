@@ -30,8 +30,11 @@ class ActivityWatcher: ObservableObject {
 
         NSLog("[Kodomon] Events file: %@", path)
 
-        // Read any existing events first
-        readNewLines()
+        // Skip to end of file — only process new events, don't replay old ones
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: path),
+           let size = attrs[.size] as? UInt64 {
+            lastReadOffset = size
+        }
 
         // Watch for changes
         fileDescriptor = open(path, O_EVTONLY)

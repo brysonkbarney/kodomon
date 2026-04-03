@@ -189,13 +189,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func openMenuPanel() {
-        if let existing = menuWindow {
+        if let existing = menuWindow, existing.isVisible {
             existing.makeKeyAndOrderFront(nil)
             return
         }
+        menuWindow?.close()
+        menuWindow = nil
 
         let isShowing = Binding<Bool>(
-            get: { true },
+            get: { [weak self] in self?.menuWindow?.isVisible ?? false },
             set: { [weak self] val in
                 if !val {
                     self?.menuWindow?.close()

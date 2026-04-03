@@ -228,6 +228,7 @@ struct AccessoryRenderer {
     static let sneakers = AccessoryData(
         pixels: sneakersKobito,
         offsets: [
+            .tamago: (x: 0, y: 18),
             .kobito: (x: 0, y: 12),
             .kani: (x: 0, y: 18),
             .kamisama: (x: 0, y: 30),
