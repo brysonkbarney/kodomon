@@ -445,13 +445,3 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-// NSWindow subclass that accepts first mouse click without needing to focus first
-class ClickThroughWindow: NSWindow {
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
-}
-
-class ClickThroughHostingView<Content: View>: NSHostingView<Content> {
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-}
-
