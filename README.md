@@ -1,12 +1,12 @@
 # Kodomon (コードモン)
 
-A macOS desktop widget — a Tamagotchi-style virtual pet that lives and grows from your real Claude Code activity. 100% local, open source, no accounts.
+A macOS desktop widget — a virtual pet that lives and grows from your real Claude Code activity. 100% local, open source, no accounts.
 
 ## How it works
 
 Code with Claude Code. Your pet gains XP from commits, file edits, and session time. Keep a daily streak to level up. Neglect it and it gets sad. Abandon it and it runs away.
 
-**4 evolution stages:** Tamago (egg) -> Kobito -> Kani (crab) -> Kamisama (god)
+**4 evolution stages:** Tamago (egg) -> Kobito -> Kani -> Kamisama
 
 Each stage requires XP + active days + a streak to unlock. Consistency beats grinding.
 
