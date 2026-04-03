@@ -30,7 +30,7 @@ if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+commit'; then
     LINES_REMOVED=$(echo "$SHORTSTAT" | grep -oE '[0-9]+ deletion' | head -1 | grep -oE '[0-9]+')
   fi
 
-  /usr/bin/jq -n \
+  /usr/bin/jq -nc \
     --arg type "git_commit" \
     --argjson ts "$TS" \
     --arg hash "$HASH" \

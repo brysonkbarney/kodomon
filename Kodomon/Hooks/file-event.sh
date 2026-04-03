@@ -20,7 +20,7 @@ elif [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "MultiEdit" ]; then
 fi
 
 if [ -n "$FILE_PATH" ]; then
-  /usr/bin/jq -n \
+  /usr/bin/jq -nc \
     --arg type "file_write" \
     --argjson ts "$TS" \
     --arg file "$FILE_PATH" \

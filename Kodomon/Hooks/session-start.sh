@@ -11,7 +11,7 @@ SESSION_ID=$(echo "$INPUT" | /usr/bin/jq -r '.session_id // "unknown"' 2>/dev/nu
 CWD=$(echo "$INPUT" | /usr/bin/jq -r '.cwd // "unknown"' 2>/dev/null || echo "unknown")
 TS=$(date +%s)
 
-/usr/bin/jq -n \
+/usr/bin/jq -nc \
   --arg type "session_start" \
   --argjson ts "$TS" \
   --arg sid "$SESSION_ID" \
