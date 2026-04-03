@@ -113,7 +113,8 @@ struct PetWidgetView: View {
                                 stage: engine.state.stage,
                                 pixelSize: spritePixelSize,
                                 evolveProgress: xpProgress,
-                                petHue: engine.state.petHue
+                                petHue: engine.state.petHue,
+                                equippedAccessories: engine.state.equippedAccessories
                             )
                             .saturation(neglectSaturation)
                             .opacity(neglectOpacity)

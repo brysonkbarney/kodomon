@@ -114,6 +114,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Add 100 XP", action: #selector(addDebugXP), keyEquivalent: ""))
+        debugMenu.addItem(NSMenuItem(title: "Add 10,000 XP", action: #selector(addDebugXPLarge), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem(title: "Test Evolution", action: #selector(testEvolution), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem(title: "Test De-Evolution", action: #selector(testDeEvolution), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem.separator())
@@ -294,6 +295,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let current = engine.state.stage.xpThreshold
         let range = next.xpThreshold - current
         engine.state.totalXP = current + (range * pct)
+        StateStore.save(engine.state)
+    }
+
+    @objc private func addDebugXPLarge() {
+        engine.state.totalXP += 10000
+        engine.state.todayXP += 10000
+        engine.state.lifetimeXP += 10000
         StateStore.save(engine.state)
     }
 

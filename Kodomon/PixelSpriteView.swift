@@ -442,6 +442,7 @@ struct PixelSpriteView: View {
     let evolveProgress: Double
     let petHue: Double
     let isStatic: Bool
+    let equippedAccessories: [String]
 
     @State private var wiggleAngle: Double = 0
     @State private var bobOffset: CGFloat = 0
@@ -451,39 +452,61 @@ struct PixelSpriteView: View {
     @State private var currentFrame: [[P]]? = nil
     @State private var animationTimers: [Timer] = []
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false) {
+    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = []) {
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
         self.petHue = petHue
         self.isStatic = isStatic
+        self.equippedAccessories = equippedAccessories
     }
+
+    // Extra padding above sprite for accessories (crowns, hats)
+    private let accPaddingTop: CGFloat = 8
+    private let accPaddingSide: CGFloat = 4
 
     var body: some View {
         let grid = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
         let activeHue = stage == .tamago ? 0.07 : petHue
+        let padTop = accPaddingTop * pixelSize
+        let padSide = accPaddingSide * pixelSize
 
         Canvas { context, _ in
+            // Draw sprite offset by padding
             for row in 0..<rows {
                 for col in 0..<cols {
                     let pixel = grid[row][col]
                     guard pixel != .n else { continue }
 
                     let rect = CGRect(
-                        x: CGFloat(col) * pixelSize,
-                        y: CGFloat(row) * pixelSize,
+                        x: padSide + CGFloat(col) * pixelSize,
+                        y: padTop + CGFloat(row) * pixelSize,
                         width: pixelSize,
                         height: pixelSize
                     )
                     context.fill(Path(rect), with: .color(pixel.color(hue: activeHue)))
                 }
             }
+
+            // Render equipped accessories (offset by same padding)
+            for accId in equippedAccessories {
+                AccessoryRenderer.render(
+                    accessoryId: accId,
+                    stage: stage,
+                    pixelSize: pixelSize,
+                    in: context,
+                    spriteWidth: cols,
+                    spriteHeight: rows,
+                    padX: padSide,
+                    padY: padTop
+                )
+            }
         }
         .frame(
-            width: CGFloat(cols) * pixelSize,
-            height: CGFloat(rows) * pixelSize
+            width: CGFloat(cols) * pixelSize + padSide * 2,
+            height: CGFloat(rows) * pixelSize + padTop
         )
         .scaleEffect(x: scaleX, y: scaleY, anchor: .bottom)
         .rotationEffect(.degrees(wiggleAngle))

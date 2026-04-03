@@ -116,7 +116,7 @@ No daily cap. Diminishing returns after 90 min. Typical day (~2hr coding): 300-5
 #### Reactive Animations (from GDD — none implemented)
 
 - [x] ~~**XP gain**~~ DONE: "+XP" floats upward when XP earned
-- [ ] **De-evolution** — sad animation when stage drops
+- [x] ~~**De-evolution**~~ DONE: sad cutscene — shake, desaturate, shrink, grey flash
 
 #### Other Must-Haves
 
@@ -131,14 +131,14 @@ No daily cap. Diminishing returns after 90 min. Typical day (~2hr coding): 300-5
 - [x] ~~**Install script**~~ DONE: `scripts/install.sh` — downloads DMG, installs Claude Code hooks
 - [x] ~~**Welcome flow**~~ DONE: 3 pages (welcome → how it works → name picker), loading screen
 - [x] ~~**Menu panel**~~ DONE: separate window with Stats/Style/Info tabs, XP bar, background picker
-- [ ] **Kamisama animations** — eye tracking, blink, arm wave, float + sparkle particles
+- [x] ~~**Kamisama animations**~~ DONE: float, breathing, power surge, arm flail, side drift
 
 #### Unlockables
 
 - [x] ~~**Unlock system data model**~~ DONE: backgrounds + accessories with XP thresholds
 - [x] ~~**Background picker**~~ DONE: in Style tab, locked items show XP required
-- [ ] **Accessories (hats)** — pixel art hats/items rendered on top of sprite
-- [ ] **Accessory picker** — UI to equip/unequip earned accessories
+- [x] ~~**Accessory picker**~~ DONE: equip/unequip, one-per-slot, full row clickable
+- [ ] **Accessories (hats)** — pixel art hats/items rendered on top of sprite (design needed)
 
 ### Nice to Have (v1.1+)
 

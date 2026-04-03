@@ -26,13 +26,13 @@ struct UnlockSystem {
 
     static let accessories: [UnlockableAccessory] = [
         UnlockableAccessory(id: "tiny_headband", displayName: "Tiny Headband", xpRequired: 200, slot: "head", description: "A simple headband"),
-        UnlockableAccessory(id: "pixel_crown", displayName: "Pixel Crown", xpRequired: 1000, slot: "head", description: "A small crown"),
-        UnlockableAccessory(id: "dev_hoodie", displayName: "Dev Hoodie", xpRequired: 3000, slot: "body", description: "Cozy hoodie"),
-        UnlockableAccessory(id: "pixel_sunglasses", displayName: "Sunglasses", xpRequired: 4000, slot: "face", description: "Cool shades"),
-        UnlockableAccessory(id: "sakura_crown", displayName: "Sakura Crown", xpRequired: 6000, slot: "head", description: "Cherry blossom crown"),
-        UnlockableAccessory(id: "golden_crown", displayName: "Golden Crown", xpRequired: 8000, slot: "head", description: "A golden crown"),
-        UnlockableAccessory(id: "katana", displayName: "Katana", xpRequired: 12000, slot: "body", description: "A pixel blade"),
-        UnlockableAccessory(id: "halo", displayName: "Halo", xpRequired: 15000, slot: "head", description: "Angelic glow"),
+        UnlockableAccessory(id: "pixel_sunglasses", displayName: "Sunglasses", xpRequired: 2000, slot: "face", description: "Cool shades"),
+        UnlockableAccessory(id: "devil_horns", displayName: "Devil Horns", xpRequired: 4000, slot: "head", description: "Little red horns"),
+        UnlockableAccessory(id: "golden_crown", displayName: "Golden Crown", xpRequired: 6000, slot: "head", description: "Fit for royalty"),
+        UnlockableAccessory(id: "rice_hat", displayName: "Rice Hat", xpRequired: 8000, slot: "head", description: "Classic kasa"),
+        UnlockableAccessory(id: "propeller_hat", displayName: "Propeller Hat", xpRequired: 10000, slot: "head", description: "Wheeee"),
+        UnlockableAccessory(id: "top_hat", displayName: "Top Hat", xpRequired: 12000, slot: "head", description: "Classy"),
+        UnlockableAccessory(id: "katana", displayName: "Katana", xpRequired: 15000, slot: "side", description: "A warrior's blade"),
     ]
 
     /// Returns all backgrounds the player has unlocked based on lifetime XP
