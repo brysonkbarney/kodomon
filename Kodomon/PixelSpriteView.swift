@@ -421,6 +421,114 @@ struct SpriteData {
         [x,x,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,x,x,x],
     ]
 
+    // ── Neglect frames — modify eyes on any base sprite ──
+
+    /// Half-closed eyes (hungry/tired) — top row of eyes becomes body
+    static func withDroopyEyes(_ base: [[P]]) -> [[P]] {
+        var grid = base
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                // Find the first row of 3x3 eyes (E,E,E) and replace with body
+                if grid[row][col] == .E,
+                   col + 2 < grid[row].count,
+                   grid[row][col+1] == .E,
+                   grid[row][col+2] == .E,
+                   row + 1 < grid.count,
+                   grid[row+1][col] == .E {
+                    // First row of eye — make it body color (half-closed)
+                    grid[row][col] = .B
+                    grid[row][col+1] = .B
+                    grid[row][col+2] = .B
+                }
+            }
+        }
+        return grid
+    }
+
+    /// X eyes (sick) — replace eye blocks with X pattern
+    static func withXEyes(_ base: [[P]]) -> [[P]] {
+        var grid = base
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                if grid[row][col] == .E,
+                   col + 2 < grid[row].count,
+                   grid[row][col+1] == .E,
+                   grid[row][col+2] == .E,
+                   row + 2 < grid.count,
+                   grid[row+1][col] == .E {
+                    // Replace 3x3 eye with X pattern
+                    grid[row][col] = .E; grid[row][col+1] = .B; grid[row][col+2] = .E
+                    grid[row+1][col] = .B; grid[row+1][col+1] = .E; grid[row+1][col+2] = .B
+                    grid[row+2][col] = .E; grid[row+2][col+1] = .B; grid[row+2][col+2] = .E
+                }
+            }
+        }
+        return grid
+    }
+
+    /// Flat eyes (critical) — just a line where eyes were
+    static func withFlatEyes(_ base: [[P]]) -> [[P]] {
+        var grid = base
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                if grid[row][col] == .E,
+                   col + 2 < grid[row].count,
+                   grid[row][col+1] == .E,
+                   grid[row][col+2] == .E,
+                   row + 2 < grid.count,
+                   grid[row+1][col] == .E {
+                    // Replace with flat line on middle row only
+                    grid[row][col] = .B; grid[row][col+1] = .B; grid[row][col+2] = .B
+                    grid[row+1][col] = .E; grid[row+1][col+1] = .E; grid[row+1][col+2] = .E
+                    grid[row+2][col] = .B; grid[row+2][col+1] = .B; grid[row+2][col+2] = .B
+                }
+            }
+        }
+        // Also remove W (eye highlights)
+        for row in 0..<grid.count {
+            for col in 0..<grid[row].count {
+                if grid[row][col] == .W { grid[row][col] = .B }
+            }
+        }
+        return grid
+    }
+
+    /// Get the right neglect frame for a given stage and neglect state
+    static func neglectSprite(for stage: Stage, neglectState: NeglectState) -> [[P]]? {
+        let base: [[P]]
+        switch stage {
+        case .tamago: return nil  // egg doesn't show neglect eyes
+        case .kobito: base = kobito
+        case .kani: base = kani
+        case .kamisama: base = kamisama
+        }
+
+        switch neglectState {
+        case .tired, .sad:
+            return withDroopyEyes(base)
+        case .sick:
+            return withXEyes(base)
+        case .critical:
+            return withFlatEyes(base)
+        default:
+            return nil
+        }
+    }
+
+    /// Apply neglect eye changes to any frame
+    static func applyNeglect(_ base: [[P]], neglectState: NeglectState) -> [[P]] {
+        switch neglectState {
+        case .tired, .sad:
+            return withDroopyEyes(base)
+        case .sick:
+            return withXEyes(base)
+        case .critical:
+            return withFlatEyes(base)
+        default:
+            return base
+        }
+    }
+
     static func sprite(for stage: Stage, evolveProgress: Double = 0) -> [[P]] {
         switch stage {
         case .tamago:
@@ -443,6 +551,7 @@ struct PixelSpriteView: View {
     let petHue: Double
     let isStatic: Bool
     let equippedAccessories: [String]
+    let neglectState: NeglectState
 
     @State private var wiggleAngle: Double = 0
     @State private var bobOffset: CGFloat = 0
@@ -452,13 +561,14 @@ struct PixelSpriteView: View {
     @State private var currentFrame: [[P]]? = nil
     @State private var animationTimers: [Timer] = []
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = []) {
+    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = [], neglectState: NeglectState = .none) {
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
         self.petHue = petHue
         self.isStatic = isStatic
         self.equippedAccessories = equippedAccessories
+        self.neglectState = neglectState
     }
 
     // Extra padding above sprite for accessories (crowns, hats)
@@ -466,7 +576,8 @@ struct PixelSpriteView: View {
     private let accPaddingSide: CGFloat = 4
 
     var body: some View {
-        let grid = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        let baseFrame = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        let grid = SpriteData.applyNeglect(baseFrame, neglectState: neglectState)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
         let activeHue = stage == .tamago ? 0.07 : petHue
@@ -520,12 +631,42 @@ struct PixelSpriteView: View {
         // Cancel all previous timers
         for timer in animationTimers { timer.invalidate() }
         animationTimers = []
-        wiggleAngle = 0
-        bobOffset = 0
-        slideOffset = 0
-        scaleX = 1.0
-        scaleY = 1.0
+        // Reset all animations explicitly to stop repeatForever
+        withAnimation(.linear(duration: 0.01)) {
+            wiggleAngle = 0
+            bobOffset = 0
+            slideOffset = 0
+            scaleX = 1.0
+            scaleY = 1.0
+        }
         currentFrame = nil
+
+        // Neglect animations override normal ones
+        switch neglectState {
+        case .sick:
+            // Shivering
+            withAnimation(.easeInOut(duration: 0.06).repeatForever(autoreverses: true)) {
+                wiggleAngle = 2
+            }
+            return
+        case .critical:
+            // Barely twitching, squished down
+            scaleY = 0.7
+            addTimer(3.0) {
+                withAnimation(.easeInOut(duration: 0.05).repeatCount(3, autoreverses: true)) {
+                    wiggleAngle = 1
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    wiggleAngle = 0
+                }
+            }
+            return
+        case .tired, .sad:
+            // Slow, listless — run normal animations but slower
+            break
+        default:
+            break
+        }
 
         switch stage {
         case .tamago:

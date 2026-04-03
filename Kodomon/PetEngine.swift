@@ -368,20 +368,14 @@ class PetEngine: ObservableObject {
         let hours = elapsed / 3600
         let oldState = state.neglectState
 
-        if hours >= 2 && hours < 8 {
-            state.neglectState = .hungry
-        } else if hours >= 8 {
+        if hours >= 8 {
             state.neglectState = .tired
         }
 
         // Send notifications on state transitions
         if state.neglectState != oldState {
-            switch state.neglectState {
-            case .hungry:
-                NotificationManager.shared.sendHungryNotification(petName: state.petName)
-            case .tired:
+            if state.neglectState == .tired {
                 NotificationManager.shared.sendTiredNotification(petName: state.petName)
-            default: break
             }
         }
 
@@ -407,6 +401,7 @@ class PetEngine: ObservableObject {
             state.totalXP *= 0.92
             state.neglectState = .sick
             addMood(-25)
+            NotificationManager.shared.sendSickNotification(petName: state.petName)
         case 5...6:
             state.totalXP *= 0.85
             state.neglectState = .critical

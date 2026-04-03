@@ -99,19 +99,12 @@ No daily cap. Diminishing returns after 90 min. Typical day (~2hr coding): 300-5
 
 #### Neglect State Visuals
 
-- [x] ~~**Desaturation system**~~ DONE: sprite desaturates progressively (hungry→tired→sad→sick→critical)
-- [x] ~~**Ran away**~~ DONE: pet gone, farewell text 「さようなら…」 (now 7 days instead of 14)
-- [ ] **Hungry** — droopy eyes sprite frame
-- [ ] **Tired** — yawning sprite frame
-- [ ] **Sick** — X eyes, shivering sprite frame
-- [ ] **Critical** — flat on ground sprite frame
-
-#### Mood Visuals (from GDD — none implemented)
-
-- [ ] **Ecstatic** (80-100) — bouncing, pixel sparkles
-- [ ] **Happy** (60-79) — relaxed wiggle
-- [ ] **Stressed** (20-39) — twitchy, side-eyes
-- [ ] **Miserable** (0-19) — grey, slumped
+- [x] ~~**Desaturation system**~~ DONE
+- [x] ~~**Ran away**~~ DONE: farewell text + revival mechanic
+- [x] ~~**Tired**~~ DONE: droopy eyes + desaturation
+- [x] ~~**Sick**~~ DONE: X eyes + shivering + notification
+- [x] ~~**Critical**~~ DONE: flat eyes + squished + barely twitching
+- Removed hungry state (unnecessary)
 
 #### Reactive Animations (from GDD — none implemented)
 

@@ -15,8 +15,8 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     // MARK: - Notification Identifiers
 
     private enum Identifier: String {
-        case hungry           = "kodomon.hungry"
         case tired            = "kodomon.tired"
+        case sick             = "kodomon.sick"
         case streakWarning    = "kodomon.streakWarning"
         case evolutionReady   = "kodomon.evolutionReady"
         case petRanAway       = "kodomon.petRanAway"
@@ -45,21 +45,21 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
 
     // MARK: - Public Triggers
 
-    /// Hungry: 2 hours with no activity.
-    func sendHungryNotification(petName: String = "") {
-        let name = petName.isEmpty ? "Your Kodomon" : petName
-        deliver(
-            identifier: .hungry,
-            body: "「お腹すいた…」 \(name) is getting hungry."
-        )
-    }
-
     /// Tired: 8 hours with no activity.
     func sendTiredNotification(petName: String = "") {
         let name = petName.isEmpty ? "Your Kodomon" : petName
         deliver(
             identifier: .tired,
             body: "「ねむい…」 \(name) misses you."
+        )
+    }
+
+    /// Sick: 3 missed days.
+    func sendSickNotification(petName: String = "") {
+        let name = petName.isEmpty ? "Your Kodomon" : petName
+        deliver(
+            identifier: .sick,
+            body: "「だいじょうぶ？」 \(name) is getting sick. Come back soon."
         )
     }
 

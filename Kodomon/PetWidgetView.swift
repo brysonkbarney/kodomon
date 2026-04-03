@@ -25,8 +25,7 @@ struct PetWidgetView: View {
     private var neglectSaturation: Double {
         switch engine.state.neglectState {
         case .none: return 1.0
-        case .hungry: return 0.85
-        case .tired: return 0.6
+        case .tired: return 0.7
         case .sad: return 0.5
         case .sick: return 0.3
         case .critical: return 0.1
@@ -137,7 +136,8 @@ struct PetWidgetView: View {
                                 pixelSize: spritePixelSize,
                                 evolveProgress: xpProgress,
                                 petHue: engine.state.petHue,
-                                equippedAccessories: engine.state.equippedAccessories
+                                equippedAccessories: engine.state.equippedAccessories,
+                                neglectState: engine.state.neglectState
                             )
                             .saturation(neglectSaturation)
                             .opacity(neglectOpacity)

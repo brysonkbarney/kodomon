@@ -86,6 +86,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Show Kodomon", action: #selector(showPanel), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Share Card", action: #selector(shareCard), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Rename Pet", action: #selector(renamePet), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Check for Updates", action: #selector(checkUpdates), keyEquivalent: ""))
         menu.addItem(NSMenuItem.separator())
@@ -122,7 +123,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Neglect state testing
         let neglectMenu = NSMenu()
-        for state in [NeglectState.none, .hungry, .tired, .sad, .sick, .critical, .ranAway] {
+        for state in [NeglectState.none, .tired, .sad, .sick, .critical, .ranAway] {
             let item = NSMenuItem(title: "Neglect: \(state.rawValue)", action: #selector(setDebugNeglect(_:)), keyEquivalent: "")
             item.representedObject = state.rawValue
             neglectMenu.addItem(item)
@@ -133,7 +134,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Notification testing
         let notifMenu = NSMenu()
-        notifMenu.addItem(NSMenuItem(title: "Test: Hungry", action: #selector(testNotifHungry), keyEquivalent: ""))
         notifMenu.addItem(NSMenuItem(title: "Test: Tired", action: #selector(testNotifTired), keyEquivalent: ""))
         notifMenu.addItem(NSMenuItem(title: "Test: Streak Warning", action: #selector(testNotifStreak), keyEquivalent: ""))
         notifMenu.addItem(NSMenuItem(title: "Test: Evolution Ready", action: #selector(testNotifEvolution), keyEquivalent: ""))
@@ -242,6 +242,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var welcomeWindow: NSWindow?
     var menuWindow: NSWindow?
 
+    @objc private func shareCard() {
+        ShareCardGenerator.copyToClipboard(state: engine.state)
+
+        // Also save to desktop
+        ShareCardGenerator.saveToDesktop(state: engine.state)
+
+        // Show confirmation
+        let alert = NSAlert()
+        alert.messageText = "Share Card Ready!"
+        alert.informativeText = "Card copied to clipboard and saved to Desktop. Paste it anywhere!"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
     @objc private func checkUpdates() {
         UpdateChecker.shared.checkForUpdates()
     }
@@ -348,10 +363,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
               let state = NeglectState(rawValue: rawValue) else { return }
         engine.state.neglectState = state
         StateStore.save(engine.state)
-    }
-
-    @objc private func testNotifHungry() {
-        NotificationManager.shared.sendHungryNotification(petName: engine.state.petName)
     }
 
     @objc private func testNotifTired() {

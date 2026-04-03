@@ -73,7 +73,6 @@ enum Stage: String, Codable, CaseIterable {
 
 enum NeglectState: String, Codable {
     case none
-    case hungry    // 2h no activity
     case tired     // 8h no activity
     case sad       // 1 missed day
     case sick      // 3 missed days
