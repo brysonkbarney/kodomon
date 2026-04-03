@@ -213,6 +213,7 @@ struct NamePage: View {
     @State private var customText: String = ""
     @State private var excluded: [String] = []
     @State private var eggBob: CGFloat = 0
+    @FocusState private var textFieldFocused: Bool
 
     let onConfirm: (String) -> Void
 
@@ -276,10 +277,12 @@ struct NamePage: View {
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .foregroundColor(grey)
 
-            TextField("", text: $customText)
+            TextField("Type a name", text: $customText)
                 .font(.system(size: 14, weight: .medium, design: .monospaced))
                 .textFieldStyle(.plain)
                 .multilineTextAlignment(.center)
+                .focused($textFieldFocused)
+                .onTapGesture { textFieldFocused = true }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background(
