@@ -436,7 +436,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func resetDebugState() {
         let alert = NSAlert()
         alert.messageText = "Reset all pet data?"
-        alert.informativeText = "This cannot be undone. Your pet and all progress will be lost."
+        alert.informativeText = "This cannot be undone. Your Kodomon and all progress will be lost."
         alert.alertStyle = .critical
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")

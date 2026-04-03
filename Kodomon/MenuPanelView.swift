@@ -96,6 +96,36 @@ struct StatsTab: View {
                 }
             }
 
+            // Evolution requirements
+            if let next = engine.state.stage.nextStage {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Evolve to \(next.displayName)")
+                        .font(.system(size: 9, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+
+                    evolveReq(
+                        met: engine.state.totalXP >= next.xpThreshold,
+                        label: "XP",
+                        value: "\(Int(engine.state.totalXP))/\(Int(next.xpThreshold))"
+                    )
+                    evolveReq(
+                        met: engine.state.activeDays >= next.requiredActiveDays,
+                        label: "Active days",
+                        value: "\(engine.state.activeDays)/\(next.requiredActiveDays)"
+                    )
+                    evolveReq(
+                        met: engine.state.currentStreak >= next.requiredStreak,
+                        label: "Streak",
+                        value: "\(engine.state.currentStreak)/\(next.requiredStreak)"
+                    )
+                }
+                .padding(10)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(KodomonColors.border.opacity(0.2))
+                )
+            }
+
             Divider()
 
             statRow("Days Alive", "\(engine.state.daysAlive)")
@@ -132,6 +162,22 @@ struct StatsTab: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
+    }
+
+    private func evolveReq(met: Bool, label: String, value: String) -> some View {
+        HStack(spacing: 6) {
+            Text(met ? "✓" : "✗")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(met ? KodomonColors.teal : KodomonColors.textSecondary)
+                .frame(width: 12)
+            Text(label)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(met ? KodomonColors.textPrimary : KodomonColors.textSecondary)
+            Spacer()
+            Text(value)
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(met ? KodomonColors.teal : KodomonColors.textSecondary)
+        }
     }
 
     private func statRow(_ label: String, _ value: String) -> some View {
@@ -270,8 +316,8 @@ struct InfoTab: View {
         ("♥", "Code daily to build your streak"),
         ("★", "Evolve through 4 stages"),
         ("◆", "Unlock backgrounds and accessories with XP"),
-        ("✦", "Stop coding and your pet gets sad"),
-        ("◆", "Miss 7+ days and your pet runs away"),
+        ("✦", "Stop coding and your Kodomon gets sad"),
+        ("◆", "Miss 7+ days and your Kodomon runs away"),
         ("♥", "Streaks multiply your XP earnings"),
         ("★", "Mood affects your XP rate"),
     ]

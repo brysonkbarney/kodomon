@@ -109,7 +109,7 @@ struct HowItWorksPage: View {
         ("▲", "Code with Claude to earn XP and streaks"),
         ("★", "Help your Kodomon evolve"),
         ("◆", "Work together to unlock new rewards"),
-        ("✦", "Stop coding and your pet gets sad"),
+        ("✦", "Stop coding and your Kodomon gets sad"),
     ]
 
     var body: some View {
