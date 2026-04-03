@@ -1,6 +1,6 @@
 # Kodomon (コードモン)
 
-A macOS desktop widget — a Tamagotchi-style virtual pet crab that lives and grows from your real Claude Code activity. 100% local, open source, no accounts.
+A macOS desktop widget — a Tamagotchi-style virtual pet that lives and grows from your real Claude Code activity. 100% local, open source, no accounts.
 
 ## How it works
 
