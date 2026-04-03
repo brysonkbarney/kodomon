@@ -267,44 +267,12 @@ struct NamePage: View {
             }
             .buttonStyle(.plain)
 
-            // Divider
-            Rectangle()
-                .fill(borderC)
-                .frame(height: 1)
-                .padding(.horizontal, 30)
-
-            Text("or type your own")
-                .font(.system(size: 10, weight: .medium, design: .monospaced))
-                .foregroundColor(grey)
-
-            TextField("Type a name", text: $customText)
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
-                .textFieldStyle(.plain)
-                .multilineTextAlignment(.center)
-                .focused($textFieldFocused)
-                .onTapGesture { textFieldFocused = true }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.white.opacity(0.6))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(borderC, lineWidth: 1)
-                )
-                .padding(.horizontal, 40)
-                .onChange(of: customText) {
-                    if !options.contains(customText) { selectedName = "" }
-                }
-
             Spacer().frame(height: 4)
 
-            // Confirm — disabled until name is entered
+            // Confirm — disabled until a name is selected
             Button(action: {
-                let name = customText.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !name.isEmpty else { return }
-                onConfirm(name)
+                guard !selectedName.isEmpty else { return }
+                onConfirm(selectedName)
             }) {
                 Text("Let's go!")
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
@@ -313,11 +281,11 @@ struct NamePage: View {
                     .padding(.vertical, 10)
                     .background(
                         RoundedRectangle(cornerRadius: 10)
-                            .fill(customText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? grey : red)
+                            .fill(selectedName.isEmpty ? grey : red)
                     )
             }
             .buttonStyle(.plain)
-            .disabled(customText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            .disabled(selectedName.isEmpty)
 
             Spacer().frame(height: 16)
         }

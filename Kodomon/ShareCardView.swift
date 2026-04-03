@@ -59,6 +59,12 @@ struct ShareCardView: View {
                     PixelSpriteView(
                         stage: state.stage,
                         pixelSize: 8,
+                        evolveProgress: {
+                            guard let next = state.stage.nextStage else { return 1.0 }
+                            let current = state.stage.xpThreshold
+                            let needed = next.xpThreshold - current
+                            return min(max((state.totalXP - current) / needed, 0), 1.0)
+                        }(),
                         petHue: state.petHue,
                         isStatic: true,
                         equippedAccessories: state.equippedAccessories
