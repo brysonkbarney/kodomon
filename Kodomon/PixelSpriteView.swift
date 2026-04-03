@@ -629,28 +629,58 @@ struct PixelSpriteView: View {
     }
 
     private func animateKamisama() {
-        currentFrame = SpriteData.kamisama
-
         // Slow majestic float
-        withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bobOffset = -6 }
-
-        // Occasional slow look around
-        addTimer(4.0) {
-            // Reuse kani eye frames concept — but kamisama is calm, mostly center
-            let roll = Int.random(in: 0...4)
-            if roll == 0 {
-                // Brief glance then back
-                withAnimation(.easeInOut(duration: 0.3)) { slideOffset = 3 }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    withAnimation(.easeInOut(duration: 0.3)) { slideOffset = 0 }
-                }
-            }
-        }
+        withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bobOffset = -8 }
 
         // Subtle breathing scale
         withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
             scaleX = 1.02
             scaleY = 1.02
+        }
+
+        // Power surge — less frequent, bigger movement
+        addTimer(14.0) {
+            // Vibrate with energy
+            withAnimation(.easeInOut(duration: 0.04).repeatCount(10, autoreverses: true)) {
+                wiggleAngle = 3
+            }
+            // Scale up + surge high
+            withAnimation(.easeOut(duration: 0.3)) {
+                scaleX = 1.1
+                scaleY = 1.1
+                bobOffset = -25
+            }
+
+            // Settle back
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    wiggleAngle = 0
+                    scaleX = 1.02
+                    scaleY = 1.02
+                }
+                withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) {
+                    bobOffset = -8
+                }
+            }
+        }
+
+        // Arm flail — rapid rock back and forth like waving all arms
+        addTimer(10.0) {
+            withAnimation(.easeInOut(duration: 0.1).repeatCount(6, autoreverses: true)) {
+                wiggleAngle = 8
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = 0 }
+            }
+        }
+
+        // Drift far to one side
+        addTimer(7.0) {
+            let direction: CGFloat = Bool.random() ? 1 : -1
+            withAnimation(.easeInOut(duration: 1.2)) { slideOffset = direction * 25 }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation(.easeInOut(duration: 1.2)) { slideOffset = 0 }
+            }
         }
     }
 }

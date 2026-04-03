@@ -5,6 +5,7 @@ import Combine
 class PetEngine: ObservableObject {
     @Published var state: PetState
     @Published var evolutionEvent: (from: Stage, to: Stage)? = nil
+    @Published var deEvolutionEvent: (from: Stage, to: Stage)? = nil
     private let watcher: ActivityWatcher
     private var cancellables = Set<AnyCancellable>()
     private var midnightTimer: Timer?
@@ -200,6 +201,10 @@ class PetEngine: ObservableObject {
         evolutionEvent = nil
     }
 
+    func clearDeEvolutionEvent() {
+        deEvolutionEvent = nil
+    }
+
     private func checkDeEvolution() {
         guard let prev = state.stage.previousStage else { return }
 
@@ -211,9 +216,11 @@ class PetEngine: ObservableObject {
         }
 
         if state.totalXP < state.stage.deEvolveFloor {
+            let from = state.stage
             state.stage = prev
             state.stageReachedDate = Date()
             state.mood = max(0, state.mood - 20)
+            deEvolutionEvent = (from: from, to: prev)
             NSLog("[Kodomon] DE-EVOLVED to %@", prev.displayName)
         }
     }

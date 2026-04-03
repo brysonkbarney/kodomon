@@ -179,36 +179,32 @@ struct CustomizeTab: View {
                 let unlocked = bg.xpRequired <= engine.state.lifetimeXP
                 let selected = engine.state.activeBackground == bg.id
 
-                Button(action: {
+                HStack {
+                    Text(bg.displayName)
+                        .font(.system(size: 10, weight: selected ? .bold : .medium, design: .monospaced))
+                        .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
+                    Spacer()
+                    if selected {
+                        Text("✓")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(KodomonColors.accent)
+                    } else if !unlocked {
+                        Text("\(Int(bg.xpRequired)) XP")
+                            .font(.system(size: 8, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                    }
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 8)
+                .background(selected ? KodomonColors.accent.opacity(0.1) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .contentShape(Rectangle())
+                .onTapGesture {
                     if unlocked {
                         engine.state.activeBackground = bg.id
                         StateStore.save(engine.state)
                     }
-                }) {
-                    HStack {
-                        Text(bg.displayName)
-                            .font(.system(size: 10, weight: selected ? .bold : .medium, design: .monospaced))
-                            .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
-                        Spacer()
-                        if selected {
-                            Text("✓")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(KodomonColors.accent)
-                        } else if !unlocked {
-                            Text("\(Int(bg.xpRequired)) XP")
-                                .font(.system(size: 8, design: .monospaced))
-                                .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
-                        }
-                    }
-                    .padding(.vertical, 4)
-                    .padding(.horizontal, 8)
-                    .background(
-                        selected ? KodomonColors.accent.opacity(0.1) : Color.clear
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
                 }
-                .buttonStyle(.plain)
-                .disabled(!unlocked)
             }
 
             Divider()
@@ -218,9 +214,48 @@ struct CustomizeTab: View {
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundColor(KodomonColors.textPrimary)
 
-            Text("Coming soon...")
-                .font(.system(size: 9, design: .monospaced))
-                .foregroundColor(KodomonColors.textSecondary)
+            ForEach(UnlockSystem.accessories) { acc in
+                let unlocked = acc.xpRequired <= engine.state.lifetimeXP
+                let equipped = engine.state.equippedAccessories.contains(acc.id)
+
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(acc.displayName)
+                            .font(.system(size: 10, weight: equipped ? .bold : .medium, design: .monospaced))
+                            .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
+                        Text(acc.description)
+                            .font(.system(size: 8, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                    }
+                    Spacer()
+                    if equipped {
+                        Text("✓")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(KodomonColors.accent)
+                    } else if !unlocked {
+                        Text("\(Int(acc.xpRequired)) XP")
+                            .font(.system(size: 8, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                    }
+                }
+                .padding(.vertical, 5)
+                .padding(.horizontal, 8)
+                .background(equipped ? KodomonColors.accent.opacity(0.1) : Color.clear)
+                .clipShape(RoundedRectangle(cornerRadius: 4))
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    if unlocked {
+                        if equipped {
+                            engine.state.equippedAccessories.removeAll { $0 == acc.id }
+                        } else {
+                            let sameSlot = UnlockSystem.accessories.filter { $0.slot == acc.slot }.map { $0.id }
+                            engine.state.equippedAccessories.removeAll { sameSlot.contains($0) }
+                            engine.state.equippedAccessories.append(acc.id)
+                        }
+                        StateStore.save(engine.state)
+                    }
+                }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)

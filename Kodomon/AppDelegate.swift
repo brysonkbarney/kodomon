@@ -115,6 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Add 100 XP", action: #selector(addDebugXP), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem(title: "Test Evolution", action: #selector(testEvolution), keyEquivalent: ""))
+        debugMenu.addItem(NSMenuItem(title: "Test De-Evolution", action: #selector(testDeEvolution), keyEquivalent: ""))
         debugMenu.addItem(NSMenuItem.separator())
 
         // Neglect state testing
@@ -311,8 +312,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func testEvolution() {
         let from = engine.state.stage
-        let to = from.nextStage ?? .kamisama
+        guard let to = from.nextStage else { return }
+        engine.state.stage = to
+        engine.state.totalXP = to.xpThreshold
+        engine.state.activeDays = to.requiredActiveDays
+        engine.state.currentStreak = to.requiredStreak
+        StateStore.save(engine.state)
         engine.evolutionEvent = (from: from, to: to)
+    }
+
+    @objc private func testDeEvolution() {
+        let from = engine.state.stage
+        guard let to = from.previousStage else { return }
+        engine.state.stage = to
+        engine.state.totalXP = to.xpThreshold
+        StateStore.save(engine.state)
+        engine.deEvolutionEvent = (from: from, to: to)
     }
 
     @objc private func setDebugNeglect(_ sender: NSMenuItem) {

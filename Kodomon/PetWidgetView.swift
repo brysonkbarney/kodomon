@@ -96,8 +96,8 @@ struct PetWidgetView: View {
                         KodomonColors.background
                     }
 
-                    // Pet sprite — hidden during evolution cutscene
-                    if engine.evolutionEvent == nil {
+                    // Pet sprite — hidden during cutscenes
+                    if engine.evolutionEvent == nil && engine.deEvolutionEvent == nil {
                         if engine.state.neglectState == .ranAway {
                             // Empty — pet is gone
                             VStack(spacing: 8) {
@@ -242,6 +242,15 @@ struct PetWidgetView: View {
                     petHue: engine.state.petHue
                 ) {
                     engine.clearEvolutionEvent()
+                }
+            }
+            if let deEvo = engine.deEvolutionEvent {
+                DeEvolutionView(
+                    fromStage: deEvo.from,
+                    toStage: deEvo.to,
+                    petHue: engine.state.petHue
+                ) {
+                    engine.clearDeEvolutionEvent()
                 }
             }
         }
