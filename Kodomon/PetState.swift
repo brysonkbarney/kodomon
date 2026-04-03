@@ -28,8 +28,8 @@ enum Stage: String, Codable, CaseIterable {
         switch self {
         case .tamago: return 0
         case .kobito: return 2
-        case .kani: return 10
-        case .kamisama: return 21
+        case .kani: return 5
+        case .kamisama: return 14
         }
     }
 
