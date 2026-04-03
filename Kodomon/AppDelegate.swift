@@ -42,8 +42,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             backing: .buffered,
             defer: false
         )
-        window.level = .floating
-        window.collectionBehavior = [.managed, .canJoinAllSpaces, .transient]
+        window.level = .normal
+        window.collectionBehavior = [.managed, .canJoinAllSpaces]
         window.isMovableByWindowBackground = true
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
