@@ -62,8 +62,7 @@ struct XPCalculator {
         rawXP: Double,
         todaySessionMins: Int,
         streak: Int,
-        mood: Double,
-        todayXP: Double
+        mood: Double
     ) -> Double {
         var xp = rawXP
         xp *= diminishingReturns(todaySessionMins: todaySessionMins)

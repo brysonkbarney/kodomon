@@ -129,23 +129,18 @@ struct StatsTab: View {
             Divider()
 
             statRow("Days Alive", "\(engine.state.daysAlive)")
+            statRow("Active Days", "\(engine.state.activeDays)")
             statRow("Code Streak", "\(engine.state.currentStreak)d")
             statRow("Best Streak", "\(engine.state.longestStreak)d")
             statRow("Mood", "\(Int(engine.state.mood))/100")
 
             Divider()
 
-            Text("Mood affects XP rate")
-                .font(.system(size: 9, weight: .medium, design: .monospaced))
-                .foregroundColor(KodomonColors.textSecondary)
-
-            VStack(alignment: .leading, spacing: 3) {
-                moodRow("80-100", "1.3x XP", "Ecstatic")
-                moodRow("60-79", "1.15x XP", "Happy")
-                moodRow("40-59", "1.0x XP", "Neutral")
-                moodRow("20-39", "0.85x XP", "Stressed")
-                moodRow("0-19", "0.6x XP", "Miserable")
-            }
+            statRow("Today's XP", "+\(Int(engine.state.todayXP))")
+            statRow("Session Time", "\(engine.state.todaySessionMins) min today")
+            statRow("Lifetime XP", "\(Int(engine.state.lifetimeXP))")
+            statRow("Total Commits", "\(engine.state.totalCommits)")
+            statRow("Lines Written", "\(engine.state.totalLinesWritten)")
 
             if let event = engine.state.activeEvent {
                 Divider()
@@ -192,21 +187,6 @@ struct StatsTab: View {
         }
     }
 
-    private func moodRow(_ range: String, _ multiplier: String, _ label: String) -> some View {
-        HStack {
-            Text(range)
-                .font(.system(size: 8, design: .monospaced))
-                .foregroundColor(KodomonColors.textSecondary)
-                .frame(width: 40, alignment: .leading)
-            Text(multiplier)
-                .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .foregroundColor(KodomonColors.textPrimary)
-                .frame(width: 50, alignment: .leading)
-            Text(label)
-                .font(.system(size: 8, design: .monospaced))
-                .foregroundColor(KodomonColors.textSecondary)
-        }
-    }
 }
 
 // MARK: - Customize Tab
@@ -323,8 +303,9 @@ struct InfoTab: View {
     ]
 
     private let xpSources: [(source: String, xp: String)] = [
-        ("Unique file edit", "+3 XP"),
+        ("Git commit", "+25-800 XP"),
         ("Session time", "+2 XP/min"),
+        ("Unique file edit", "+3 XP"),
         ("First code of day", "+10 XP"),
         ("Variety bonus (3+ types)", "+20 XP"),
     ]
@@ -378,9 +359,39 @@ struct InfoTab: View {
                 streakRow("14-29 days", "1.8x")
                 streakRow("30+ days", "2.0x")
             }
+
+            Divider()
+
+            Text("Mood Multiplier")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: 3) {
+                moodRow("80-100", "1.3x XP", "Ecstatic")
+                moodRow("60-79", "1.15x XP", "Happy")
+                moodRow("40-59", "1.0x XP", "Neutral")
+                moodRow("20-39", "0.85x XP", "Stressed")
+                moodRow("0-19", "0.6x XP", "Miserable")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
+    }
+
+    private func moodRow(_ range: String, _ multiplier: String, _ label: String) -> some View {
+        HStack {
+            Text(range)
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+                .frame(width: 40, alignment: .leading)
+            Text(multiplier)
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+                .frame(width: 50, alignment: .leading)
+            Text(label)
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+        }
     }
 
     private func streakRow(_ days: String, _ mult: String) -> some View {

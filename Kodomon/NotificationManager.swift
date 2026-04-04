@@ -17,6 +17,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     private enum Identifier: String {
         case tired            = "kodomon.tired"
         case sick             = "kodomon.sick"
+        case critical         = "kodomon.critical"
         case streakWarning    = "kodomon.streakWarning"
         case evolutionReady   = "kodomon.evolutionReady"
         case petRanAway       = "kodomon.petRanAway"
@@ -54,12 +55,21 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
 
-    /// Sick: 3 missed days.
+    /// Sick: 2-4 missed days.
     func sendSickNotification(petName: String = "") {
         let name = petName.isEmpty ? "Your Kodomon" : petName
         deliver(
             identifier: .sick,
             body: "「だいじょうぶ？」 \(name) is getting sick. Come back soon."
+        )
+    }
+
+    /// Critical: 5+ missed days, pet is about to run away.
+    func sendCriticalNotification(petName: String = "") {
+        let name = petName.isEmpty ? "Your Kodomon" : petName
+        deliver(
+            identifier: .critical,
+            body: "「たすけて…！」 \(name) is in critical condition. Come back before it's too late!"
         )
     }
 
@@ -122,7 +132,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         )
     }
 
-    /// Pet ran away: 14+ days of neglect.
+    /// Pet ran away: 7+ days of neglect.
     func sendPetRanAwayNotification(petName: String = "") {
         let name = petName.isEmpty ? "Your Kodomon" : petName
         deliver(

@@ -23,6 +23,7 @@ class PetEngine: ObservableObject {
 
         NSLog("[Kodomon] Engine init — stage: %@, XP: %.0f", state.stage.rawValue, state.totalXP)
 
+        restoreActiveSessions()
         checkMissedMidnights()
 
         watcher.eventPublisher
@@ -69,20 +70,21 @@ class PetEngine: ObservableObject {
 
         switch event {
         case .sessionStart(let sessionId, _, let timestamp):
+            let wasActive = state.todayIsActive
             markActive()
             activeSessions[sessionId] = timestamp
+            persistActiveSessions()
 
-            if !state.todayIsActive {
+            // First-activity-of-day bonus (only on session start)
+            if !wasActive {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 10,
                     todaySessionMins: state.todaySessionMins,
                     streak: state.currentStreak,
-                    mood: state.mood,
-                    todayXP: state.todayXP
+                    mood: state.mood
                 )
                 addXP(xp)
                 addMood(15)
-                state.todayIsActive = true
             }
 
         case .sessionStop(let sessionId, let timestamp):
@@ -96,11 +98,13 @@ class PetEngine: ObservableObject {
                     rawXP: rawXP,
                     todaySessionMins: state.todaySessionMins,
                     streak: state.currentStreak,
-                    mood: state.mood,
-                    todayXP: state.todayXP
+                    mood: state.mood
                 )
                 addXP(xp)
+                persistActiveSessions()
                 NSLog("[Kodomon] Session %@ ended — %d min, +%.0f XP", sessionId, cappedMins, xp)
+            } else {
+                NSLog("[Kodomon] Session %@ stop with no matching start — skipped", sessionId)
             }
 
         case .fileWrite(let path, let linesWritten, _):
@@ -120,7 +124,6 @@ class PetEngine: ObservableObject {
                     todaySessionMins: state.todaySessionMins,
                     streak: state.currentStreak,
                     mood: state.mood,
-                    todayXP: state.todayXP
                 )
                 addXP(xp)
                 addMood(6)
@@ -136,13 +139,12 @@ class PetEngine: ObservableObject {
                     todaySessionMins: state.todaySessionMins,
                     streak: state.currentStreak,
                     mood: state.mood,
-                    todayXP: state.todayXP
                 )
                 addXP(xp)
             }
             addMood(isNewFile ? 4 : 1)
 
-            // Lines of code XP (nearly negligible — ~1 XP per 50 lines)
+            // Lines of code XP (~1 XP per 10 lines)
             let linesRawXP = XPCalculator.linesXP(linesWritten: linesWritten)
             if linesRawXP > 0 {
                 let linesXP = XPCalculator.applyMultipliers(
@@ -150,7 +152,6 @@ class PetEngine: ObservableObject {
                     todaySessionMins: state.todaySessionMins,
                     streak: state.currentStreak,
                     mood: state.mood,
-                    todayXP: state.todayXP
                 )
                 addXP(linesXP)
             }
@@ -172,8 +173,7 @@ class PetEngine: ObservableObject {
                 rawXP: rawXP,
                 todaySessionMins: state.todaySessionMins,
                 streak: state.currentStreak,
-                mood: state.mood,
-                todayXP: state.todayXP
+                mood: state.mood
             )
             addXP(xp)
         }
@@ -226,6 +226,11 @@ class PetEngine: ObservableObject {
     private func markActive() {
         NotificationManager.shared.cancelStreakWarning()
         state.lastActiveDate = Date()
+
+        // Mark the day as active on ANY coding event, not just sessionStart
+        if !state.todayIsActive {
+            state.todayIsActive = true
+        }
     }
 
     // MARK: - Evolution
@@ -277,9 +282,11 @@ class PetEngine: ObservableObject {
         // Come back one stage lower
         let returnStage = state.stage.previousStage ?? .tamago
 
-        // Set XP to midpoint of return stage's range
+        // Set XP to midpoint of return stage's range (but 0 if returning to tamago)
         let midXP: Double
-        if let next = returnStage.nextStage {
+        if returnStage == .tamago {
+            midXP = 0
+        } else if let next = returnStage.nextStage {
             midXP = (returnStage.xpThreshold + next.xpThreshold) / 2
         } else {
             midXP = returnStage.xpThreshold
@@ -347,20 +354,37 @@ class PetEngine: ObservableObject {
         let missedDays = cal.dateComponents([.day], from: lastReset, to: today).day ?? 0
         if missedDays <= 0 { return }
 
-        // Apply decay once based on total missed days, not per-day loop
-        if missedDays > 0 {
-            state.daysAlive += missedDays
-            state.currentStreak = 0
-            applyDecay()
-            state.todayXP = 0
-            state.todaySessionMins = 0
-            state.todayFileTypes = []
-            state.todayFilesWritten = []
-            state.todayIsActive = false
-            state.lastMidnightReset = today
-            checkDeEvolution()
-            save()
+        // Credit the day that was in progress when we missed midnight
+        if state.todayIsActive {
+            state.activeDays += 1
+            state.currentStreak += 1
+            state.longestStreak = max(state.longestStreak, state.currentStreak)
         }
+
+        // Any gap days (days with zero activity) reset the streak and apply decay
+        // If user was active yesterday and only 1 midnight missed, there's no gap
+        let gapDays = state.todayIsActive ? missedDays - 1 : missedDays
+        if gapDays > 0 {
+            state.currentStreak = 0
+            applyDecay(daysMissed: gapDays)
+        }
+
+        // Apply mood regression toward 50 (same as performMidnightReset)
+        for _ in 0..<missedDays {
+            let moodDelta = (50 - state.mood) * 0.3
+            state.mood = min(100, max(0, state.mood + moodDelta))
+        }
+
+        state.daysAlive += missedDays
+        state.todayXP = 0
+        state.todaySessionMins = 0
+        state.todayFileTypes = []
+        state.todayFilesWritten = []
+        state.todayIsActive = false
+        state.lastMidnightReset = today
+        checkEvolution()
+        checkDeEvolution()
+        save()
     }
 
     private func performMidnightReset() {
@@ -370,7 +394,7 @@ class PetEngine: ObservableObject {
             state.longestStreak = max(state.longestStreak, state.currentStreak)
         } else {
             state.currentStreak = 0
-            applyDecay()
+            applyDecay(daysMissed: 1)
         }
 
         state.daysAlive += 1
@@ -413,6 +437,7 @@ class PetEngine: ObservableObject {
             RandomEventEngine.applyEvent(event, to: &state)
         }
 
+        checkEvolution()
         checkDeEvolution()
         rotateEventsLog()
         save()
@@ -449,8 +474,17 @@ class PetEngine: ObservableObject {
 
         // Send notifications on state transitions
         if state.neglectState != oldState {
-            if state.neglectState == .tired {
+            switch state.neglectState {
+            case .tired:
                 NotificationManager.shared.sendTiredNotification(petName: state.petName)
+            case .sick:
+                NotificationManager.shared.sendSickNotification(petName: state.petName)
+            case .critical:
+                NotificationManager.shared.sendCriticalNotification(petName: state.petName)
+            case .ranAway:
+                NotificationManager.shared.sendPetRanAwayNotification(petName: state.petName)
+            case .sad, .none:
+                break
             }
         }
 
@@ -462,11 +496,7 @@ class PetEngine: ObservableObject {
         save()
     }
 
-    private func applyDecay() {
-        let daysMissed = Calendar.current.dateComponents(
-            [.day], from: state.lastActiveDate, to: Date()
-        ).day ?? 0
-
+    private func applyDecay(daysMissed: Int) {
         switch daysMissed {
         case 1:
             state.totalXP *= 0.97
@@ -481,6 +511,7 @@ class PetEngine: ObservableObject {
             state.totalXP *= 0.85
             state.neglectState = .critical
             addMood(-30)
+            NotificationManager.shared.sendCriticalNotification(petName: state.petName)
         case 7...:
             state.neglectState = .ranAway
             state.mood = 0
@@ -516,5 +547,23 @@ class PetEngine: ObservableObject {
 
     private func save() {
         StateStore.save(state)
+    }
+
+    private func persistActiveSessions() {
+        let dict = activeSessions.mapValues { $0.timeIntervalSince1970 }
+        UserDefaults.standard.set(dict, forKey: "kodomonActiveSessions")
+    }
+
+    private func restoreActiveSessions() {
+        guard let dict = UserDefaults.standard.dictionary(forKey: "kodomonActiveSessions") as? [String: Double] else { return }
+        let cutoff = Date().addingTimeInterval(-86400) // 24h
+        let restored = dict.mapValues { Date(timeIntervalSince1970: $0) }
+            .filter { $0.value > cutoff }
+        activeSessions = restored
+        if restored.count != dict.count {
+            NSLog("[Kodomon] Pruned %d stale session(s)", dict.count - restored.count)
+            persistActiveSessions()
+        }
+        NSLog("[Kodomon] Restored %d active session(s)", activeSessions.count)
     }
 }

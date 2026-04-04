@@ -75,9 +75,9 @@ enum NeglectState: String, Codable {
     case none
     case tired     // 8h no activity
     case sad       // 1 missed day
-    case sick      // 3 missed days
-    case critical  // 7 missed days
-    case ranAway   // 14 missed days
+    case sick      // 2-4 missed days
+    case critical  // 5-6 missed days
+    case ranAway   // 7+ missed days
 }
 
 struct PetState: Codable {
@@ -155,7 +155,8 @@ struct PetState: Codable {
         totalXP = try c.decodeIfPresent(Double.self, forKey: .totalXP) ?? 0
         todayXP = try c.decodeIfPresent(Double.self, forKey: .todayXP) ?? 0
         todaySessionMins = try c.decodeIfPresent(Int.self, forKey: .todaySessionMins) ?? 0
-        lifetimeXP = try c.decodeIfPresent(Double.self, forKey: .lifetimeXP) ?? 0
+        let decodedLifetimeXP = try c.decodeIfPresent(Double.self, forKey: .lifetimeXP) ?? 0
+        lifetimeXP = decodedLifetimeXP == 0 && totalXP > 0 ? totalXP : decodedLifetimeXP
         stage = try c.decodeIfPresent(Stage.self, forKey: .stage) ?? .tamago
         currentStreak = try c.decodeIfPresent(Int.self, forKey: .currentStreak) ?? 0
         longestStreak = try c.decodeIfPresent(Int.self, forKey: .longestStreak) ?? 0

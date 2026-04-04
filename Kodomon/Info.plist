@@ -2,21 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>LSUIElement</key>
-	<true/>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.9</string>
+	<key>CFBundleVersion</key>
+	<string>9</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
-	<key>CFBundleVersion</key>
-	<string>8</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0.8</string>
+	<key>LSUIElement</key>
+	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Bryson. MIT License.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 	<key>SUFeedURL</key>
 	<string>https://kodomon.app/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>tK9j/JqcWG5srxjIeqiEBGlcTFF7ysEvKIGl3ZuJN1A=</string>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
 </dict>
 </plist>
