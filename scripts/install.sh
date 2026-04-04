@@ -50,6 +50,10 @@ echo "  ${GREEN}Downloaded${RESET}"
 echo "Installing..."
 MOUNT_POINT=$(hdiutil attach "$DMG_PATH" -nobrowse -noautoopen | grep "/Volumes" | awk '{print $3}')
 
+# Kill running instance before replacing
+pkill -x Kodomon 2>/dev/null || true
+sleep 0.5
+
 # Copy to Applications
 if [[ -d "/Applications/Kodomon.app" ]]; then
     rm -rf "/Applications/Kodomon.app"

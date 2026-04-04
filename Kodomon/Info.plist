@@ -7,10 +7,16 @@
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>CFBundleVersion</key>
-	<string>1</string>
+	<string>8</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.0</string>
+	<string>1.0.8</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2026 Bryson. MIT License.</string>
+	<key>SUFeedURL</key>
+	<string>https://kodomon.app/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>tK9j/JqcWG5srxjIeqiEBGlcTFF7ysEvKIGl3ZuJN1A=</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
 </dict>
 </plist>
