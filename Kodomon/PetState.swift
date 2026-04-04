@@ -112,6 +112,8 @@ struct PetState: Codable {
     var isReviving: Bool
     var revivalSessionStart: Date?
     var hasRevived: Bool  // survivor badge
+    var pendingEvolutionFrom: String?  // Stage rawValue — set when evolution triggers, cleared when cutscene plays
+    var pendingEvolutionTo: String?    // Stage rawValue — paired with pendingEvolutionFrom
 
     // MARK: - Memberwise init (needed because custom Decodable init disables auto-synthesis)
 
@@ -122,7 +124,8 @@ struct PetState: Codable {
          totalCommits: Int, totalLinesWritten: Int, biggestCommitLines: Int, lastActiveDate: Date,
          stageReachedDate: Date?, lastMidnightReset: Date, todayFileTypes: Set<String>,
          todayFilesWritten: Set<String>, todayIsActive: Bool, activeEvent: RandomEvent?,
-         activeEventExpiry: Date?, isReviving: Bool, revivalSessionStart: Date?, hasRevived: Bool) {
+         activeEventExpiry: Date?, isReviving: Bool, revivalSessionStart: Date?, hasRevived: Bool,
+         pendingEvolutionFrom: String? = nil, pendingEvolutionTo: String? = nil) {
         self.petName = petName; self.petHue = petHue; self.daysAlive = daysAlive
         self.activeDays = activeDays; self.createdAt = createdAt; self.totalXP = totalXP
         self.todayXP = todayXP; self.todaySessionMins = todaySessionMins; self.lifetimeXP = lifetimeXP
@@ -136,6 +139,7 @@ struct PetState: Codable {
         self.todayIsActive = todayIsActive; self.activeEvent = activeEvent
         self.activeEventExpiry = activeEventExpiry; self.isReviving = isReviving
         self.revivalSessionStart = revivalSessionStart; self.hasRevived = hasRevived
+        self.pendingEvolutionFrom = pendingEvolutionFrom; self.pendingEvolutionTo = pendingEvolutionTo
     }
 
     // MARK: - Migration-safe decoding
@@ -174,6 +178,8 @@ struct PetState: Codable {
         isReviving = try c.decodeIfPresent(Bool.self, forKey: .isReviving) ?? false
         revivalSessionStart = try c.decodeIfPresent(Date.self, forKey: .revivalSessionStart)
         hasRevived = try c.decodeIfPresent(Bool.self, forKey: .hasRevived) ?? false
+        pendingEvolutionFrom = try c.decodeIfPresent(String.self, forKey: .pendingEvolutionFrom)
+        pendingEvolutionTo = try c.decodeIfPresent(String.self, forKey: .pendingEvolutionTo)
     }
 
     /// Pick a random hue that produces a good, readable pet color
@@ -231,7 +237,9 @@ struct PetState: Codable {
             activeEventExpiry: nil,
             isReviving: false,
             revivalSessionStart: nil,
-            hasRevived: false
+            hasRevived: false,
+            pendingEvolutionFrom: nil,
+            pendingEvolutionTo: nil
         )
     }
 }

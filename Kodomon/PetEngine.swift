@@ -240,10 +240,29 @@ class PetEngine: ObservableObject {
             state.stage = next
             state.stageReachedDate = Date()
             state.mood = min(100, state.mood + 30)
-            evolutionEvent = (from: from, to: next)
+
+            // Save as pending — cutscene plays when the user interacts with the widget
+            state.pendingEvolutionFrom = from.rawValue
+            state.pendingEvolutionTo = next.rawValue
+
+            // Notification fires immediately so the user knows to come back
             NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
-            NSLog("[Kodomon] EVOLVED to %@!", next.displayName)
+            NSLog("[Kodomon] EVOLVED to %@ (pending cutscene)", next.displayName)
         }
+    }
+
+    /// Triggers the pending evolution cutscene. Called when the user taps the widget
+    /// or the window comes to foreground. No-op if there is no pending evolution.
+    func triggerPendingEvolution() {
+        guard let fromRaw = state.pendingEvolutionFrom,
+              let toRaw = state.pendingEvolutionTo,
+              let from = Stage(rawValue: fromRaw),
+              let to = Stage(rawValue: toRaw) else { return }
+
+        evolutionEvent = (from: from, to: to)
+        state.pendingEvolutionFrom = nil
+        state.pendingEvolutionTo = nil
+        save()
     }
 
     func clearEvolutionEvent() {

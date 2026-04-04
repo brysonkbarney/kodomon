@@ -181,6 +181,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func handleWake() {
         NSLog("[Kodomon] System woke — checking missed midnights and decay")
         engine.handleWake()
+        // If the widget is visible on wake, trigger any pending evolution cutscene
+        if window?.isVisible == true {
+            engine.triggerPendingEvolution()
+        }
     }
 
     @objc private func handleSleep() {
@@ -264,9 +268,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func showPanel() {
         if let w = window, w.isVisible || w.contentView != nil {
             w.orderFront(nil)
+            engine.triggerPendingEvolution()
         } else {
             window = nil
             setupPanel()
+            // Trigger after panel is set up — small delay so SwiftUI view is attached
+            DispatchQueue.main.async { [weak self] in
+                self?.engine.triggerPendingEvolution()
+            }
         }
     }
 
@@ -394,8 +403,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         engine.state.activeDays = to.requiredActiveDays
         engine.state.currentStreak = to.requiredStreak
         engine.state.stageReachedDate = Date()
+        // Use pending system so cutscene plays on next tap, just like real evolution
+        engine.state.pendingEvolutionFrom = from.rawValue
+        engine.state.pendingEvolutionTo = to.rawValue
         StateStore.save(engine.state)
-        engine.evolutionEvent = (from: from, to: to)
+        // Immediately trigger for debug convenience
+        engine.triggerPendingEvolution()
     }
 
     @objc private func testDeEvolution() {

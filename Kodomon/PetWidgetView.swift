@@ -22,6 +22,16 @@ struct PetWidgetView: View {
     @State private var xpPopupOpacity: Double = 0
     @State private var lastXP: Double = 0
 
+    /// When an evolution is pending, show the OLD stage sprite until the cutscene plays.
+    /// The underlying state.stage is already the new stage (for correct XP math).
+    private var displayStage: Stage {
+        if let fromRaw = engine.state.pendingEvolutionFrom,
+           let from = Stage(rawValue: fromRaw) {
+            return from
+        }
+        return engine.state.stage
+    }
+
     private var neglectSaturation: Double {
         switch engine.state.neglectState {
         case .none: return 1.0
@@ -42,7 +52,7 @@ struct PetWidgetView: View {
     }
 
     private var spritePixelSize: CGFloat {
-        switch engine.state.stage {
+        switch displayStage {
         case .tamago: return 4
         case .kobito: return 4
         case .kani: return 4
@@ -51,8 +61,8 @@ struct PetWidgetView: View {
     }
 
     private var xpProgress: Double {
-        guard let next = engine.state.stage.nextStage else { return 1.0 }
-        let current = engine.state.stage.xpThreshold
+        guard let next = displayStage.nextStage else { return 1.0 }
+        let current = displayStage.xpThreshold
         let needed = next.xpThreshold - current
         let progress = (engine.state.totalXP - current) / needed
         return min(max(progress, 0), 1.0)
@@ -69,7 +79,7 @@ struct PetWidgetView: View {
     }
 
     private var stageColor: Color {
-        switch engine.state.stage {
+        switch displayStage {
         case .tamago: return KodomonColors.textSecondary
         case .kobito: return KodomonColors.teal
         case .kani: return KodomonColors.coral
@@ -132,7 +142,7 @@ struct PetWidgetView: View {
                             }
                         } else {
                             PixelSpriteView(
-                                stage: engine.state.stage,
+                                stage: displayStage,
                                 pixelSize: spritePixelSize,
                                 evolveProgress: xpProgress,
                                 petHue: engine.state.petHue,
@@ -190,7 +200,7 @@ struct PetWidgetView: View {
                         }
 
                         // Stage name
-                        Text(engine.state.stage.displayName)
+                        Text(displayStage.displayName)
                             .font(.system(size: 10, weight: .medium, design: .monospaced))
                             .foregroundColor(KodomonColors.textSecondary)
 
@@ -203,7 +213,7 @@ struct PetWidgetView: View {
                                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                                     .foregroundColor(KodomonColors.textSecondary)
                                 Spacer()
-                                if let next = engine.state.stage.nextStage {
+                                if let next = displayStage.nextStage {
                                     Text("\(Int(next.xpThreshold))")
                                         .font(.system(size: 8, weight: .medium, design: .monospaced))
                                         .foregroundColor(KodomonColors.border)
@@ -282,13 +292,19 @@ struct PetWidgetView: View {
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+        .onTapGesture {
+            engine.triggerPendingEvolution()
+        }
         .onChange(of: engine.state.totalXP) {
             if engine.state.totalXP > lastXP && lastXP > 0 {
                 triggerXPPopup()
             }
             lastXP = engine.state.totalXP
         }
-        .onAppear { lastXP = engine.state.totalXP }
+        .onAppear {
+            lastXP = engine.state.totalXP
+            engine.triggerPendingEvolution()
+        }
     }
 
     private func triggerXPPopup() {
