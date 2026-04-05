@@ -251,6 +251,7 @@ struct AccessoryRenderer {
     static let boots = AccessoryData(
         pixels: bootsKobito,
         offsets: [
+            .tamago: (x: 0, y: 18),
             .kobito: (x: 0, y: 12),
             .kani: (x: 0, y: 18),
             .kamisama: (x: 0, y: 30),

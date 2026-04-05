@@ -4,6 +4,7 @@ struct MenuPanelView: View {
     @ObservedObject var engine: PetEngine
     @Binding var isShowing: Bool
     @State private var tab: MenuTab = .stats
+    @State private var showingLeaderboard = false
 
     enum MenuTab: String, CaseIterable {
         case stats = "Stats"
@@ -13,36 +14,60 @@ struct MenuPanelView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Tab bar — full area clickable
-            HStack(spacing: 0) {
-                ForEach(MenuTab.allCases, id: \.self) { t in
-                    Text(t.rawValue)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .foregroundColor(tab == t ? .white : KodomonColors.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 32)
-                        .background(tab == t ? KodomonColors.accent : Color.clear)
-                        .contentShape(Rectangle())
-                        .onTapGesture { tab = t }
+            if showingLeaderboard {
+                // Back button
+                HStack {
+                    Button(action: { showingLeaderboard = false }) {
+                        HStack(spacing: 4) {
+                            Text("←")
+                                .font(.system(size: 12, weight: .bold))
+                            Text("Back")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        }
+                        .foregroundColor(KodomonColors.accent)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
                 }
-            }
-            .background(KodomonColors.border.opacity(0.3))
-            .clipShape(RoundedRectangle(cornerRadius: 6))
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
 
-            // Content
-            ScrollView {
-                switch tab {
-                case .stats:
-                    StatsTab(engine: engine)
-                case .customize:
-                    CustomizeTab(engine: engine)
-                case .info:
-                    InfoTab()
+                ScrollView {
+                    LeaderboardView(engine: engine)
                 }
+                .padding(.top, 8)
+            } else {
+                // Tab bar — full area clickable
+                HStack(spacing: 0) {
+                    ForEach(MenuTab.allCases, id: \.self) { t in
+                        Text(t.rawValue)
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundColor(tab == t ? .white : KodomonColors.textSecondary)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .background(tab == t ? KodomonColors.accent : Color.clear)
+                            .contentShape(Rectangle())
+                            .onTapGesture { tab = t }
+                    }
+                }
+                .background(KodomonColors.border.opacity(0.3))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+
+                // Content
+                ScrollView {
+                    switch tab {
+                    case .stats:
+                        StatsTab(engine: engine, showingLeaderboard: $showingLeaderboard)
+                    case .customize:
+                        CustomizeTab(engine: engine)
+                    case .info:
+                        InfoTab()
+                    }
+                }
+                .padding(.top, 8)
             }
-            .padding(.top, 8)
         }
     }
 }
@@ -51,6 +76,7 @@ struct MenuPanelView: View {
 
 struct StatsTab: View {
     @ObservedObject var engine: PetEngine
+    @Binding var showingLeaderboard: Bool
 
     private var xpProgress: Double {
         guard let next = engine.state.stage.nextStage else { return 1.0 }
@@ -154,6 +180,26 @@ struct StatsTab: View {
                         .foregroundColor(KodomonColors.accent)
                 }
             }
+
+            Divider()
+
+            Button(action: {
+                showingLeaderboard = true
+            }) {
+                HStack {
+                    Text("Leaderboard")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    Spacer()
+                    Text("→")
+                        .font(.system(size: 11, weight: .bold))
+                }
+                .foregroundColor(.white)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(KodomonColors.accent)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+            .buttonStyle(.plain)
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
