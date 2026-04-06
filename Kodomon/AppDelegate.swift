@@ -181,10 +181,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func handleWake() {
         NSLog("[Kodomon] System woke — checking missed midnights and decay")
         engine.handleWake()
-        // If the widget is visible on wake, trigger any pending evolution cutscene
-        if window?.isVisible == true {
-            engine.triggerPendingEvolution()
-        }
+        // Don't trigger cutscene on wake — wait for user tap or panel open
     }
 
     @objc private func handleSleep() {

@@ -11,6 +11,7 @@ class PetEngine: ObservableObject {
     private var midnightTimer: Timer?
     private var decayTimer: Timer?
     private var activeSessions: [String: Date] = [:]
+    private var lastCreditedTime: [String: Date] = [:]
 
     deinit {
         midnightTimer?.invalidate()
@@ -73,6 +74,7 @@ class PetEngine: ObservableObject {
             let wasActive = state.todayIsActive
             markActive()
             activeSessions[sessionId] = timestamp
+            lastCreditedTime[sessionId] = timestamp
             persistActiveSessions()
 
             // First-activity-of-day bonus (only on session start)
@@ -88,21 +90,25 @@ class PetEngine: ObservableObject {
             }
 
         case .sessionStop(let sessionId, let timestamp):
-            if let startTime = activeSessions.removeValue(forKey: sessionId) {
-                let minutes = Int(timestamp.timeIntervalSince(startTime) / 60)
+            // Use lastCreditedTime to calculate only NEW minutes since last stop
+            let creditFrom = lastCreditedTime[sessionId] ?? activeSessions[sessionId]
+            if let from = creditFrom {
+                let minutes = Int(timestamp.timeIntervalSince(from) / 60)
                 let cappedMins = max(0, min(minutes, 120 - state.todaySessionMins))
-                state.todaySessionMins += cappedMins
-
-                let rawXP = XPCalculator.sessionXP(minutes: cappedMins)
-                let xp = XPCalculator.applyMultipliers(
-                    rawXP: rawXP,
-                    todaySessionMins: state.todaySessionMins,
-                    streak: state.currentStreak,
-                    mood: state.mood
-                )
-                addXP(xp)
+                if cappedMins > 0 {
+                    state.todaySessionMins += cappedMins
+                    let rawXP = XPCalculator.sessionXP(minutes: cappedMins)
+                    let xp = XPCalculator.applyMultipliers(
+                        rawXP: rawXP,
+                        todaySessionMins: state.todaySessionMins,
+                        streak: state.currentStreak,
+                        mood: state.mood
+                    )
+                    addXP(xp)
+                    NSLog("[Kodomon] Session %@ — +%d min, +%.0f XP", sessionId, cappedMins, xp)
+                }
+                lastCreditedTime[sessionId] = timestamp
                 persistActiveSessions()
-                NSLog("[Kodomon] Session %@ ended — %d min, +%.0f XP", sessionId, cappedMins, xp)
             } else {
                 NSLog("[Kodomon] Session %@ stop with no matching start — skipped", sessionId)
             }
@@ -554,6 +560,8 @@ class PetEngine: ObservableObject {
     private func persistActiveSessions() {
         let dict = activeSessions.mapValues { $0.timeIntervalSince1970 }
         UserDefaults.standard.set(dict, forKey: "kodomonActiveSessions")
+        let credited = lastCreditedTime.mapValues { $0.timeIntervalSince1970 }
+        UserDefaults.standard.set(credited, forKey: "kodomonLastCreditedTime")
     }
 
     private func restoreActiveSessions() {
@@ -562,6 +570,10 @@ class PetEngine: ObservableObject {
         let restored = dict.mapValues { Date(timeIntervalSince1970: $0) }
             .filter { $0.value > cutoff }
         activeSessions = restored
+        if let credited = UserDefaults.standard.dictionary(forKey: "kodomonLastCreditedTime") as? [String: Double] {
+            lastCreditedTime = credited.mapValues { Date(timeIntervalSince1970: $0) }
+                .filter { restored.keys.contains($0.key) }
+        }
         if restored.count != dict.count {
             NSLog("[Kodomon] Pruned %d stale session(s)", dict.count - restored.count)
             persistActiveSessions()

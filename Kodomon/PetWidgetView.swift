@@ -303,7 +303,10 @@ struct PetWidgetView: View {
         }
         .onAppear {
             lastXP = engine.state.totalXP
-            engine.triggerPendingEvolution()
+            // Delay cutscene trigger so the widget is fully visible first
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                engine.triggerPendingEvolution()
+            }
         }
     }
 
