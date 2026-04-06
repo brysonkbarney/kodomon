@@ -30,8 +30,6 @@ class LeaderboardService: ObservableObject {
     private let endpoint = "https://iczwbhwfepgldhznbfjz.supabase.co/functions/v1/leaderboard-sync"
     private let kodomonIdKey = "kodomonLeaderboardId"
     private let optedInKey = "kodomonLeaderboardOptedIn"
-    private let syncInterval: TimeInterval = 21600 // 6 hours
-    private var lastSyncTime: Date = .distantPast
 
     var kodomonId: String {
         if let existing = UserDefaults.standard.string(forKey: kodomonIdKey) {
@@ -62,9 +60,8 @@ class LeaderboardService: ObservableObject {
 
     func sync(state: PetState, force: Bool = false) {
         guard isOptedIn else { return }
-        if !force && Date().timeIntervalSince(lastSyncTime) < syncInterval { return }
+        guard force else { return } // Only sync when explicitly forced (midnight, opt-in, evolution)
         isSyncing = true
-        lastSyncTime = Date()
 
         let body: [String: Any] = [
             "pet_name": state.petName,

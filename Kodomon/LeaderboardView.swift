@@ -50,7 +50,10 @@ struct LeaderboardView: View {
             Button(action: {
                 leaderboard.optIn()
                 leaderboard.sync(state: engine.state, force: true)
-                leaderboard.fetch(sort: sortBy)
+                // Delay fetch so the sync has time to write to DB
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    leaderboard.fetch(sort: sortBy)
+                }
             }) {
                 Text("Join Leaderboard")
                     .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -108,6 +111,10 @@ struct LeaderboardView: View {
             }
             .background(KodomonColors.border.opacity(0.3))
             .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            Text("Updated daily at midnight")
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
 
             // Entries
             if leaderboard.entries.isEmpty {

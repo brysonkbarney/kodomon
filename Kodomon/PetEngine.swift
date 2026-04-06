@@ -186,7 +186,6 @@ class PetEngine: ObservableObject {
 
         state.neglectState = .none
         save()
-        LeaderboardService.shared.sync(state: state)
         NSLog("[Kodomon] State saved — XP: %.0f, mood: %.0f", state.totalXP, state.mood)
     }
 
@@ -450,6 +449,7 @@ class PetEngine: ObservableObject {
         rotateEventsLog()
         save()
 
+        LeaderboardService.shared.sync(state: state, force: true)
         NSLog("[Kodomon] Midnight reset — Day %d, Streak: %d", state.daysAlive, state.currentStreak)
     }
 
