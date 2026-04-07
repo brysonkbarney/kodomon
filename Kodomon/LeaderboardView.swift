@@ -94,7 +94,12 @@ struct LeaderboardView: View {
                         .foregroundColor(KodomonColors.textSecondary)
                 }
                 .buttonStyle(.plain)
-                Button(action: { leaderboard.fetch(sort: sortBy) }) {
+                Button(action: {
+                    leaderboard.sync(state: engine.state, force: true)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        leaderboard.fetch(sort: sortBy)
+                    }
+                }) {
                     Text("↻")
                         .font(.system(size: 14))
                         .foregroundColor(KodomonColors.textSecondary)
