@@ -391,6 +391,7 @@ class PetEngine: ObservableObject {
         state.lastMidnightReset = today
         checkEvolution()
         checkDeEvolution()
+        LeaderboardService.shared.sync(state: state, force: true)
         save()
     }
 
