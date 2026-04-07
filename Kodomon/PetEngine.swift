@@ -97,6 +97,7 @@ class PetEngine: ObservableObject {
                 let cappedMins = max(0, min(minutes, 120 - state.todaySessionMins))
                 if cappedMins > 0 {
                     state.todaySessionMins += cappedMins
+                    state.totalSessionMins += cappedMins
                     let rawXP = XPCalculator.sessionXP(minutes: cappedMins)
                     let xp = XPCalculator.applyMultipliers(
                         rawXP: rawXP,

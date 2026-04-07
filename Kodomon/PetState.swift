@@ -99,6 +99,7 @@ struct PetState: Codable {
     var unlockedItems: Set<String>
     var activeBackground: String
     var totalCommits: Int
+    var totalSessionMins: Int
     var totalLinesWritten: Int
     var biggestCommitLines: Int
     var lastActiveDate: Date
@@ -121,7 +122,7 @@ struct PetState: Codable {
          totalXP: Double, todayXP: Double, todaySessionMins: Int, lifetimeXP: Double, stage: Stage,
          currentStreak: Int, longestStreak: Int, mood: Double, neglectState: NeglectState,
          equippedAccessories: [String], unlockedItems: Set<String>, activeBackground: String,
-         totalCommits: Int, totalLinesWritten: Int, biggestCommitLines: Int, lastActiveDate: Date,
+         totalCommits: Int, totalSessionMins: Int = 0, totalLinesWritten: Int, biggestCommitLines: Int, lastActiveDate: Date,
          stageReachedDate: Date?, lastMidnightReset: Date, todayFileTypes: Set<String>,
          todayFilesWritten: Set<String>, todayIsActive: Bool, activeEvent: RandomEvent?,
          activeEventExpiry: Date?, isReviving: Bool, revivalSessionStart: Date?, hasRevived: Bool,
@@ -132,7 +133,7 @@ struct PetState: Codable {
         self.stage = stage; self.currentStreak = currentStreak; self.longestStreak = longestStreak
         self.mood = mood; self.neglectState = neglectState; self.equippedAccessories = equippedAccessories
         self.unlockedItems = unlockedItems; self.activeBackground = activeBackground
-        self.totalCommits = totalCommits; self.totalLinesWritten = totalLinesWritten
+        self.totalCommits = totalCommits; self.totalSessionMins = totalSessionMins; self.totalLinesWritten = totalLinesWritten
         self.biggestCommitLines = biggestCommitLines; self.lastActiveDate = lastActiveDate
         self.stageReachedDate = stageReachedDate; self.lastMidnightReset = lastMidnightReset
         self.todayFileTypes = todayFileTypes; self.todayFilesWritten = todayFilesWritten
@@ -166,6 +167,7 @@ struct PetState: Codable {
         unlockedItems = try c.decodeIfPresent(Set<String>.self, forKey: .unlockedItems) ?? []
         activeBackground = try c.decodeIfPresent(String.self, forKey: .activeBackground) ?? "none"
         totalCommits = try c.decodeIfPresent(Int.self, forKey: .totalCommits) ?? 0
+        totalSessionMins = try c.decodeIfPresent(Int.self, forKey: .totalSessionMins) ?? 0
         totalLinesWritten = try c.decodeIfPresent(Int.self, forKey: .totalLinesWritten) ?? 0
         biggestCommitLines = try c.decodeIfPresent(Int.self, forKey: .biggestCommitLines) ?? 0
         lastActiveDate = try c.decodeIfPresent(Date.self, forKey: .lastActiveDate) ?? now

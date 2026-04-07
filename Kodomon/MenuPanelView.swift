@@ -163,7 +163,7 @@ struct StatsTab: View {
             Divider()
 
             statRow("Today's XP", "+\(Int(engine.state.todayXP))")
-            statRow("Session Time", "\(engine.state.todaySessionMins) min today")
+            statRow("Session Time", "\(engine.state.totalSessionMins / 60)h \(engine.state.totalSessionMins % 60)m")
             statRow("Lifetime XP", "\(Int(engine.state.lifetimeXP))")
             statRow("Total Commits", "\(engine.state.totalCommits)")
             statRow("Lines Written", "\(engine.state.totalLinesWritten)")
