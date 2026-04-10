@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0.16</string>
+	<string>1.0.17</string>
 	<key>CFBundleVersion</key>
-	<string>16</string>
+	<string>17</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSUIElement</key>
@@ -18,5 +18,7 @@
 	<string>https://kodomon.app/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>tK9j/JqcWG5srxjIeqiEBGlcTFF7ysEvKIGl3ZuJN1A=</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>14400</integer>
 </dict>
 </plist>

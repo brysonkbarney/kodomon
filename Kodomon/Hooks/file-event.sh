@@ -5,22 +5,23 @@
 KODOMON_DIR="$HOME/.kodomon"
 EVENT_FILE="$KODOMON_DIR/events.jsonl"
 mkdir -p "$KODOMON_DIR"
+JQ=$(command -v jq 2>/dev/null || echo /usr/bin/jq)
 
 INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | /usr/bin/jq -r '.tool_input.file_path // empty' 2>/dev/null || echo "unknown")
-TOOL_NAME=$(echo "$INPUT" | /usr/bin/jq -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
+FILE_PATH=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.file_path // empty' 2>/dev/null || echo "unknown")
+TOOL_NAME=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_name // "unknown"' 2>/dev/null || echo "unknown")
 TS=$(date +%s)
 
 # Count lines written
 LINES=0
 if [ "$TOOL_NAME" = "Write" ]; then
-  LINES=$(echo "$INPUT" | /usr/bin/jq -r '.tool_input.content // empty' 2>/dev/null | wc -l | tr -d ' ')
+  LINES=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.content // empty' 2>/dev/null | wc -l | tr -d ' ')
 elif [ "$TOOL_NAME" = "Edit" ] || [ "$TOOL_NAME" = "MultiEdit" ]; then
-  LINES=$(echo "$INPUT" | /usr/bin/jq -r '.tool_input.new_string // empty' 2>/dev/null | wc -l | tr -d ' ')
+  LINES=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.new_string // empty' 2>/dev/null | wc -l | tr -d ' ')
 fi
 
 if [ -n "$FILE_PATH" ]; then
-  /usr/bin/jq -nc \
+  "${JQ:-jq}" -nc \
     --arg type "file_write" \
     --argjson ts "$TS" \
     --arg file "$FILE_PATH" \

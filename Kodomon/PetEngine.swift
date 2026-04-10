@@ -547,8 +547,13 @@ class PetEngine: ObservableObject {
 
     private func rotateEventsLog() {
         let path = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".kodomon/events.jsonl")
-        try? "".write(to: path, atomically: true, encoding: .utf8)
+            .appendingPathComponent(".kodomon/events.jsonl").path
+        // Truncate in place to preserve the file inode — atomic write replaces
+        // the inode which breaks the DispatchSource file watcher
+        if let fh = FileHandle(forWritingAtPath: path) {
+            fh.truncateFile(atOffset: 0)
+            fh.closeFile()
+        }
         watcher.resetOffset()
         NSLog("[Kodomon] Events log rotated")
     }

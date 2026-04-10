@@ -86,11 +86,11 @@ struct ShareCardView: View {
 
                     // Stats grid
                     HStack(spacing: 0) {
-                        ShareStat(value: "\(state.daysAlive)", label: "DAYS")
+                        ShareStat(value: formatXP(state.totalXP), label: "XP")
                         ShareStatDivider()
-                        ShareStat(value: formatXP(state.lifetimeXP), label: "XP")
+                        ShareStat(value: "\(state.currentStreak)d", label: "STREAK")
                         ShareStatDivider()
-                        ShareStat(value: "\(state.longestStreak)d", label: "BEST STREAK")
+                        ShareStat(value: "\(state.activeDays)", label: "ACTIVE DAYS")
                         if state.hasRevived {
                             ShareStatDivider()
                             ShareStat(value: "★", label: "SURVIVOR")

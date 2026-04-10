@@ -12,6 +12,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
 
+        HookInstaller.installOrUpdate()
+
         engine = PetEngine(watcher: watcher)
         watcher.startWatching()
 

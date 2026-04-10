@@ -5,14 +5,15 @@
 KODOMON_DIR="$HOME/.kodomon"
 EVENT_FILE="$KODOMON_DIR/events.jsonl"
 mkdir -p "$KODOMON_DIR"
+JQ=$(command -v jq 2>/dev/null || echo /usr/bin/jq)
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | /usr/bin/jq -r '.tool_input.command // empty' 2>/dev/null)
+COMMAND=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.command // empty' 2>/dev/null)
 TS=$(date +%s)
 
 # Only track git commits
 if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+commit'; then
-  CWD=$(echo "$INPUT" | /usr/bin/jq -r '.cwd // empty' 2>/dev/null)
+  CWD=$(echo "$INPUT" | "${JQ:-jq}" -r '.cwd // empty' 2>/dev/null)
   GIT_DIR="${CWD:-.}"
 
   LINES_ADDED=0
@@ -30,7 +31,7 @@ if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+commit'; then
     LINES_REMOVED=$(echo "$SHORTSTAT" | grep -oE '[0-9]+ deletion' | head -1 | grep -oE '[0-9]+')
   fi
 
-  /usr/bin/jq -nc \
+  "${JQ:-jq}" -nc \
     --arg type "git_commit" \
     --argjson ts "$TS" \
     --arg hash "$HASH" \
