@@ -386,19 +386,23 @@ struct KodexTab: View {
                 }
             }
 
-            // Sprite placeholder box — stays square-ish
+            // Sprite box — shows the actual pixel sprite for unlocked
+            // species at their current stage, tinted with the Kodomon's
+            // own hue. Locked species show a question-mark silhouette.
             ZStack {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(KodomonColors.background.opacity(0.8))
                 if unlocked, let k = kodomon {
-                    Circle()
-                        .fill(hueColor(k.hue))
-                        .frame(width: 28, height: 28)
-                        .overlay(
-                            Text(String(species.displayName.prefix(1)))
-                                .font(.system(size: 14, weight: .bold, design: .monospaced))
-                                .foregroundColor(.white)
-                        )
+                    PixelSpriteView(
+                        stage: k.stage,
+                        pixelSize: 1,
+                        evolveProgress: 0,
+                        petHue: k.hue,
+                        isStatic: true,
+                        equippedAccessories: [],
+                        neglectState: .none
+                    )
+                    .scaleEffect(1.2)
                 } else {
                     Circle()
                         .fill(KodomonColors.textSecondary.opacity(0.25))
@@ -448,6 +452,23 @@ struct KodexTab: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 if unlocked, let k = kodomon {
+                    // Bigger sprite preview at the top of the detail panel
+                    HStack {
+                        Spacer()
+                        PixelSpriteView(
+                            stage: k.stage,
+                            pixelSize: 2,
+                            evolveProgress: 0,
+                            petHue: k.hue,
+                            isStatic: true,
+                            equippedAccessories: k.equippedAccessories,
+                            neglectState: .none
+                        )
+                        .frame(height: 72)
+                        Spacer()
+                    }
+                    .padding(.bottom, 4)
+
                     HStack(alignment: .firstTextBaseline) {
                         Text(species.displayName)
                             .font(.system(size: 14, weight: .bold, design: .monospaced))
