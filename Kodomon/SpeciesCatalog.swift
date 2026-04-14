@@ -73,6 +73,38 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
         case .legendary: return 3
         }
     }
+
+    /// XP floor below which a species of this rarity begins de-evolving from
+    /// the given stage. Includes a grace buffer — this is the point at which
+    /// de-evolution *triggers*, not the stage entry threshold. Common
+    /// matches v1 Tamago crab thresholds exactly.
+    func deEvolveFloor(for stage: Stage) -> Double {
+        switch stage {
+        case .tamago:
+            return 0
+        case .kobito:
+            switch self {
+            case .common: return 500
+            case .uncommon: return 600
+            case .rare: return 750
+            case .legendary: return 1_000
+            }
+        case .kani:
+            switch self {
+            case .common: return 5_000
+            case .uncommon: return 6_000
+            case .rare: return 7_500
+            case .legendary: return 10_000
+            }
+        case .kamisama:
+            switch self {
+            case .common: return 15_000
+            case .uncommon: return 18_000
+            case .rare: return 22_500
+            case .legendary: return 30_000
+            }
+        }
+    }
 }
 
 // MARK: - Trigger
