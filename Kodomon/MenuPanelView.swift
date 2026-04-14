@@ -257,28 +257,17 @@ struct StatsTab: View {
 struct KodexTab: View {
     @ObservedObject var engine: PetEngine
 
-    /// Species ID currently selected in the grid (click-to-select). Nil
-    /// means nothing explicitly selected — the details panel falls back
-    /// to the currently active Kodomon's species so it's never empty.
+    /// Species ID currently selected (click-to-select). Nil = fall back to
+    /// the currently active Kodomon's species.
     @State private var selectedSpeciesID: String? = nil
 
-    /// Species whose details are shown in the detail panel below.
-    /// Explicit selection takes priority; otherwise show active.
-    private var detailSpecies: SpeciesDefinition? {
-        if let id = selectedSpeciesID {
-            return SpeciesCatalog.definition(forID: id)
-        }
-        return SpeciesCatalog.definition(forID: engine.activeKodomon.speciesID)
-    }
+    /// True when the egg cell is selected — details panel shows egg info
+    /// with Hatch button instead of a species. Takes priority over
+    /// selectedSpeciesID. Reset on cell click, hatch, or egg dismissal.
+    @State private var eggSelected: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Incubating egg at the very top — it's the most urgent thing
-            if !engine.player.pendingEggs.isEmpty {
-                incubatingEggSection
-                Divider()
-            }
-
             // Section header — matches the Stats/Style/Info tab pattern
             HStack(alignment: .firstTextBaseline) {
                 Text("Kodex")
@@ -290,7 +279,7 @@ struct KodexTab: View {
                     .foregroundColor(KodomonColors.textSecondary)
             }
 
-            // 3×2 grid of species cells (click to select)
+            // Grid of cells (egg cell when a pending egg exists, then species)
             speciesGrid
 
             // Persistent details panel below the grid
@@ -298,75 +287,103 @@ struct KodexTab: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
-    }
-
-    // MARK: Incubating egg — compact single-row form so the detail panel
-    // below the grid still fits in the 420pt menu window.
-
-    private var incubatingEggSection: some View {
-        let isReady = engine.headEggIsReady
-        let progress = engine.headEggProgress
-        let pct = Int(progress * 100)
-        let queueExtra = engine.player.pendingEggs.count - 1
-
-        return HStack(spacing: 10) {
-            Text("◓")
-                .font(.system(size: 18))
-                .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
-
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 4) {
-                    Text("???")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundColor(KodomonColors.textPrimary)
-                    Text("·")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
-                    Text(isReady ? "ready to hatch" : "\(pct)% incubated")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
-                    if queueExtra > 0 {
-                        Text("· +\(queueExtra) waiting")
-                            .font(.system(size: 8, design: .monospaced))
-                            .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
-                    }
-                    Spacer()
-                }
-                PixelXPBar(
-                    progress: progress,
-                    color: isReady ? KodomonColors.accent : KodomonColors.teal
-                )
+        // If the egg queue empties (hatched or dismissed), drop egg selection.
+        .onChange(of: engine.player.pendingEggs.count) { _, newCount in
+            if newCount == 0 && eggSelected {
+                eggSelected = false
             }
-
-            Button(action: {
-                engine.hatchHeadEggIfReady()
-            }) {
-                Text(isReady ? "Hatch" : "...")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundColor(isReady ? .white : KodomonColors.textSecondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(isReady ? KodomonColors.accent : KodomonColors.border.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 4))
-            }
-            .buttonStyle(.plain)
-            .disabled(!isReady)
         }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(KodomonColors.border.opacity(0.15))
-        )
     }
 
     // MARK: Grid
 
+    /// A slot in the Kodex grid — either an incubating egg cell or a species cell.
+    private enum KodexSlot: Identifiable {
+        case egg
+        case species(SpeciesDefinition, Int)
+
+        var id: String {
+            switch self {
+            case .egg: return "__egg__"
+            case let .species(s, _): return s.id
+            }
+        }
+    }
+
+    private var gridSlots: [KodexSlot] {
+        var result: [KodexSlot] = []
+        if !engine.player.pendingEggs.isEmpty {
+            result.append(.egg)
+        }
+        for (index, species) in SpeciesCatalog.all.enumerated() {
+            result.append(.species(species, index + 1))
+        }
+        return result
+    }
+
     private var speciesGrid: some View {
         let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
         return LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(Array(SpeciesCatalog.all.enumerated()), id: \.element.id) { index, species in
-                speciesCell(species: species, zukanNumber: index + 1)
+            ForEach(gridSlots) { slot in
+                switch slot {
+                case .egg:
+                    eggCell()
+                case let .species(species, zukanNumber):
+                    speciesCell(species: species, zukanNumber: zukanNumber)
+                }
             }
+        }
+    }
+
+    private func eggCell() -> some View {
+        let isReady = engine.headEggIsReady
+        let pct = Int(engine.headEggProgress * 100)
+        let queueExtra = engine.player.pendingEggs.count - 1
+        let isSelected = eggSelected
+
+        return VStack(spacing: 3) {
+            HStack {
+                Text("EGG")
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary.opacity(0.6))
+                Spacer()
+                if queueExtra > 0 {
+                    Text("+\(queueExtra)")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                }
+            }
+
+            ZStack {
+                Text("◓")
+                    .font(.system(size: 28))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary.opacity(0.8))
+            }
+            .frame(height: 48)
+
+            Text(isReady ? "READY" : "\(pct)%")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
+                .lineLimit(1)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? KodomonColors.accent.opacity(0.1) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(
+                    isSelected ? KodomonColors.accent.opacity(0.6)
+                        : (isReady ? KodomonColors.accent.opacity(0.4) : KodomonColors.border.opacity(0.3)),
+                    lineWidth: 1
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            eggSelected = true
+            selectedSpeciesID = nil
         }
     }
 
@@ -428,19 +445,102 @@ struct KodexTab: View {
         .contentShape(Rectangle())
         .onTapGesture {
             selectedSpeciesID = species.id
+            eggSelected = false
         }
     }
 
     // MARK: Detail panel
 
+    /// Species currently shown in the detail panel. Only meaningful when
+    /// `eggSelected` is false. Explicit selection takes priority; falls back
+    /// to active.
+    private var detailSpecies: SpeciesDefinition? {
+        if let id = selectedSpeciesID {
+            return SpeciesCatalog.definition(forID: id)
+        }
+        return SpeciesCatalog.definition(forID: engine.activeKodomon.speciesID)
+    }
+
     @ViewBuilder
     private var detailPanel: some View {
-        if let species = detailSpecies {
-            let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
-            let kodomon = engine.player.collection.first { $0.speciesID == species.id }
-            let isActive = kodomon?.id == engine.player.activeKodomonID
+        if eggSelected {
+            eggDetailPanel
+        } else if let species = detailSpecies {
+            speciesDetailPanel(species: species)
+        }
+    }
 
-            VStack(alignment: .leading, spacing: 6) {
+    private var eggDetailPanel: some View {
+        let isReady = engine.headEggIsReady
+        let progress = engine.headEggProgress
+        let pct = Int(progress * 100)
+        let queueExtra = engine.player.pendingEggs.count - 1
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Incubating Egg")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.accent)
+                Text("— ???")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Spacer()
+                if queueExtra > 0 {
+                    Text("+\(queueExtra) in queue")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+                }
+            }
+
+            HStack {
+                Text(isReady ? "Ready to hatch" : "\(pct)% incubated")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textPrimary)
+                Spacer()
+            }
+
+            PixelXPBar(
+                progress: progress,
+                color: isReady ? KodomonColors.accent : KodomonColors.teal
+            )
+
+            Text(isReady
+                ? "Tap Hatch to reveal the species."
+                : "Keep coding to fill the incubation bar.")
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+
+            Button(action: {
+                engine.hatchHeadEggIfReady()
+            }) {
+                Text(isReady ? "Hatch" : "Keep coding...")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(isReady ? .white : KodomonColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(isReady ? KodomonColors.accent : KodomonColors.border.opacity(0.3))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isReady)
+            .padding(.top, 4)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.border.opacity(0.2))
+        )
+    }
+
+    private func speciesDetailPanel(species: SpeciesDefinition) -> some View {
+        let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
+        let kodomon = engine.player.collection.first { $0.speciesID == species.id }
+        let isActive = kodomon?.id == engine.player.activeKodomonID
+
+        return VStack(alignment: .leading, spacing: 6) {
                 if unlocked, let k = kodomon {
                     // Header: name + stage + deployed badge
                     HStack(alignment: .firstTextBaseline) {
@@ -494,27 +594,26 @@ struct KodexTab: View {
                         .buttonStyle(.plain)
                         .padding(.top, 4)
                     }
-                } else {
-                    // Locked species — stays fully mysterious
-                    Text("???")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary)
-                    Text("Undiscovered")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
-                    Text("Keep coding. You'll find it eventually.")
-                        .font(.system(size: 8, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+            } else {
+                // Locked species — stays fully mysterious
+                Text("???")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Text("Undiscovered")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                Text("Keep coding. You'll find it eventually.")
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(KodomonColors.border.opacity(0.2))
-            )
         }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.border.opacity(0.2))
+        )
     }
 
     // MARK: Helpers
