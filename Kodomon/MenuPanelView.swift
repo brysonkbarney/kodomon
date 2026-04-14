@@ -257,43 +257,43 @@ struct StatsTab: View {
 struct KodexTab: View {
     @ObservedObject var engine: PetEngine
 
-    /// Species ID currently being hovered over in the grid. Nil means the
-    /// cursor isn't over any cell — the details panel falls back to the
-    /// currently active Kodomon's species.
-    @State private var hoveredSpeciesID: String? = nil
+    /// Species ID currently selected in the grid (click-to-select). Nil
+    /// means nothing explicitly selected — the details panel falls back
+    /// to the currently active Kodomon's species so it's never empty.
+    @State private var selectedSpeciesID: String? = nil
 
-    /// The species whose details are shown in the detail panel below.
-    /// Hovering takes priority; otherwise show the active Kodomon's species.
+    /// Species whose details are shown in the detail panel below.
+    /// Explicit selection takes priority; otherwise show active.
     private var detailSpecies: SpeciesDefinition? {
-        if let id = hoveredSpeciesID {
+        if let id = selectedSpeciesID {
             return SpeciesCatalog.definition(forID: id)
         }
         return SpeciesCatalog.definition(forID: engine.activeKodomon.speciesID)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             // Incubating egg at the very top — it's the most urgent thing
             if !engine.player.pendingEggs.isEmpty {
                 incubatingEggSection
                 Divider()
             }
 
-            // Pokedex header
+            // Section header — matches the Stats/Style/Info tab pattern
             HStack(alignment: .firstTextBaseline) {
-                Text("KODEX")
-                    .font(.system(size: 13, weight: .bold, design: .monospaced))
-                    .foregroundColor(KodomonColors.accent)
+                Text("Kodex")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textPrimary)
                 Spacer()
                 Text("\(engine.player.collection.count)/\(SpeciesCatalog.all.count) discovered")
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .font(.system(size: 9, design: .monospaced))
                     .foregroundColor(KodomonColors.textSecondary)
             }
 
-            // 3×2 grid of species cells
+            // 3×2 grid of species cells (click to select)
             speciesGrid
 
-            // Hover-driven details panel below the grid
+            // Persistent details panel below the grid
             detailPanel
         }
         .padding(.horizontal, 16)
@@ -370,28 +370,20 @@ struct KodexTab: View {
         let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
         let kodomon = engine.player.collection.first { $0.speciesID == species.id }
         let isActive = kodomon?.id == engine.player.activeKodomonID
-        let isHovered = hoveredSpeciesID == species.id
+        let isSelected = selectedSpeciesID == species.id
+            || (selectedSpeciesID == nil && isActive)
 
-        return VStack(spacing: 4) {
-            // Zukan number badge
+        return VStack(spacing: 3) {
+            // Zukan number — small corner label
             HStack {
                 Text(String(format: "#%03d", zukanNumber))
                     .font(.system(size: 8, weight: .bold, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
                 Spacer()
-                if isActive {
-                    Circle()
-                        .fill(KodomonColors.accent)
-                        .frame(width: 6, height: 6)
-                }
             }
 
-            // Sprite box — shows the actual pixel sprite for unlocked
-            // species at their current stage, tinted with the Kodomon's
-            // own hue. Locked species show a question-mark silhouette.
+            // Sprite area — actual PixelSpriteView for unlocked, silhouette for locked
             ZStack {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(KodomonColors.background.opacity(0.8))
                 if unlocked, let k = kodomon {
                     PixelSpriteView(
                         stage: k.stage,
@@ -402,42 +394,36 @@ struct KodexTab: View {
                         equippedAccessories: [],
                         neglectState: .none
                     )
-                    .scaleEffect(1.2)
                 } else {
-                    Circle()
-                        .fill(KodomonColors.textSecondary.opacity(0.25))
-                        .frame(width: 28, height: 28)
-                        .overlay(
-                            Text("?")
-                                .font(.system(size: 16, weight: .bold, design: .monospaced))
-                                .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
-                        )
+                    Text("?")
+                        .font(.system(size: 22, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.4))
                 }
             }
-            .frame(height: 54)
+            .frame(height: 48)
 
             // Name label
             Text(unlocked ? species.displayName : "???")
-                .font(.system(size: 9, weight: .bold, design: .monospaced))
-                .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.6))
+                .font(.system(size: 9, weight: unlocked ? .bold : .medium, design: .monospaced))
+                .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
                 .lineLimit(1)
         }
-        .padding(6)
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
         .background(
-            RoundedRectangle(cornerRadius: 8)
-                .fill(isHovered ? KodomonColors.accent.opacity(0.1) : Color.clear)
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? KodomonColors.accent.opacity(0.1) : Color.clear)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: 4)
                 .stroke(
-                    isActive ? KodomonColors.accent
-                        : (isHovered ? KodomonColors.accent.opacity(0.5) : KodomonColors.border.opacity(0.3)),
-                    lineWidth: isActive ? 2 : 1
+                    isSelected ? KodomonColors.accent.opacity(0.6) : KodomonColors.border.opacity(0.3),
+                    lineWidth: 1
                 )
         )
         .contentShape(Rectangle())
-        .onHover { hovering in
-            hoveredSpeciesID = hovering ? species.id : (hoveredSpeciesID == species.id ? nil : hoveredSpeciesID)
+        .onTapGesture {
+            selectedSpeciesID = species.id
         }
     }
 
@@ -450,55 +436,43 @@ struct KodexTab: View {
             let kodomon = engine.player.collection.first { $0.speciesID == species.id }
             let isActive = kodomon?.id == engine.player.activeKodomonID
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 if unlocked, let k = kodomon {
-                    // Bigger sprite preview at the top of the detail panel
-                    HStack {
-                        Spacer()
-                        PixelSpriteView(
-                            stage: k.stage,
-                            pixelSize: 2,
-                            evolveProgress: 0,
-                            petHue: k.hue,
-                            isStatic: true,
-                            equippedAccessories: k.equippedAccessories,
-                            neglectState: .none
-                        )
-                        .frame(height: 72)
-                        Spacer()
-                    }
-                    .padding(.bottom, 4)
-
+                    // Header: name + stage + deployed badge
                     HStack(alignment: .firstTextBaseline) {
                         Text(species.displayName)
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
                             .foregroundColor(KodomonColors.accent)
                         Text("— \(k.stage.displayName)")
-                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
                             .foregroundColor(KodomonColors.textSecondary)
                         Spacer()
                         if isActive {
                             Text("DEPLOYED")
-                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
                                 .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
                                 .background(KodomonColors.accent)
                                 .clipShape(RoundedRectangle(cornerRadius: 3))
                         }
                     }
 
-                    Text("\"\(k.name)\"")
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundColor(KodomonColors.textPrimary)
-
-                    Text("\(Int(k.speciesXP)) species XP")
-                        .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary)
+                    // Pet name + XP — matches statRow style from Stats tab
+                    HStack {
+                        Text("\"\(k.name)\"")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(KodomonColors.textPrimary)
+                        Spacer()
+                        Text("\(Int(k.speciesXP)) XP")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                    }
 
                     Text(species.earnedDescription)
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(size: 8, design: .monospaced))
                         .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 2)
 
                     if !isActive {
@@ -506,37 +480,35 @@ struct KodexTab: View {
                             engine.setActive(kodomonID: k.id)
                         }) {
                             Text("Deploy \(k.name)")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 7)
                                 .background(KodomonColors.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
                         }
                         .buttonStyle(.plain)
                         .padding(.top, 4)
                     }
                 } else {
                     // Locked species — stays fully mysterious
-                    HStack {
-                        Text("???")
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))
-                            .foregroundColor(KodomonColors.textSecondary)
-                        Spacer()
-                    }
-                    Text("Undiscovered species")
+                    Text("???")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+                    Text("Undiscovered")
                         .font(.system(size: 9, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
                     Text("Keep coding. You'll find it eventually.")
-                        .font(.system(size: 9, design: .monospaced))
+                        .font(.system(size: 8, design: .monospaced))
                         .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(12)
+            .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 8)
-                    .fill(KodomonColors.border.opacity(0.15))
+                    .fill(KodomonColors.border.opacity(0.2))
             )
         }
     }
