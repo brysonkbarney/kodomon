@@ -8,6 +8,7 @@ struct MenuPanelView: View {
 
     enum MenuTab: String, CaseIterable {
         case stats = "Stats"
+        case collection = "Collection"
         case customize = "Style"
         case info = "Info"
     }
@@ -60,6 +61,8 @@ struct MenuPanelView: View {
                     switch tab {
                     case .stats:
                         StatsTab(engine: engine, showingLeaderboard: $showingLeaderboard)
+                    case .collection:
+                        CollectionTab(engine: engine)
                     case .customize:
                         CustomizeTab(engine: engine)
                     case .info:
@@ -176,32 +179,11 @@ struct StatsTab: View {
 
             Divider()
 
-            // v2 collection visibility. Everything here is deliberately
-            // rarity-agnostic — no raw XP numbers, no species names — so
-            // players can't reverse-engineer what's in the egg before it
-            // hatches. Reveal happens at the hatch cutscene.
+            // Collection size. Full egg / species details live in the
+            // Collection tab — this is just a summary on the Stats page.
             let totalSpecies = SpeciesCatalog.all.count
             let discovered = engine.player.collection.count
             statRow("Collection", "\(discovered)/\(totalSpecies)")
-            if !engine.player.pendingEggs.isEmpty {
-                let headEgg = engine.player.pendingEggs[0]
-                // Use the egg's own rarity for its hatch requirements, but
-                // the min of all three incubation fractions so the bar
-                // advances only when every dimension (XP, active days,
-                // streak) is progressing.
-                let rarity = headEgg.species?.rarity ?? .common
-                let xpFrac = min(1.0, headEgg.incubationXP / rarity.hatchXP)
-                let daysFrac = rarity.hatchActiveDays == 0 ? 1.0
-                    : min(1.0, Double(headEgg.incubationActiveDays) / Double(rarity.hatchActiveDays))
-                let streakFrac = rarity.hatchStreak == 0 ? 1.0
-                    : min(1.0, Double(engine.player.currentStreak) / Double(rarity.hatchStreak))
-                let overallFrac = min(xpFrac, daysFrac, streakFrac)
-                let pct = Int(overallFrac * 100)
-                statRow("Egg Incubating", "??? — \(pct)%")
-                if engine.player.pendingEggs.count > 1 {
-                    statRow("In Queue", "\(engine.player.pendingEggs.count - 1) more")
-                }
-            }
 
             if let event = engine.player.activeEvent {
                 Divider()
@@ -268,6 +250,179 @@ struct StatsTab: View {
         }
     }
 
+}
+
+// MARK: - Collection Tab
+
+struct CollectionTab: View {
+    @ObservedObject var engine: PetEngine
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Incubating egg section (if any)
+            if !engine.player.pendingEggs.isEmpty {
+                incubatingEggSection
+                Divider()
+            }
+
+            // Species grid — silhouettes for locked, full details for unlocked
+            Text("Species")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            let discoveredIDs = Set(engine.player.collection.map { $0.speciesID })
+            ForEach(SpeciesCatalog.all, id: \.id) { species in
+                let unlocked = discoveredIDs.contains(species.id)
+                if unlocked,
+                   let kodomon = engine.player.collection.first(where: { $0.speciesID == species.id }) {
+                    unlockedRow(species: species, kodomon: kodomon)
+                } else {
+                    lockedRow()
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+    }
+
+    // MARK: Incubating egg
+
+    private var incubatingEggSection: some View {
+        let isReady = engine.headEggIsReady
+        let progress = engine.headEggProgress
+        let pct = Int(progress * 100)
+        let queueExtra = engine.player.pendingEggs.count - 1
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Text("Incubating Egg")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            HStack {
+                // Simple egg glyph — pulses conceptually with the accent
+                // color when ready, dim when still incubating.
+                Text("◓")
+                    .font(.system(size: 24))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("???")
+                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textPrimary)
+                    Text(isReady ? "Ready to hatch!" : "\(pct)% incubated")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
+                }
+                Spacer()
+            }
+
+            PixelXPBar(
+                progress: progress,
+                color: isReady ? KodomonColors.accent : KodomonColors.teal
+            )
+
+            // Hatch button — disabled when not ready, accent when ready
+            Button(action: {
+                engine.hatchHeadEggIfReady()
+            }) {
+                Text(isReady ? "Hatch" : "Keep coding...")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(isReady ? .white : KodomonColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(isReady ? KodomonColors.accent : KodomonColors.border.opacity(0.3))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isReady)
+
+            if queueExtra > 0 {
+                Text("\(queueExtra) more egg\(queueExtra == 1 ? "" : "s") waiting in queue")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+            }
+        }
+    }
+
+    // MARK: Species rows
+
+    private func unlockedRow(species: SpeciesDefinition, kodomon: KodomonState) -> some View {
+        let isActive = kodomon.id == engine.player.activeKodomonID
+        return HStack(alignment: .top, spacing: 10) {
+            // Simple tinted disc placeholder — real sprites land in a later phase.
+            Circle()
+                .fill(hueColor(kodomon.hue))
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Text(String(species.displayName.prefix(1)))
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
+                )
+
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(species.displayName)
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textPrimary)
+                    if isActive {
+                        Text("ACTIVE")
+                            .font(.system(size: 7, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(KodomonColors.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                    }
+                }
+                Text("\(kodomon.name) — \(kodomon.stage.displayName)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Text(species.earnedDescription)
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isActive ? KodomonColors.accent.opacity(0.08) : Color.clear)
+        )
+    }
+
+    private func lockedRow() -> some View {
+        HStack(spacing: 10) {
+            // Silhouette placeholder
+            Circle()
+                .fill(KodomonColors.textSecondary.opacity(0.25))
+                .frame(width: 32, height: 32)
+                .overlay(
+                    Text("?")
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("???")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Text("Undiscovered")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+            }
+            Spacer()
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+    }
+
+    // MARK: Helpers
+
+    /// Convert a stored hue (0.0-1.0) back into a Color for the placeholder disc.
+    private func hueColor(_ hue: Double) -> Color {
+        Color(hue: hue, saturation: 0.75, brightness: 0.85)
+    }
 }
 
 // MARK: - Customize Tab

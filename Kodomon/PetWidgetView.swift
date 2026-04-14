@@ -241,6 +241,18 @@ struct PetWidgetView: View {
                                 Text("≡")
                                     .font(.system(size: 16, weight: .bold, design: .monospaced))
                                     .foregroundColor(KodomonColors.textSecondary)
+                                    .overlay(alignment: .topTrailing) {
+                                        // Notification dot — appears whenever
+                                        // there are pending eggs so the user
+                                        // can't miss that something is waiting
+                                        // for them in the Collection tab.
+                                        if !engine.player.pendingEggs.isEmpty {
+                                            Circle()
+                                                .fill(KodomonColors.accent)
+                                                .frame(width: 6, height: 6)
+                                                .offset(x: 3, y: -2)
+                                        }
+                                    }
                             }
                             .buttonStyle(.plain)
                         }

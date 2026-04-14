@@ -240,9 +240,10 @@ class PetEngine: ObservableObject {
 
         // Head of the pending egg queue accumulates incubation XP alongside
         // the active Kodomon's species XP. Only the head incubates.
+        // Hatching is NOT automatic — the user must explicitly click Hatch
+        // in the Collection tab once the egg reaches the ready state.
         if !player.pendingEggs.isEmpty {
             player.pendingEggs[0].incubationXP += xp
-            checkHatching()
         }
 
         checkEvolution()
@@ -431,10 +432,10 @@ class PetEngine: ObservableObject {
             player.currentStreak += 1
             player.longestStreak = max(player.longestStreak, player.currentStreak)
 
-            // Incubation active-days clock advances only on player-active days
+            // Incubation active-days clock advances only on player-active days.
+            // Hatching stays manual — no auto-hatch on day rollover either.
             if !player.pendingEggs.isEmpty {
                 player.pendingEggs[0].incubationActiveDays += 1
-                checkHatching()
             }
         }
 
@@ -477,10 +478,10 @@ class PetEngine: ObservableObject {
             player.currentStreak += 1
             player.longestStreak = max(player.longestStreak, player.currentStreak)
 
-            // Incubation active-days clock advances only on player-active days
+            // Incubation active-days clock advances only on player-active days.
+            // Hatching stays manual — no auto-hatch on day rollover.
             if !player.pendingEggs.isEmpty {
                 player.pendingEggs[0].incubationActiveDays += 1
-                checkHatching()
             }
         } else {
             player.currentStreak = 0
@@ -731,25 +732,54 @@ class PetEngine: ObservableObject {
         NotificationManager.shared.sendEggDiscoveredNotification()
     }
 
-    /// Check whether the head of the pending-egg queue meets its rarity-scaled
-    /// hatching requirements. If so, hatch it into a fresh KodomonState and
-    /// append to the collection.
-    private func checkHatching() {
-        guard let head = player.pendingEggs.first else { return }
-        guard let species = head.species else {
-            // Unknown species ID in the queue — discard gracefully so we
-            // don't block the queue forever on a stale entry.
-            NSLog("[Kodomon] Dropping pending egg with unknown speciesID: %@", head.speciesID)
-            player.pendingEggs.removeFirst()
+    /// Whether the head of the pending-egg queue meets all rarity-scaled
+    /// hatching requirements. UI reads this to decide whether to show an
+    /// active "Hatch" button.
+    var headEggIsReady: Bool {
+        guard let head = player.pendingEggs.first else { return false }
+        guard let species = head.species else { return false }
+        let rarity = species.rarity
+        return head.incubationXP >= rarity.hatchXP
+            && head.incubationActiveDays >= rarity.hatchActiveDays
+            && player.currentStreak >= rarity.hatchStreak
+    }
+
+    /// Fractional incubation progress (0.0 to 1.0) for the head egg, using
+    /// the minimum of all three dimensions (XP, active days, streak) so the
+    /// bar only advances when every requirement is progressing. UI-ready —
+    /// rarity-agnostic so it doesn't leak what's in the egg.
+    var headEggProgress: Double {
+        guard let head = player.pendingEggs.first else { return 0 }
+        guard let species = head.species else { return 0 }
+        let rarity = species.rarity
+        let xpFrac = min(1.0, head.incubationXP / rarity.hatchXP)
+        let daysFrac = rarity.hatchActiveDays == 0
+            ? 1.0
+            : min(1.0, Double(head.incubationActiveDays) / Double(rarity.hatchActiveDays))
+        let streakFrac = rarity.hatchStreak == 0
+            ? 1.0
+            : min(1.0, Double(player.currentStreak) / Double(rarity.hatchStreak))
+        return min(xpFrac, daysFrac, streakFrac)
+    }
+
+    /// User-initiated hatch of the head egg. No-op if the queue is empty
+    /// or the head isn't ready yet. Called by the Collection tab's Hatch
+    /// button — hatching is never automatic.
+    func hatchHeadEggIfReady() {
+        guard headEggIsReady else { return }
+        guard let head = player.pendingEggs.first,
+              let species = head.species else {
+            // Stale entry (species was removed in a future version) —
+            // drop it so the queue isn't blocked forever.
+            if !player.pendingEggs.isEmpty {
+                NSLog("[Kodomon] Dropping pending egg with unknown speciesID")
+                player.pendingEggs.removeFirst()
+                save()
+            }
             return
         }
-
-        let rarity = species.rarity
-        guard head.incubationXP >= rarity.hatchXP else { return }
-        guard head.incubationActiveDays >= rarity.hatchActiveDays else { return }
-        guard player.currentStreak >= rarity.hatchStreak else { return }
-
         hatchHeadEgg(species: species)
+        save()
     }
 
     /// Pop the head of the queue and create the new Kodomon in the collection.
