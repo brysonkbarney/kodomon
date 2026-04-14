@@ -189,43 +189,43 @@ enum SpeciesCatalog {
         ),
         SpeciesDefinition(
             id: "committer",
-            displayName: "Committer",
+            displayName: "Kozuchi",
             rarity: .common,
             spriteBundle: "committer",
             trigger: .commitsInDay(count: 10),
-            earnedDescription: "You shipped 10 commits in one day."
+            earnedDescription: "Kozuchi appears after you ship 10 commits in a day."
         ),
         SpeciesDefinition(
             id: "polyglot",
-            displayName: "Polyglot",
+            displayName: "Tanuki",
             rarity: .common,
             spriteBundle: "polyglot",
             trigger: .distinctExtensionsInDay(count: 5),
-            earnedDescription: "You touched 5 different file types in one day."
+            earnedDescription: "Tanuki appears after you touch 5 different file types in a day."
         ),
         SpeciesDefinition(
             id: "night_owl",
-            displayName: "Night Owl",
+            displayName: "Fukuron",
             rarity: .uncommon,
             spriteBundle: "night_owl",
             trigger: .sessionCrossesMidnight,
-            earnedDescription: "You coded through midnight. Time flies."
+            earnedDescription: "Fukuron appears after a coding session that crosses midnight."
         ),
         SpeciesDefinition(
             id: "refactorer",
-            displayName: "Refactorer",
+            displayName: "Kirimaru",
             rarity: .rare,
             spriteBundle: "refactorer",
             trigger: .commitDeletionsExceedInsertions,
-            earnedDescription: "You shipped a commit that deleted more than it added. Beautiful."
+            earnedDescription: "Kirimaru appears after a commit that deletes more lines than it adds."
         ),
         SpeciesDefinition(
             id: "graduation",
-            displayName: "Graduation",
+            displayName: "Houou",
             rarity: .legendary,
             spriteBundle: "graduation",
             trigger: .anyKodomonReachesStage(.kamisama),
-            earnedDescription: "One of your Kodomon reached Kamisama. Congratulations, sensei."
+            earnedDescription: "Houou appears the first time one of your Kodomon reaches Kamisama."
         ),
     ]
 

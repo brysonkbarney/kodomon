@@ -144,10 +144,12 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     }
 
     /// Egg discovered: a species trigger just fired, a new egg is incubating.
-    func sendEggDiscoveredNotification(speciesName: String) {
+    /// Intentionally does NOT reveal the species — the reveal is the hatch
+    /// notification. Keeps the "what did I get?" surprise.
+    func sendEggDiscoveredNotification() {
         deliver(
             identifier: .eggDiscovered,
-            body: "「たまご！」 A new egg appeared — \(speciesName) is incubating. Keep coding to hatch it!"
+            body: "「たまご！」 A mysterious egg appeared in your collection. Keep coding to hatch it!"
         )
     }
 

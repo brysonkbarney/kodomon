@@ -720,14 +720,15 @@ class PetEngine: ObservableObject {
     }
 
     /// Record that a species trigger has fired, append a new pending egg
-    /// to the queue, and notify the user.
+    /// to the queue, and notify the user. The notification deliberately
+    /// does NOT reveal the species — that reveal is saved for hatching.
     private func fireTrigger(for species: SpeciesDefinition) {
         player.triggersFired.insert(species.id)
         let egg = PendingEgg.newlyTriggered(speciesID: species.id)
         player.pendingEggs.append(egg)
         NSLog("[Kodomon] Trigger fired: %@ — egg queued (%d in queue)",
               species.displayName, player.pendingEggs.count)
-        NotificationManager.shared.sendEggDiscoveredNotification(speciesName: species.displayName)
+        NotificationManager.shared.sendEggDiscoveredNotification()
     }
 
     /// Check whether the head of the pending-egg queue meets its rarity-scaled

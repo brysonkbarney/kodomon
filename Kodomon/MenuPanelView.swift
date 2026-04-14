@@ -176,17 +176,28 @@ struct StatsTab: View {
 
             Divider()
 
-            // v2 collection visibility
+            // v2 collection visibility. Everything here is deliberately
+            // rarity-agnostic — no raw XP numbers, no species names — so
+            // players can't reverse-engineer what's in the egg before it
+            // hatches. Reveal happens at the hatch cutscene.
             let totalSpecies = SpeciesCatalog.all.count
             let discovered = engine.player.collection.count
             statRow("Collection", "\(discovered)/\(totalSpecies)")
             if !engine.player.pendingEggs.isEmpty {
                 let headEgg = engine.player.pendingEggs[0]
-                let species = headEgg.species
-                let name = species?.displayName ?? headEgg.speciesID
-                let rarity = species?.rarity ?? .common
-                let xpLabel = "\(Int(headEgg.incubationXP))/\(Int(rarity.hatchXP)) XP"
-                statRow("Egg Incubating", "\(name) — \(xpLabel)")
+                // Use the egg's own rarity for its hatch requirements, but
+                // the min of all three incubation fractions so the bar
+                // advances only when every dimension (XP, active days,
+                // streak) is progressing.
+                let rarity = headEgg.species?.rarity ?? .common
+                let xpFrac = min(1.0, headEgg.incubationXP / rarity.hatchXP)
+                let daysFrac = rarity.hatchActiveDays == 0 ? 1.0
+                    : min(1.0, Double(headEgg.incubationActiveDays) / Double(rarity.hatchActiveDays))
+                let streakFrac = rarity.hatchStreak == 0 ? 1.0
+                    : min(1.0, Double(engine.player.currentStreak) / Double(rarity.hatchStreak))
+                let overallFrac = min(xpFrac, daysFrac, streakFrac)
+                let pct = Int(overallFrac * 100)
+                statRow("Egg Incubating", "??? — \(pct)%")
                 if engine.player.pendingEggs.count > 1 {
                     statRow("In Queue", "\(engine.player.pendingEggs.count - 1) more")
                 }
