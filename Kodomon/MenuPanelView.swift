@@ -300,7 +300,8 @@ struct KodexTab: View {
         .padding(.bottom, 16)
     }
 
-    // MARK: Incubating egg
+    // MARK: Incubating egg — compact single-row form so the detail panel
+    // below the grid still fits in the 420pt menu window.
 
     private var incubatingEggSection: some View {
         let isReady = engine.headEggIsReady
@@ -308,51 +309,54 @@ struct KodexTab: View {
         let pct = Int(progress * 100)
         let queueExtra = engine.player.pendingEggs.count - 1
 
-        return VStack(alignment: .leading, spacing: 8) {
-            Text("Incubating Egg")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(KodomonColors.textPrimary)
+        return HStack(spacing: 10) {
+            Text("◓")
+                .font(.system(size: 18))
+                .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
 
-            HStack {
-                Text("◓")
-                    .font(.system(size: 24))
-                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
-                VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 4) {
                     Text("???")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.textPrimary)
-                    Text(isReady ? "Ready to hatch!" : "\(pct)% incubated")
+                    Text("·")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                    Text(isReady ? "ready to hatch" : "\(pct)% incubated")
                         .font(.system(size: 9, design: .monospaced))
                         .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
+                    if queueExtra > 0 {
+                        Text("· +\(queueExtra) waiting")
+                            .font(.system(size: 8, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                    }
+                    Spacer()
                 }
-                Spacer()
+                PixelXPBar(
+                    progress: progress,
+                    color: isReady ? KodomonColors.accent : KodomonColors.teal
+                )
             }
-
-            PixelXPBar(
-                progress: progress,
-                color: isReady ? KodomonColors.accent : KodomonColors.teal
-            )
 
             Button(action: {
                 engine.hatchHeadEggIfReady()
             }) {
-                Text(isReady ? "Hatch" : "Keep coding...")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                Text(isReady ? "Hatch" : "...")
+                    .font(.system(size: 9, weight: .bold, design: .monospaced))
                     .foregroundColor(isReady ? .white : KodomonColors.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(isReady ? KodomonColors.accent : KodomonColors.border.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
             }
             .buttonStyle(.plain)
             .disabled(!isReady)
-
-            if queueExtra > 0 {
-                Text("\(queueExtra) more egg\(queueExtra == 1 ? "" : "s") waiting in queue")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary)
-            }
         }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(KodomonColors.border.opacity(0.15))
+        )
     }
 
     // MARK: Grid
