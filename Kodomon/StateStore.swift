@@ -21,9 +21,23 @@
 import Foundation
 
 enum StateStore {
-    static let v2URL: URL = {
+    /// The real v2 state file, used by Release builds and read by
+    /// Debug builds only to seed the sandbox on first launch.
+    static let realV2URL: URL = {
         FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent(".kodomon/state.v2.json")
+    }()
+
+    /// The canonical URL the engine reads and writes. In Debug builds this
+    /// points to a sandboxed file so test mutations never touch the real
+    /// save. In Release builds it's the real v2 URL.
+    static let v2URL: URL = {
+        #if DEBUG
+        return FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".kodomon/state.debug.json")
+        #else
+        return realV2URL
+        #endif
     }()
 
     static let v1URL: URL = {
@@ -37,17 +51,46 @@ enum StateStore {
     /// returns nil — a fresh install produces an empty PlayerState with a
     /// default Tamago crab starter.
     static func load() -> PlayerState {
+        #if DEBUG
+        // First-launch seeding for the debug sandbox. If the debug file
+        // doesn't exist yet but a real v2 save does, copy it once so
+        // testing starts from a mirror of the real state. After that,
+        // the debug file is independent — changes here never leak back
+        // to the real save.
+        seedDebugSandboxIfNeeded()
+        #endif
+
         if let player = loadV2() {
-            NSLog("[Kodomon] Loaded state.v2.json — %d Kodomon in collection", player.collection.count)
+            NSLog("[Kodomon] Loaded %@ — %d Kodomon in collection",
+                  v2URL.lastPathComponent, player.collection.count)
             return player
         }
         if let migrated = migrateFromV1() {
-            NSLog("[Kodomon] Migrated v1 state.json to state.v2.json")
+            NSLog("[Kodomon] Migrated v1 state.json to %@", v2URL.lastPathComponent)
             return migrated
         }
         NSLog("[Kodomon] Fresh install — creating starter Tamago crab")
         return freshInstall()
     }
+
+    #if DEBUG
+    /// One-time seed of the debug sandbox file from the real v2 save.
+    /// Runs only when the debug file doesn't exist and the real file does.
+    /// No-op otherwise. Runs before any load, so the engine sees a
+    /// populated debug file on its first read.
+    private static func seedDebugSandboxIfNeeded() {
+        let fm = FileManager.default
+        guard !fm.fileExists(atPath: v2URL.path) else { return }
+        guard fm.fileExists(atPath: realV2URL.path) else { return }
+        do {
+            try fm.copyItem(at: realV2URL, to: v2URL)
+            NSLog("[Kodomon] Seeded debug sandbox %@ from real state.v2.json",
+                  v2URL.lastPathComponent)
+        } catch {
+            NSLog("[Kodomon] Failed to seed debug sandbox: %@", error.localizedDescription)
+        }
+    }
+    #endif
 
     private static func loadV2() -> PlayerState? {
         guard let data = try? Data(contentsOf: v2URL) else { return nil }
