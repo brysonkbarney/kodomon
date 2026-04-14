@@ -152,6 +152,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         debugMenu.addItem(notifItem)
 
         debugMenu.addItem(NSMenuItem.separator())
+
+        // v2 egg/trigger testing
+        let triggerMenu = NSMenu()
+        for species in SpeciesCatalog.all {
+            // Skip starter (always present) and Graduation (fires from evolution, not events)
+            if case .defaultStarter = species.trigger { continue }
+            let item = NSMenuItem(
+                title: "Force: \(species.displayName)",
+                action: #selector(forceFireTrigger(_:)),
+                keyEquivalent: ""
+            )
+            item.representedObject = species.id
+            triggerMenu.addItem(item)
+        }
+        let triggerItem = NSMenuItem(title: "Force Trigger", action: nil, keyEquivalent: "")
+        triggerItem.submenu = triggerMenu
+        debugMenu.addItem(triggerItem)
+
+        debugMenu.addItem(NSMenuItem(title: "Instant Hatch Head Egg", action: #selector(instantHatchHeadEgg), keyEquivalent: ""))
+
+        debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Reset State", action: #selector(resetDebugState), keyEquivalent: ""))
 
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
@@ -477,6 +498,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let starter = KodomonState.fresh(speciesID: "tamago_crab", name: "")
         engine.player = PlayerState.initial(starter: starter)
         StateStore.save(engine.player)
+    }
+
+    @objc private func forceFireTrigger(_ sender: NSMenuItem) {
+        guard let speciesID = sender.representedObject as? String else { return }
+        engine.debugForceFireTrigger(speciesID: speciesID)
+    }
+
+    @objc private func instantHatchHeadEgg() {
+        engine.debugInstantHatchHeadEgg()
     }
     #endif
 

@@ -174,6 +174,24 @@ struct StatsTab: View {
             statRow("Total Commits", "\(engine.player.totalCommits)")
             statRow("Lines Written", "\(engine.player.totalLinesWritten)")
 
+            Divider()
+
+            // v2 collection visibility
+            let totalSpecies = SpeciesCatalog.all.count
+            let discovered = engine.player.collection.count
+            statRow("Collection", "\(discovered)/\(totalSpecies)")
+            if !engine.player.pendingEggs.isEmpty {
+                let headEgg = engine.player.pendingEggs[0]
+                let species = headEgg.species
+                let name = species?.displayName ?? headEgg.speciesID
+                let rarity = species?.rarity ?? .common
+                let xpLabel = "\(Int(headEgg.incubationXP))/\(Int(rarity.hatchXP)) XP"
+                statRow("Egg Incubating", "\(name) — \(xpLabel)")
+                if engine.player.pendingEggs.count > 1 {
+                    statRow("In Queue", "\(engine.player.pendingEggs.count - 1) more")
+                }
+            }
+
             if let event = engine.player.activeEvent {
                 Divider()
                 HStack {

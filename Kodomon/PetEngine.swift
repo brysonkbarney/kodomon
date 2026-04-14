@@ -791,6 +791,44 @@ class PetEngine: ObservableObject {
         return start < nextMidnight && end >= nextMidnight
     }
 
+    // MARK: - Debug affordances
+
+    #if DEBUG
+    /// Force-fire the discovery trigger for a given species id — useful to
+    /// test the pending-egg pipeline without waiting for a real match.
+    /// No-op if the species is already in `triggersFired` or if the id is
+    /// unknown. Respects the same side effects as a natural trigger fire.
+    func debugForceFireTrigger(speciesID: String) {
+        guard let species = SpeciesCatalog.definition(forID: speciesID) else {
+            NSLog("[Kodomon] debugForceFireTrigger: unknown species %@", speciesID)
+            return
+        }
+        guard !player.triggersFired.contains(species.id) else {
+            NSLog("[Kodomon] debugForceFireTrigger: %@ already fired", species.id)
+            return
+        }
+        fireTrigger(for: species)
+        save()
+    }
+
+    /// Instantly hatch the head of the pending-egg queue, bypassing
+    /// rarity-scaled incubation requirements. No-op if the queue is empty.
+    func debugInstantHatchHeadEgg() {
+        guard let head = player.pendingEggs.first else {
+            NSLog("[Kodomon] debugInstantHatchHeadEgg: queue empty")
+            return
+        }
+        guard let species = head.species else {
+            NSLog("[Kodomon] debugInstantHatchHeadEgg: unknown species %@", head.speciesID)
+            player.pendingEggs.removeFirst()
+            save()
+            return
+        }
+        hatchHeadEgg(species: species)
+        save()
+    }
+    #endif
+
     // MARK: - Persistence
 
     private func save() {
