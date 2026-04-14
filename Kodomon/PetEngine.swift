@@ -3,7 +3,7 @@ import Combine
 
 @MainActor
 class PetEngine: ObservableObject {
-    @Published var state: PetState
+    @Published var player: PlayerState
     @Published var evolutionEvent: (from: Stage, to: Stage)? = nil
     @Published var deEvolutionEvent: (from: Stage, to: Stage)? = nil
     private let watcher: ActivityWatcher
@@ -13,6 +13,15 @@ class PetEngine: ObservableObject {
     private var activeSessions: [String: Date] = [:]
     private var lastCreditedTime: [String: Date] = [:]
 
+    // MARK: - Convenience accessors
+
+    /// The currently active Kodomon. Get and set both route through
+    /// `player.collection` so writes fire the `@Published` update on `player`.
+    var activeKodomon: KodomonState {
+        get { player.activeKodomon }
+        set { player.activeKodomon = newValue }
+    }
+
     deinit {
         midnightTimer?.invalidate()
         decayTimer?.invalidate()
@@ -20,9 +29,10 @@ class PetEngine: ObservableObject {
 
     init(watcher: ActivityWatcher) {
         self.watcher = watcher
-        self.state = StateStore.load()
+        self.player = StateStore.load()
 
-        NSLog("[Kodomon] Engine init — stage: %@, XP: %.0f", state.stage.rawValue, state.totalXP)
+        NSLog("[Kodomon] Engine init — stage: %@, species XP: %.0f, lifetime XP: %.0f",
+              activeKodomon.stage.rawValue, activeKodomon.speciesXP, player.lifetimeXP)
 
         restoreActiveSessions()
         checkMissedMidnights()
@@ -54,12 +64,12 @@ class PetEngine: ObservableObject {
         NSLog("[Kodomon] Handling event")
 
         // Revival mechanic — if pet ran away, start revival session
-        if state.neglectState == .ranAway {
-            if !state.isReviving {
-                state.isReviving = true
-                state.revivalSessionStart = Date()
+        if activeKodomon.neglectState == .ranAway {
+            if !player.isReviving {
+                player.isReviving = true
+                player.revivalSessionStart = Date()
                 NSLog("[Kodomon] Revival session started — code for 30 min to bring pet back")
-            } else if let start = state.revivalSessionStart {
+            } else if let start = player.revivalSessionStart {
                 let minutes = Date().timeIntervalSince(start) / 60
                 if minutes >= 30 {
                     revivePet()
@@ -71,7 +81,7 @@ class PetEngine: ObservableObject {
 
         switch event {
         case .sessionStart(let sessionId, _, let timestamp):
-            let wasActive = state.todayIsActive
+            let wasActive = player.todayIsActive
             markActive()
             activeSessions[sessionId] = timestamp
             lastCreditedTime[sessionId] = timestamp
@@ -81,9 +91,9 @@ class PetEngine: ObservableObject {
             if !wasActive {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 10,
-                    todaySessionMins: state.todaySessionMins,
-                    streak: state.currentStreak,
-                    mood: state.mood
+                    todaySessionMins: player.todaySessionMins,
+                    streak: player.currentStreak,
+                    mood: activeKodomon.mood
                 )
                 addXP(xp)
                 addMood(15)
@@ -94,16 +104,16 @@ class PetEngine: ObservableObject {
             let creditFrom = lastCreditedTime[sessionId] ?? activeSessions[sessionId]
             if let from = creditFrom {
                 let minutes = Int(timestamp.timeIntervalSince(from) / 60)
-                let cappedMins = max(0, min(minutes, 120 - state.todaySessionMins))
+                let cappedMins = max(0, min(minutes, 120 - player.todaySessionMins))
                 if cappedMins > 0 {
-                    state.todaySessionMins += cappedMins
-                    state.totalSessionMins += cappedMins
+                    player.todaySessionMins += cappedMins
+                    player.totalSessionMins += cappedMins
                     let rawXP = XPCalculator.sessionXP(minutes: cappedMins)
                     let xp = XPCalculator.applyMultipliers(
                         rawXP: rawXP,
-                        todaySessionMins: state.todaySessionMins,
-                        streak: state.currentStreak,
-                        mood: state.mood
+                        todaySessionMins: player.todaySessionMins,
+                        streak: player.currentStreak,
+                        mood: activeKodomon.mood
                     )
                     addXP(xp)
                     NSLog("[Kodomon] Session %@ — +%d min, +%.0f XP", sessionId, cappedMins, xp)
@@ -116,36 +126,36 @@ class PetEngine: ObservableObject {
 
         case .fileWrite(let path, let linesWritten, _):
             markActive()
-            state.totalLinesWritten += linesWritten
+            player.totalLinesWritten += linesWritten
 
             // Track file type for variety bonus
             let ext = (path as NSString).pathExtension.lowercased()
             if !ext.isEmpty {
-                state.todayFileTypes.insert(ext)
+                player.todayFileTypes.insert(ext)
             }
 
             // Variety bonus: first time hitting 3+ file types today
-            if state.todayFileTypes.count == 3 {
+            if player.todayFileTypes.count == 3 {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 20,
-                    todaySessionMins: state.todaySessionMins,
-                    streak: state.currentStreak,
-                    mood: state.mood,
+                    todaySessionMins: player.todaySessionMins,
+                    streak: player.currentStreak,
+                    mood: activeKodomon.mood
                 )
                 addXP(xp)
                 addMood(6)
             }
 
             // Only give XP for unique files per day
-            let isNewFile = !state.todayFilesWritten.contains(path)
-            state.todayFilesWritten.insert(path)
+            let isNewFile = !player.todayFilesWritten.contains(path)
+            player.todayFilesWritten.insert(path)
 
             if isNewFile {
                 let xp = XPCalculator.applyMultipliers(
                     rawXP: 3,
-                    todaySessionMins: state.todaySessionMins,
-                    streak: state.currentStreak,
-                    mood: state.mood,
+                    todaySessionMins: player.todaySessionMins,
+                    streak: player.currentStreak,
+                    mood: activeKodomon.mood
                 )
                 addXP(xp)
             }
@@ -156,19 +166,20 @@ class PetEngine: ObservableObject {
             if linesRawXP > 0 {
                 let linesXP = XPCalculator.applyMultipliers(
                     rawXP: linesRawXP,
-                    todaySessionMins: state.todaySessionMins,
-                    streak: state.currentStreak,
-                    mood: state.mood,
+                    todaySessionMins: player.todaySessionMins,
+                    streak: player.currentStreak,
+                    mood: activeKodomon.mood
                 )
                 addXP(linesXP)
             }
 
         case .gitCommit(let linesAdded, let linesRemoved, _, _):
             markActive()
-            state.totalCommits += 1
+            player.totalCommits += 1
+            player.todayCommitCount += 1
 
             let totalLines = linesAdded + linesRemoved
-            state.biggestCommitLines = max(state.biggestCommitLines, totalLines)
+            player.biggestCommitLines = max(player.biggestCommitLines, totalLines)
 
             addMood(8)
 
@@ -178,16 +189,21 @@ class PetEngine: ObservableObject {
                 : 25.0
             let xp = XPCalculator.applyMultipliers(
                 rawXP: rawXP,
-                todaySessionMins: state.todaySessionMins,
-                streak: state.currentStreak,
-                mood: state.mood
+                todaySessionMins: player.todaySessionMins,
+                streak: player.currentStreak,
+                mood: activeKodomon.mood
             )
             addXP(xp)
         }
 
-        state.neglectState = .none
+        // Clear neglect state on any activity
+        var kodomon = activeKodomon
+        kodomon.neglectState = .none
+        activeKodomon = kodomon
+
         save()
-        NSLog("[Kodomon] State saved — XP: %.0f, mood: %.0f", state.totalXP, state.mood)
+        NSLog("[Kodomon] State saved — species XP: %.0f, mood: %.0f",
+              activeKodomon.speciesXP, activeKodomon.mood)
     }
 
     // MARK: - XP & Mood
@@ -197,8 +213,8 @@ class PetEngine: ObservableObject {
         var xp = amount
 
         // Active event modifiers
-        if let event = state.activeEvent,
-           let expiry = state.activeEventExpiry,
+        if let event = player.activeEvent,
+           let expiry = player.activeEventExpiry,
            Date() < expiry {
             switch event {
             case .codingStorm: xp *= 2.0
@@ -208,58 +224,76 @@ class PetEngine: ObservableObject {
             }
         }
 
-        let oldLifetimeXP = state.lifetimeXP
-        state.totalXP += xp
-        state.todayXP += xp
-        state.lifetimeXP += xp
+        let oldLifetimeXP = player.lifetimeXP
+
+        // Credit both layers: species XP (active Kodomon only) + lifetime XP (always)
+        var kodomon = activeKodomon
+        kodomon.speciesXP += xp
+        activeKodomon = kodomon
+
+        player.todayXP += xp
+        player.lifetimeXP += xp
+
         checkEvolution()
-        checkNewUnlocks(oldXP: oldLifetimeXP, newXP: state.lifetimeXP)
+        checkNewUnlocks(oldXP: oldLifetimeXP, newXP: player.lifetimeXP)
     }
 
     private func addMood(_ amount: Double) {
-        state.mood = min(100, max(0, state.mood + amount))
+        var kodomon = activeKodomon
+        kodomon.mood = min(100, max(0, kodomon.mood + amount))
+        activeKodomon = kodomon
     }
 
     private func checkNewUnlocks(oldXP: Double, newXP: Double) {
         let unlocks = UnlockSystem.checkNewUnlocks(oldXP: oldXP, newXP: newXP)
         for bg in unlocks.backgrounds {
-            state.unlockedItems.insert(bg.id)
+            player.unlockedItems.insert(bg.id)
         }
         for acc in unlocks.accessories {
-            state.unlockedItems.insert(acc.id)
+            player.unlockedItems.insert(acc.id)
         }
     }
 
     private func markActive() {
         NotificationManager.shared.cancelStreakWarning()
-        state.lastActiveDate = Date()
+        let now = Date()
+        player.lastActiveDate = now
 
         // Mark the day as active on ANY coding event, not just sessionStart
-        if !state.todayIsActive {
-            state.todayIsActive = true
+        if !player.todayIsActive {
+            player.todayIsActive = true
         }
+
+        // Bump the active Kodomon's per-creature clock so decay math stays correct
+        var kodomon = activeKodomon
+        kodomon.lastActiveWhileEquipped = now
+        activeKodomon = kodomon
     }
 
     // MARK: - Evolution
 
     private func checkEvolution() {
-        guard let next = state.stage.nextStage else { return }
+        let kodomon = activeKodomon
+        guard let next = kodomon.stage.nextStage else { return }
+        let rarity = kodomon.rarity
+        let xpThreshold = rarity.xpThreshold(for: next)
 
-        if state.totalXP >= next.xpThreshold
-            && state.activeDays >= next.requiredActiveDays
-            && state.currentStreak >= next.requiredStreak {
-            let from = state.stage
-            state.stage = next
-            state.stageReachedDate = Date()
-            state.mood = min(100, state.mood + 30)
-
+        if kodomon.speciesXP >= xpThreshold
+            && kodomon.activeDays >= next.requiredActiveDays
+            && player.currentStreak >= next.requiredStreak {
+            let from = kodomon.stage
+            var updated = kodomon
+            updated.stage = next
+            updated.stageReachedDate = Date()
+            updated.mood = min(100, updated.mood + 30)
             // Save as pending — cutscene plays when the user interacts with the widget
-            state.pendingEvolutionFrom = from.rawValue
-            state.pendingEvolutionTo = next.rawValue
+            updated.pendingEvolutionFrom = from.rawValue
+            updated.pendingEvolutionTo = next.rawValue
+            activeKodomon = updated
 
             // Notification fires immediately so the user knows to come back
-            NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
-            LeaderboardService.shared.sync(state: state, force: true)
+            NotificationManager.shared.sendEvolutionReadyNotification(petName: updated.name)
+            LeaderboardService.shared.sync(player: player, force: true)
             NSLog("[Kodomon] EVOLVED to %@ (pending cutscene)", next.displayName)
         }
     }
@@ -267,14 +301,17 @@ class PetEngine: ObservableObject {
     /// Triggers the pending evolution cutscene. Called when the user taps the widget
     /// or the window comes to foreground. No-op if there is no pending evolution.
     func triggerPendingEvolution() {
-        guard let fromRaw = state.pendingEvolutionFrom,
-              let toRaw = state.pendingEvolutionTo,
+        let kodomon = activeKodomon
+        guard let fromRaw = kodomon.pendingEvolutionFrom,
+              let toRaw = kodomon.pendingEvolutionTo,
               let from = Stage(rawValue: fromRaw),
               let to = Stage(rawValue: toRaw) else { return }
 
         evolutionEvent = (from: from, to: to)
-        state.pendingEvolutionFrom = nil
-        state.pendingEvolutionTo = nil
+        var updated = kodomon
+        updated.pendingEvolutionFrom = nil
+        updated.pendingEvolutionTo = nil
+        activeKodomon = updated
         save()
     }
 
@@ -287,53 +324,62 @@ class PetEngine: ObservableObject {
     }
 
     private func revivePet() {
+        let kodomon = activeKodomon
         // Come back one stage lower
-        let returnStage = state.stage.previousStage ?? .tamago
+        let returnStage = kodomon.stage.previousStage ?? .tamago
+        let rarity = kodomon.rarity
 
         // Set XP to midpoint of return stage's range (but 0 if returning to tamago)
         let midXP: Double
         if returnStage == .tamago {
             midXP = 0
         } else if let next = returnStage.nextStage {
-            midXP = (returnStage.xpThreshold + next.xpThreshold) / 2
+            midXP = (rarity.xpThreshold(for: returnStage) + rarity.xpThreshold(for: next)) / 2
         } else {
-            midXP = returnStage.xpThreshold
+            midXP = rarity.xpThreshold(for: returnStage)
         }
 
-        let fromStage = state.stage
-        state.stage = returnStage
-        state.totalXP = midXP
-        state.neglectState = .none
-        state.isReviving = false
-        state.revivalSessionStart = nil
-        state.hasRevived = true
-        state.mood = 50
-        state.currentStreak = 0
-        state.lastActiveDate = Date()
+        let fromStage = kodomon.stage
+        var updated = kodomon
+        updated.stage = returnStage
+        updated.speciesXP = midXP
+        updated.neglectState = .none
+        updated.hasRevived = true
+        updated.mood = 50
+        activeKodomon = updated
+
+        player.isReviving = false
+        player.revivalSessionStart = nil
+        player.currentStreak = 0
+        player.lastActiveDate = Date()
 
         // Show evolution event (revival feels like a rebirth)
         evolutionEvent = (from: fromStage, to: returnStage)
 
-        NotificationManager.shared.sendEvolutionReadyNotification(petName: state.petName)
-        NSLog("[Kodomon] Pet revived as %@! XP: %.0f", returnStage.displayName, midXP)
+        NotificationManager.shared.sendEvolutionReadyNotification(petName: updated.name)
+        NSLog("[Kodomon] Pet revived as %@! species XP: %.0f", returnStage.displayName, midXP)
         save()
     }
 
     private func checkDeEvolution() {
-        guard let prev = state.stage.previousStage else { return }
+        let kodomon = activeKodomon
+        guard let prev = kodomon.stage.previousStage else { return }
+        let rarity = kodomon.rarity
 
-        if let reached = state.stageReachedDate {
+        if let reached = kodomon.stageReachedDate {
             let daysSinceEvolution = Calendar.current.dateComponents(
                 [.day], from: reached, to: Date()
             ).day ?? 0
             if daysSinceEvolution < 3 { return }
         }
 
-        if state.totalXP < state.stage.deEvolveFloor {
-            let from = state.stage
-            state.stage = prev
-            state.stageReachedDate = Date()
-            addMood(-20)
+        if kodomon.speciesXP < rarity.deEvolveFloor(for: kodomon.stage) {
+            let from = kodomon.stage
+            var updated = kodomon
+            updated.stage = prev
+            updated.stageReachedDate = Date()
+            updated.mood = max(0, updated.mood - 20)
+            activeKodomon = updated
             deEvolutionEvent = (from: from, to: prev)
             NSLog("[Kodomon] DE-EVOLVED to %@", prev.displayName)
         }
@@ -357,93 +403,107 @@ class PetEngine: ObservableObject {
     private func checkMissedMidnights() {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
-        let lastReset = state.lastMidnightReset
+        let lastReset = player.lastMidnightReset
 
         let missedDays = cal.dateComponents([.day], from: lastReset, to: today).day ?? 0
         if missedDays <= 0 { return }
 
         // Credit the day that was in progress when we missed midnight
-        if state.todayIsActive {
-            state.activeDays += 1
-            state.currentStreak += 1
-            state.longestStreak = max(state.longestStreak, state.currentStreak)
+        if player.todayIsActive {
+            var kodomon = activeKodomon
+            kodomon.activeDays += 1
+            activeKodomon = kodomon
+
+            player.currentStreak += 1
+            player.longestStreak = max(player.longestStreak, player.currentStreak)
         }
 
         // Any gap days (days with zero activity) reset the streak and apply decay
         // If user was active yesterday and only 1 midnight missed, there's no gap
-        let gapDays = state.todayIsActive ? missedDays - 1 : missedDays
+        let gapDays = player.todayIsActive ? missedDays - 1 : missedDays
         if gapDays > 0 {
-            state.currentStreak = 0
+            player.currentStreak = 0
             applyDecay(daysMissed: gapDays)
         }
 
         // Apply mood regression toward 50 (same as performMidnightReset)
+        var kodomon = activeKodomon
         for _ in 0..<missedDays {
-            let moodDelta = (50 - state.mood) * 0.3
-            state.mood = min(100, max(0, state.mood + moodDelta))
+            let moodDelta = (50 - kodomon.mood) * 0.3
+            kodomon.mood = min(100, max(0, kodomon.mood + moodDelta))
         }
+        kodomon.daysAlive += missedDays
+        activeKodomon = kodomon
 
-        state.daysAlive += missedDays
-        state.todayXP = 0
-        state.todaySessionMins = 0
-        state.todayFileTypes = []
-        state.todayFilesWritten = []
-        state.todayIsActive = false
-        state.lastMidnightReset = today
+        player.todayXP = 0
+        player.todaySessionMins = 0
+        player.todayFileTypes = []
+        player.todayFilesWritten = []
+        player.todayIsActive = false
+        player.todayCommitCount = 0
+        player.lastMidnightReset = today
         checkEvolution()
         checkDeEvolution()
-        LeaderboardService.shared.sync(state: state, force: true)
+        LeaderboardService.shared.sync(player: player, force: true)
         save()
     }
 
     private func performMidnightReset() {
-        if state.todayIsActive {
-            state.activeDays += 1
-            state.currentStreak += 1
-            state.longestStreak = max(state.longestStreak, state.currentStreak)
+        if player.todayIsActive {
+            var kodomon = activeKodomon
+            kodomon.activeDays += 1
+            activeKodomon = kodomon
+
+            player.currentStreak += 1
+            player.longestStreak = max(player.longestStreak, player.currentStreak)
         } else {
-            state.currentStreak = 0
+            player.currentStreak = 0
             applyDecay(daysMissed: 1)
         }
 
-        state.daysAlive += 1
-        state.todayXP = 0
-        state.todaySessionMins = 0
-        state.todayFileTypes = []
-        state.todayFilesWritten = []
-        state.todayIsActive = false
+        var kodomon = activeKodomon
+        kodomon.daysAlive += 1
+        let moodDelta = (50 - kodomon.mood) * 0.3
+        kodomon.mood += moodDelta
+        activeKodomon = kodomon
 
-        let moodDelta = (50 - state.mood) * 0.3
-        state.mood += moodDelta
+        player.todayXP = 0
+        player.todaySessionMins = 0
+        player.todayFileTypes = []
+        player.todayFilesWritten = []
+        player.todayIsActive = false
+        player.todayCommitCount = 0
 
-        state.lastMidnightReset = Calendar.current.startOfDay(for: Date())
+        player.lastMidnightReset = Calendar.current.startOfDay(for: Date())
 
         // Schedule streak warning if applicable
-        if state.currentStreak >= 3 {
-            NotificationManager.shared.scheduleStreakWarning(currentStreak: state.currentStreak, petName: state.petName)
+        if player.currentStreak >= 3 {
+            NotificationManager.shared.scheduleStreakWarning(currentStreak: player.currentStreak, petName: activeKodomon.name)
         }
 
         // Clear yesterday's event, roll for today
-        state.activeEvent = nil
-        state.activeEventExpiry = nil
+        player.activeEvent = nil
+        player.activeEventExpiry = nil
         if let event = RandomEventEngine.rollDailyEvent(
-            currentStreak: state.currentStreak,
-            stage: state.stage
+            currentStreak: player.currentStreak,
+            stage: activeKodomon.stage
         ) {
-            state.activeEvent = event
+            player.activeEvent = event
             // Most events last all day, timed ones get specific expiry
             switch event {
             case .codingStorm:
-                state.activeEventExpiry = Date().addingTimeInterval(3600) // 60 min
+                player.activeEventExpiry = Date().addingTimeInterval(3600) // 60 min
             case .flowState:
-                state.activeEventExpiry = Date().addingTimeInterval(2700) // 45 min
+                player.activeEventExpiry = Date().addingTimeInterval(2700) // 45 min
             default:
-                state.activeEventExpiry = Calendar.current.date(
+                player.activeEventExpiry = Calendar.current.date(
                     byAdding: .day, value: 1,
                     to: Calendar.current.startOfDay(for: Date())
                 )
             }
-            RandomEventEngine.applyEvent(event, to: &state)
+            var target = activeKodomon
+            RandomEventEngine.applyEvent(event, to: &target)
+            activeKodomon = target
         }
 
         checkEvolution()
@@ -451,8 +511,8 @@ class PetEngine: ObservableObject {
         rotateEventsLog()
         save()
 
-        LeaderboardService.shared.sync(state: state, force: true)
-        NSLog("[Kodomon] Midnight reset — Day %d, Streak: %d", state.daysAlive, state.currentStreak)
+        LeaderboardService.shared.sync(player: player, force: true)
+        NSLog("[Kodomon] Midnight reset — Day %d, Streak: %d", activeKodomon.daysAlive, player.currentStreak)
     }
 
     // MARK: - Decay
@@ -464,35 +524,38 @@ class PetEngine: ObservableObject {
     }
 
     private func updateNeglectState() {
-        let elapsed = Date().timeIntervalSince(state.lastActiveDate)
+        let kodomon = activeKodomon
+        let elapsed = Date().timeIntervalSince(player.lastActiveDate)
         let hours = elapsed / 3600
-        let oldState = state.neglectState
+        let oldState = kodomon.neglectState
 
-        let daysMissed = Calendar.current.dateComponents([.day], from: state.lastActiveDate, to: Date()).day ?? 0
+        let daysMissed = Calendar.current.dateComponents([.day], from: player.lastActiveDate, to: Date()).day ?? 0
+        var updated = kodomon
         if daysMissed >= 7 {
-            state.neglectState = .ranAway
-            state.mood = 0
+            updated.neglectState = .ranAway
+            updated.mood = 0
         } else if daysMissed >= 5 {
-            state.neglectState = .critical
+            updated.neglectState = .critical
         } else if daysMissed >= 2 {
-            state.neglectState = .sick
+            updated.neglectState = .sick
         } else if daysMissed >= 1 {
-            state.neglectState = .sad
+            updated.neglectState = .sad
         } else if hours >= 8 {
-            state.neglectState = .tired
+            updated.neglectState = .tired
         }
+        activeKodomon = updated
 
         // Send notifications on state transitions
-        if state.neglectState != oldState {
-            switch state.neglectState {
+        if updated.neglectState != oldState {
+            switch updated.neglectState {
             case .tired:
-                NotificationManager.shared.sendTiredNotification(petName: state.petName)
+                NotificationManager.shared.sendTiredNotification(petName: updated.name)
             case .sick:
-                NotificationManager.shared.sendSickNotification(petName: state.petName)
+                NotificationManager.shared.sendSickNotification(petName: updated.name)
             case .critical:
-                NotificationManager.shared.sendCriticalNotification(petName: state.petName)
+                NotificationManager.shared.sendCriticalNotification(petName: updated.name)
             case .ranAway:
-                NotificationManager.shared.sendPetRanAwayNotification(petName: state.petName)
+                NotificationManager.shared.sendPetRanAwayNotification(petName: updated.name)
             case .sad, .none:
                 break
             }
@@ -507,38 +570,40 @@ class PetEngine: ObservableObject {
     }
 
     private func applyDecay(daysMissed: Int) {
+        var kodomon = activeKodomon
         switch daysMissed {
         case 1:
-            state.totalXP *= 0.97
-            state.neglectState = .sad
-            addMood(-20)
+            kodomon.speciesXP *= 0.97
+            kodomon.neglectState = .sad
+            kodomon.mood = max(0, kodomon.mood - 20)
         case 2...4:
-            state.totalXP *= 0.92
-            state.neglectState = .sick
-            addMood(-25)
-            NotificationManager.shared.sendSickNotification(petName: state.petName)
+            kodomon.speciesXP *= 0.92
+            kodomon.neglectState = .sick
+            kodomon.mood = max(0, kodomon.mood - 25)
+            NotificationManager.shared.sendSickNotification(petName: kodomon.name)
         case 5...6:
-            state.totalXP *= 0.85
-            state.neglectState = .critical
-            addMood(-30)
-            NotificationManager.shared.sendCriticalNotification(petName: state.petName)
+            kodomon.speciesXP *= 0.85
+            kodomon.neglectState = .critical
+            kodomon.mood = max(0, kodomon.mood - 30)
+            NotificationManager.shared.sendCriticalNotification(petName: kodomon.name)
         case 7...:
-            state.neglectState = .ranAway
-            state.mood = 0
-            NotificationManager.shared.sendPetRanAwayNotification(petName: state.petName)
+            kodomon.neglectState = .ranAway
+            kodomon.mood = 0
+            NotificationManager.shared.sendPetRanAwayNotification(petName: kodomon.name)
         default:
             break
         }
 
-        state.totalXP = max(0, state.totalXP)
+        kodomon.speciesXP = max(0, kodomon.speciesXP)
+        activeKodomon = kodomon
     }
 
     // MARK: - Events
 
     private func clearExpiredEvent() {
-        if let expiry = state.activeEventExpiry, Date() >= expiry {
-            state.activeEvent = nil
-            state.activeEventExpiry = nil
+        if let expiry = player.activeEventExpiry, Date() >= expiry {
+            player.activeEvent = nil
+            player.activeEventExpiry = nil
             save()
         }
     }
@@ -561,7 +626,7 @@ class PetEngine: ObservableObject {
     // MARK: - Persistence
 
     private func save() {
-        StateStore.save(state)
+        StateStore.save(player)
     }
 
     private func persistActiveSessions() {

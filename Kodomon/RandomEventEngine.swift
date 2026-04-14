@@ -83,19 +83,21 @@ struct RandomEventEngine {
         return pool.randomElement()
     }
 
-    /// Apply the immediate effects of an event to pet state
-    static func applyEvent(_ event: RandomEvent, to state: inout PetState) {
+    /// Apply the immediate effects of an event to the currently active Kodomon.
+    /// All random event mutations are per-creature (mood, speciesXP) — they
+    /// affect the pet that is currently out and feeling the event.
+    static func applyEvent(_ event: RandomEvent, to kodomon: inout KodomonState) {
         switch event {
         case .goodVibes:
-            state.mood = min(100, state.mood + 30)
+            kodomon.mood = min(100, kodomon.mood + 30)
         case .restlessNight:
-            state.mood = 40
+            kodomon.mood = 40
         case .homesick:
-            state.mood = 30
+            kodomon.mood = 30
         case .ancientBug:
-            state.totalXP = max(0, state.totalXP - 200)
+            kodomon.speciesXP = max(0, kodomon.speciesXP - 200)
         case .kaniFestival:
-            state.mood = min(100, state.mood + 20)
+            kodomon.mood = min(100, kodomon.mood + 20)
         default:
             break // Other events modify XP rates, handled in PetEngine
         }

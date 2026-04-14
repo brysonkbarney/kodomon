@@ -49,7 +49,7 @@ struct LeaderboardView: View {
 
             Button(action: {
                 leaderboard.optIn()
-                leaderboard.sync(state: engine.state, force: true)
+                leaderboard.sync(player: engine.player, force: true)
                 // Delay fetch so the sync has time to write to DB
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     leaderboard.fetch(sort: sortBy)
@@ -95,7 +95,7 @@ struct LeaderboardView: View {
                 }
                 .buttonStyle(.plain)
                 Button(action: {
-                    leaderboard.sync(state: engine.state, force: true)
+                    leaderboard.sync(player: engine.player, force: true)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         leaderboard.fetch(sort: sortBy)
                     }
@@ -152,7 +152,7 @@ struct LeaderboardView: View {
     }
 
     private func leaderboardRow(rank: Int, entry: LeaderboardEntry) -> some View {
-        let isMe = entry.pet_name == engine.state.petName
+        let isMe = entry.pet_name == engine.activeKodomon.name
 
         return HStack(alignment: .center, spacing: 8) {
             // Rank

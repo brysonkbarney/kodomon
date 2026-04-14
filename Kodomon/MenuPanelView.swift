@@ -79,22 +79,27 @@ struct StatsTab: View {
     @Binding var showingLeaderboard: Bool
 
     private var xpProgress: Double {
-        guard let next = engine.state.stage.nextStage else { return 1.0 }
-        let current = engine.state.stage.xpThreshold
-        let needed = next.xpThreshold - current
-        let progress = (engine.state.totalXP - current) / needed
+        let kodomon = engine.activeKodomon
+        guard let next = kodomon.stage.nextStage else { return 1.0 }
+        let rarity = kodomon.rarity
+        let current = rarity.xpThreshold(for: kodomon.stage)
+        let needed = rarity.xpThreshold(for: next) - current
+        guard needed > 0 else { return 1.0 }
+        let progress = (kodomon.speciesXP - current) / needed
         return min(max(progress, 0), 1.0)
     }
 
     var body: some View {
+        let kodomon = engine.activeKodomon
+        let rarity = kodomon.rarity
         VStack(alignment: .leading, spacing: 10) {
             // Pet name + stage
             HStack {
-                Text(engine.state.petName.isEmpty ? "Kodomon" : engine.state.petName)
+                Text(kodomon.name.isEmpty ? "Kodomon" : kodomon.name)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(KodomonColors.accent)
                 Spacer()
-                Text(engine.state.stage.displayName)
+                Text(kodomon.stage.displayName)
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundColor(KodomonColors.textSecondary)
             }
@@ -106,12 +111,12 @@ struct StatsTab: View {
                     color: KodomonColors.purple
                 )
                 HStack {
-                    Text("\(Int(engine.state.totalXP)) XP")
+                    Text("\(Int(kodomon.speciesXP)) XP")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.textPrimary)
                     Spacer()
-                    if let next = engine.state.stage.nextStage {
-                        Text("\(Int(next.xpThreshold)) to \(next.displayName)")
+                    if let next = kodomon.stage.nextStage {
+                        Text("\(Int(rarity.xpThreshold(for: next))) to \(next.displayName)")
                             .font(.system(size: 9, design: .monospaced))
                             .foregroundColor(KodomonColors.textSecondary)
                     } else {
@@ -123,26 +128,27 @@ struct StatsTab: View {
             }
 
             // Evolution requirements
-            if let next = engine.state.stage.nextStage {
+            if let next = kodomon.stage.nextStage {
+                let nextXPThreshold = rarity.xpThreshold(for: next)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Evolve to \(next.displayName)")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.textSecondary)
 
                     evolveReq(
-                        met: engine.state.totalXP >= next.xpThreshold,
+                        met: kodomon.speciesXP >= nextXPThreshold,
                         label: "XP",
-                        value: "\(Int(engine.state.totalXP))/\(Int(next.xpThreshold))"
+                        value: "\(Int(kodomon.speciesXP))/\(Int(nextXPThreshold))"
                     )
                     evolveReq(
-                        met: engine.state.activeDays >= next.requiredActiveDays,
+                        met: kodomon.activeDays >= next.requiredActiveDays,
                         label: "Active days",
-                        value: "\(engine.state.activeDays)/\(next.requiredActiveDays)"
+                        value: "\(kodomon.activeDays)/\(next.requiredActiveDays)"
                     )
                     evolveReq(
-                        met: engine.state.currentStreak >= next.requiredStreak,
+                        met: engine.player.currentStreak >= next.requiredStreak,
                         label: "Streak",
-                        value: "\(engine.state.currentStreak)/\(next.requiredStreak)"
+                        value: "\(engine.player.currentStreak)/\(next.requiredStreak)"
                     )
                 }
                 .padding(10)
@@ -154,21 +160,21 @@ struct StatsTab: View {
 
             Divider()
 
-            statRow("Days Alive", "\(engine.state.daysAlive)")
-            statRow("Active Days", "\(engine.state.activeDays)")
-            statRow("Code Streak", "\(engine.state.currentStreak)d")
-            statRow("Best Streak", "\(engine.state.longestStreak)d")
-            statRow("Mood", "\(Int(engine.state.mood))/100")
+            statRow("Days Alive", "\(kodomon.daysAlive)")
+            statRow("Active Days", "\(kodomon.activeDays)")
+            statRow("Code Streak", "\(engine.player.currentStreak)d")
+            statRow("Best Streak", "\(engine.player.longestStreak)d")
+            statRow("Mood", "\(Int(kodomon.mood))/100")
 
             Divider()
 
-            statRow("Today's XP", "+\(Int(engine.state.todayXP))")
-            statRow("Session Time", "\(engine.state.totalSessionMins / 60)h \(engine.state.totalSessionMins % 60)m")
-            statRow("Lifetime XP", "\(Int(engine.state.lifetimeXP))")
-            statRow("Total Commits", "\(engine.state.totalCommits)")
-            statRow("Lines Written", "\(engine.state.totalLinesWritten)")
+            statRow("Today's XP", "+\(Int(engine.player.todayXP))")
+            statRow("Session Time", "\(engine.player.totalSessionMins / 60)h \(engine.player.totalSessionMins % 60)m")
+            statRow("Lifetime XP", "\(Int(engine.player.lifetimeXP))")
+            statRow("Total Commits", "\(engine.player.totalCommits)")
+            statRow("Lines Written", "\(engine.player.totalLinesWritten)")
 
-            if let event = engine.state.activeEvent {
+            if let event = engine.player.activeEvent {
                 Divider()
                 HStack {
                     Text("Active Event")
@@ -248,8 +254,8 @@ struct CustomizeTab: View {
                 .foregroundColor(KodomonColors.textPrimary)
 
             ForEach(UnlockSystem.backgrounds) { bg in
-                let unlocked = bg.xpRequired <= engine.state.lifetimeXP
-                let selected = engine.state.activeBackground == bg.id
+                let unlocked = bg.xpRequired <= engine.player.lifetimeXP
+                let selected = engine.player.activeBackground == bg.id
 
                 HStack {
                     Text(bg.displayName)
@@ -273,8 +279,8 @@ struct CustomizeTab: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if unlocked {
-                        engine.state.activeBackground = bg.id
-                        StateStore.save(engine.state)
+                        engine.player.activeBackground = bg.id
+                        StateStore.save(engine.player)
                     }
                 }
             }
@@ -287,8 +293,8 @@ struct CustomizeTab: View {
                 .foregroundColor(KodomonColors.textPrimary)
 
             ForEach(UnlockSystem.accessories) { acc in
-                let unlocked = acc.xpRequired <= engine.state.lifetimeXP
-                let equipped = engine.state.equippedAccessories.contains(acc.id)
+                let unlocked = acc.xpRequired <= engine.player.lifetimeXP
+                let equipped = engine.activeKodomon.equippedAccessories.contains(acc.id)
 
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -317,14 +323,16 @@ struct CustomizeTab: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if unlocked {
+                        var kodomon = engine.activeKodomon
                         if equipped {
-                            engine.state.equippedAccessories.removeAll { $0 == acc.id }
+                            kodomon.equippedAccessories.removeAll { $0 == acc.id }
                         } else {
                             let sameSlot = UnlockSystem.accessories.filter { $0.slot == acc.slot }.map { $0.id }
-                            engine.state.equippedAccessories.removeAll { sameSlot.contains($0) }
-                            engine.state.equippedAccessories.append(acc.id)
+                            kodomon.equippedAccessories.removeAll { sameSlot.contains($0) }
+                            kodomon.equippedAccessories.append(acc.id)
                         }
-                        StateStore.save(engine.state)
+                        engine.activeKodomon = kodomon
+                        StateStore.save(engine.player)
                     }
                 }
             }

@@ -23,17 +23,18 @@ struct PetWidgetView: View {
     @State private var lastXP: Double = 0
 
     /// When an evolution is pending, show the OLD stage sprite until the cutscene plays.
-    /// The underlying state.stage is already the new stage (for correct XP math).
+    /// The active Kodomon's stage is already the new stage (for correct XP math).
     private var displayStage: Stage {
-        if let fromRaw = engine.state.pendingEvolutionFrom,
+        let kodomon = engine.activeKodomon
+        if let fromRaw = kodomon.pendingEvolutionFrom,
            let from = Stage(rawValue: fromRaw) {
             return from
         }
-        return engine.state.stage
+        return kodomon.stage
     }
 
     private var neglectSaturation: Double {
-        switch engine.state.neglectState {
+        switch engine.activeKodomon.neglectState {
         case .none: return 1.0
         case .tired: return 0.7
         case .sad: return 0.5
@@ -44,7 +45,7 @@ struct PetWidgetView: View {
     }
 
     private var neglectOpacity: Double {
-        switch engine.state.neglectState {
+        switch engine.activeKodomon.neglectState {
         case .critical: return 0.7
         case .sick: return 0.8
         default: return 1.0
@@ -61,15 +62,18 @@ struct PetWidgetView: View {
     }
 
     private var xpProgress: Double {
+        let kodomon = engine.activeKodomon
         guard let next = displayStage.nextStage else { return 1.0 }
-        let current = displayStage.xpThreshold
-        let needed = next.xpThreshold - current
-        let progress = (engine.state.totalXP - current) / needed
+        let rarity = kodomon.rarity
+        let current = rarity.xpThreshold(for: displayStage)
+        let needed = rarity.xpThreshold(for: next) - current
+        guard needed > 0 else { return 1.0 }
+        let progress = (kodomon.speciesXP - current) / needed
         return min(max(progress, 0), 1.0)
     }
 
     private var moodColor: Color {
-        switch engine.state.mood {
+        switch engine.activeKodomon.mood {
         case 80...100: return KodomonColors.purple
         case 60..<80: return KodomonColors.teal
         case 40..<60: return KodomonColors.textSecondary
@@ -93,13 +97,13 @@ struct PetWidgetView: View {
             // Scene area — background + sprite
             ZStack(alignment: .bottom) {
                     // Background — uses image asset if available, falls back to code-drawn
-                    if let bgImage = NSImage(named: engine.state.activeBackground) {
+                    if let bgImage = NSImage(named: engine.player.activeBackground) {
                         Image(nsImage: bgImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 240, height: 240)
                             .clipped()
-                    } else if let theme = BackgroundTheme(rawValue: engine.state.activeBackground) {
+                    } else if let theme = BackgroundTheme(rawValue: engine.player.activeBackground) {
                         PixelBackgroundView(theme: theme, width: 220, height: 190)
                     } else {
                         KodomonColors.background
@@ -107,8 +111,8 @@ struct PetWidgetView: View {
 
                     // Pet sprite — hidden during cutscenes
                     if engine.evolutionEvent == nil && engine.deEvolutionEvent == nil {
-                        if engine.state.neglectState == .ranAway {
-                            if engine.state.isReviving {
+                        if engine.activeKodomon.neglectState == .ranAway {
+                            if engine.player.isReviving {
                                 // Revival in progress
                                 VStack(spacing: 8) {
                                     PixelSpriteView(stage: .tamago, pixelSize: 3, isStatic: true)
@@ -116,7 +120,7 @@ struct PetWidgetView: View {
                                     Text("Reviving...")
                                         .font(.system(size: 12, weight: .bold, design: .monospaced))
                                         .foregroundColor(KodomonColors.accent)
-                                    if let start = engine.state.revivalSessionStart {
+                                    if let start = engine.player.revivalSessionStart {
                                         let elapsed = Int(Date().timeIntervalSince(start) / 60)
                                         Text("\(min(elapsed, 30))/30 min")
                                             .font(.system(size: 10, design: .monospaced))
@@ -145,9 +149,9 @@ struct PetWidgetView: View {
                                 stage: displayStage,
                                 pixelSize: spritePixelSize,
                                 evolveProgress: xpProgress,
-                                petHue: engine.state.petHue,
-                                equippedAccessories: engine.state.equippedAccessories,
-                                neglectState: engine.state.neglectState
+                                petHue: engine.activeKodomon.hue,
+                                equippedAccessories: engine.activeKodomon.equippedAccessories,
+                                neglectState: engine.activeKodomon.neglectState
                             )
                             .saturation(neglectSaturation)
                             .opacity(neglectOpacity)
@@ -185,7 +189,7 @@ struct PetWidgetView: View {
                     VStack(spacing: 6) {
                         // Header row
                         HStack {
-                            Text(engine.state.petName.isEmpty ? "KODOMON" : engine.state.petName)
+                            Text(engine.activeKodomon.name.isEmpty ? "KODOMON" : engine.activeKodomon.name)
                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                                 .foregroundColor(KodomonColors.accent)
                             Spacer()
@@ -193,7 +197,7 @@ struct PetWidgetView: View {
                                 Text("♥")
                                     .font(.system(size: 9))
                                     .foregroundColor(moodColor)
-                                Text("\(Int(engine.state.mood))")
+                                Text("\(Int(engine.activeKodomon.mood))")
                                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                                     .foregroundColor(KodomonColors.textSecondary)
                             }
@@ -209,12 +213,13 @@ struct PetWidgetView: View {
                             PixelXPBar(progress: xpProgress, color: stageColor)
 
                             HStack {
-                                Text("\(Int(engine.state.totalXP)) XP")
+                                Text("\(Int(engine.activeKodomon.speciesXP)) XP")
                                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                                     .foregroundColor(KodomonColors.textSecondary)
                                 Spacer()
                                 if let next = displayStage.nextStage {
-                                    Text("\(Int(next.xpThreshold))")
+                                    let threshold = engine.activeKodomon.rarity.xpThreshold(for: next)
+                                    Text("\(Int(threshold))")
                                         .font(.system(size: 8, weight: .medium, design: .monospaced))
                                         .foregroundColor(KodomonColors.border)
                                 }
@@ -227,7 +232,7 @@ struct PetWidgetView: View {
                                 Text("▲")
                                     .font(.system(size: 8))
                                     .foregroundColor(KodomonColors.coral)
-                                Text("\(engine.state.currentStreak)d streak")
+                                Text("\(engine.player.currentStreak)d streak")
                                     .font(.system(size: 9, weight: .medium, design: .monospaced))
                                     .foregroundColor(KodomonColors.textSecondary)
                             }
@@ -241,7 +246,7 @@ struct PetWidgetView: View {
                         }
 
                         // Active event
-                        if let event = engine.state.activeEvent {
+                        if let event = engine.player.activeEvent {
                             HStack {
                                 Rectangle()
                                     .fill(KodomonColors.accent)
@@ -271,7 +276,7 @@ struct PetWidgetView: View {
                 EvolutionCutsceneView(
                     fromStage: evo.from,
                     toStage: evo.to,
-                    petHue: engine.state.petHue
+                    petHue: engine.activeKodomon.hue
                 ) {
                     engine.clearEvolutionEvent()
                 }
@@ -281,7 +286,7 @@ struct PetWidgetView: View {
                 DeEvolutionView(
                     fromStage: deEvo.from,
                     toStage: deEvo.to,
-                    petHue: engine.state.petHue
+                    petHue: engine.activeKodomon.hue
                 ) {
                     engine.clearDeEvolutionEvent()
                 }
@@ -295,14 +300,14 @@ struct PetWidgetView: View {
         .onTapGesture {
             engine.triggerPendingEvolution()
         }
-        .onChange(of: engine.state.totalXP) {
-            if engine.state.totalXP > lastXP && lastXP > 0 {
+        .onChange(of: engine.activeKodomon.speciesXP) {
+            if engine.activeKodomon.speciesXP > lastXP && lastXP > 0 {
                 triggerXPPopup()
             }
-            lastXP = engine.state.totalXP
+            lastXP = engine.activeKodomon.speciesXP
         }
         .onAppear {
-            lastXP = engine.state.totalXP
+            lastXP = engine.activeKodomon.speciesXP
             // Delay cutscene trigger so the widget is fully visible first
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                 engine.triggerPendingEvolution()
