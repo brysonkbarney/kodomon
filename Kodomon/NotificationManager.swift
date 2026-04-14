@@ -21,6 +21,8 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         case streakWarning    = "kodomon.streakWarning"
         case evolutionReady   = "kodomon.evolutionReady"
         case petRanAway       = "kodomon.petRanAway"
+        case eggDiscovered    = "kodomon.eggDiscovered"
+        case eggHatched       = "kodomon.eggHatched"
     }
 
     // MARK: - Init
@@ -138,6 +140,23 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         deliver(
             identifier: .petRanAway,
             body: "「さようなら…」 \(name) has left."
+        )
+    }
+
+    /// Egg discovered: a species trigger just fired, a new egg is incubating.
+    func sendEggDiscoveredNotification(speciesName: String) {
+        deliver(
+            identifier: .eggDiscovered,
+            body: "「たまご！」 A new egg appeared — \(speciesName) is incubating. Keep coding to hatch it!"
+        )
+    }
+
+    /// Egg hatched: the head of the pending-egg queue finished incubation and
+    /// just produced a new Kodomon in the collection.
+    func sendEggHatchedNotification(speciesName: String, kodomonName: String) {
+        deliver(
+            identifier: .eggHatched,
+            body: "「はじめまして！」 \(kodomonName) the \(speciesName) hatched! Check your collection."
         )
     }
 

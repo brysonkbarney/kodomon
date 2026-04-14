@@ -201,6 +201,10 @@ class PetEngine: ObservableObject {
         kodomon.neglectState = .none
         activeKodomon = kodomon
 
+        // Evaluate species-discovery triggers against this event.
+        // Only post-arming events count — historical activity never fires triggers.
+        evaluateTriggers(for: event)
+
         save()
         NSLog("[Kodomon] State saved — species XP: %.0f, mood: %.0f",
               activeKodomon.speciesXP, activeKodomon.mood)
@@ -233,6 +237,13 @@ class PetEngine: ObservableObject {
 
         player.todayXP += xp
         player.lifetimeXP += xp
+
+        // Head of the pending egg queue accumulates incubation XP alongside
+        // the active Kodomon's species XP. Only the head incubates.
+        if !player.pendingEggs.isEmpty {
+            player.pendingEggs[0].incubationXP += xp
+            checkHatching()
+        }
 
         checkEvolution()
         checkNewUnlocks(oldXP: oldLifetimeXP, newXP: player.lifetimeXP)
@@ -295,6 +306,9 @@ class PetEngine: ObservableObject {
             NotificationManager.shared.sendEvolutionReadyNotification(petName: updated.name)
             LeaderboardService.shared.sync(player: player, force: true)
             NSLog("[Kodomon] EVOLVED to %@ (pending cutscene)", next.displayName)
+
+            // Evolution-based species triggers (e.g. Graduation on first Kamisama)
+            fireStageReachedTriggersIfNeeded(stage: next)
         }
     }
 
@@ -416,6 +430,12 @@ class PetEngine: ObservableObject {
 
             player.currentStreak += 1
             player.longestStreak = max(player.longestStreak, player.currentStreak)
+
+            // Incubation active-days clock advances only on player-active days
+            if !player.pendingEggs.isEmpty {
+                player.pendingEggs[0].incubationActiveDays += 1
+                checkHatching()
+            }
         }
 
         // Any gap days (days with zero activity) reset the streak and apply decay
@@ -456,6 +476,12 @@ class PetEngine: ObservableObject {
 
             player.currentStreak += 1
             player.longestStreak = max(player.longestStreak, player.currentStreak)
+
+            // Incubation active-days clock advances only on player-active days
+            if !player.pendingEggs.isEmpty {
+                player.pendingEggs[0].incubationActiveDays += 1
+                checkHatching()
+            }
         } else {
             player.currentStreak = 0
             applyDecay(daysMissed: 1)
@@ -621,6 +647,148 @@ class PetEngine: ObservableObject {
         }
         watcher.resetOffset()
         NSLog("[Kodomon] Events log rotated")
+    }
+
+    // MARK: - Species triggers (Phase 2)
+
+    /// Evaluate every species-discovery trigger against the given event and
+    /// fire any that match. Respects `triggersArmedAt` — events with
+    /// timestamps earlier than arming never fire triggers (protects against
+    /// historical activity on v1 migration and against clock-skew edge cases).
+    private func evaluateTriggers(for event: ActivityEvent) {
+        let eventTimestamp = timestamp(of: event)
+        guard eventTimestamp >= player.triggersArmedAt else { return }
+
+        for species in SpeciesCatalog.all {
+            guard !player.triggersFired.contains(species.id) else { continue }
+            if triggerMatches(species.trigger, event: event) {
+                fireTrigger(for: species)
+            }
+        }
+    }
+
+    /// Check whether a species trigger matches the given event.
+    /// `.defaultStarter` and `.anyKodomonReachesStage` are never matched
+    /// here — starter is bootstrap-only, graduation is evaluated in
+    /// `fireStageReachedTriggersIfNeeded` during evolution.
+    private func triggerMatches(_ trigger: SpeciesTrigger, event: ActivityEvent) -> Bool {
+        switch trigger {
+        case .defaultStarter, .anyKodomonReachesStage:
+            return false
+
+        case .commitsInDay(let count):
+            if case .gitCommit = event {
+                return player.todayCommitCount >= count
+            }
+            return false
+
+        case .distinctExtensionsInDay(let count):
+            if case .fileWrite = event {
+                return player.todayFileTypes.count >= count
+            }
+            return false
+
+        case .sessionCrossesMidnight:
+            if case .sessionStop(let sessionId, let stopTime) = event,
+               let startTime = activeSessions[sessionId] {
+                return sessionStraddlesMidnight(start: startTime, end: stopTime)
+            }
+            return false
+
+        case .commitDeletionsExceedInsertions:
+            if case .gitCommit(let linesAdded, let linesRemoved, _, _) = event {
+                // Must have actually deleted something — an empty commit shouldn't count.
+                return linesRemoved > linesAdded && linesRemoved > 0
+            }
+            return false
+        }
+    }
+
+    /// Fire evolution-stage triggers for all species that watch for this
+    /// stage transition. Currently only `.anyKodomonReachesStage(.kamisama)`
+    /// matters (Graduation), but the loop is data-driven so future species
+    /// can plug in without more case analysis.
+    private func fireStageReachedTriggersIfNeeded(stage: Stage) {
+        guard Date() >= player.triggersArmedAt else { return }
+
+        for species in SpeciesCatalog.all {
+            guard !player.triggersFired.contains(species.id) else { continue }
+            if case .anyKodomonReachesStage(let target) = species.trigger, target == stage {
+                fireTrigger(for: species)
+            }
+        }
+    }
+
+    /// Record that a species trigger has fired, append a new pending egg
+    /// to the queue, and notify the user.
+    private func fireTrigger(for species: SpeciesDefinition) {
+        player.triggersFired.insert(species.id)
+        let egg = PendingEgg.newlyTriggered(speciesID: species.id)
+        player.pendingEggs.append(egg)
+        NSLog("[Kodomon] Trigger fired: %@ — egg queued (%d in queue)",
+              species.displayName, player.pendingEggs.count)
+        NotificationManager.shared.sendEggDiscoveredNotification(speciesName: species.displayName)
+    }
+
+    /// Check whether the head of the pending-egg queue meets its rarity-scaled
+    /// hatching requirements. If so, hatch it into a fresh KodomonState and
+    /// append to the collection.
+    private func checkHatching() {
+        guard let head = player.pendingEggs.first else { return }
+        guard let species = head.species else {
+            // Unknown species ID in the queue — discard gracefully so we
+            // don't block the queue forever on a stale entry.
+            NSLog("[Kodomon] Dropping pending egg with unknown speciesID: %@", head.speciesID)
+            player.pendingEggs.removeFirst()
+            return
+        }
+
+        let rarity = species.rarity
+        guard head.incubationXP >= rarity.hatchXP else { return }
+        guard head.incubationActiveDays >= rarity.hatchActiveDays else { return }
+        guard player.currentStreak >= rarity.hatchStreak else { return }
+
+        hatchHeadEgg(species: species)
+    }
+
+    /// Pop the head of the queue and create the new Kodomon in the collection.
+    private func hatchHeadEgg(species: SpeciesDefinition) {
+        player.pendingEggs.removeFirst()
+
+        let name = NameGenerator.names.randomElement() ?? "Kodomon"
+        let newKodomon = KodomonState.fresh(speciesID: species.id, name: name)
+        player.collection.append(newKodomon)
+
+        NSLog("[Kodomon] Egg hatched: %@ the %@ (collection size %d)",
+              newKodomon.name, species.displayName, player.collection.count)
+        NotificationManager.shared.sendEggHatchedNotification(
+            speciesName: species.displayName,
+            kodomonName: newKodomon.name
+        )
+    }
+
+    // MARK: - Trigger helpers
+
+    /// Extract a timestamp from any ActivityEvent case.
+    private func timestamp(of event: ActivityEvent) -> Date {
+        switch event {
+        case .sessionStart(_, _, let ts): return ts
+        case .sessionStop(_, let ts): return ts
+        case .fileWrite(_, _, let ts): return ts
+        case .gitCommit(_, _, _, let ts): return ts
+        }
+    }
+
+    /// True if a session's start and stop straddle local midnight
+    /// (start before midnight, end at/after midnight of the same rollover).
+    private func sessionStraddlesMidnight(start: Date, end: Date) -> Bool {
+        let cal = Calendar.current
+        // The midnight boundary that falls between start and end, if any.
+        // Walk forward from the start day's next midnight and check.
+        guard let nextMidnight = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: start)) else {
+            return false
+        }
+        return start < nextMidnight && end >= nextMidnight
     }
 
     // MARK: - Persistence
