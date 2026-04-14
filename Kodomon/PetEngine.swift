@@ -762,8 +762,26 @@ class PetEngine: ObservableObject {
         return min(xpFrac, daysFrac, streakFrac)
     }
 
+    /// Swap the active Kodomon to the one with the given id. The old active
+    /// is frozen in place; the new active starts earning species XP from the
+    /// next event. No-op if the id isn't in the collection or is already
+    /// active. Bumps the new active's `lastActiveWhileEquipped` timestamp so
+    /// decay math starts fresh from the moment of the swap.
+    func setActive(kodomonID: UUID) {
+        guard kodomonID != player.activeKodomonID else { return }
+        guard let idx = player.collection.firstIndex(where: { $0.id == kodomonID }) else {
+            NSLog("[Kodomon] setActive: id %@ not in collection", kodomonID.uuidString)
+            return
+        }
+        let oldName = activeKodomon.name
+        player.activeKodomonID = kodomonID
+        player.collection[idx].lastActiveWhileEquipped = Date()
+        NSLog("[Kodomon] Deployed %@ (was %@)", player.collection[idx].name, oldName)
+        save()
+    }
+
     /// User-initiated hatch of the head egg. No-op if the queue is empty
-    /// or the head isn't ready yet. Called by the Collection tab's Hatch
+    /// or the head isn't ready yet. Called by the Kodex tab's Hatch
     /// button — hatching is never automatic.
     func hatchHeadEggIfReady() {
         guard headEggIsReady else { return }

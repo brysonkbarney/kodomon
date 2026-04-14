@@ -8,7 +8,7 @@ struct MenuPanelView: View {
 
     enum MenuTab: String, CaseIterable {
         case stats = "Stats"
-        case collection = "Collection"
+        case kodex = "Kodex"
         case customize = "Style"
         case info = "Info"
     }
@@ -61,8 +61,8 @@ struct MenuPanelView: View {
                     switch tab {
                     case .stats:
                         StatsTab(engine: engine, showingLeaderboard: $showingLeaderboard)
-                    case .collection:
-                        CollectionTab(engine: engine)
+                    case .kodex:
+                        KodexTab(engine: engine)
                     case .customize:
                         CustomizeTab(engine: engine)
                     case .info:
@@ -252,34 +252,49 @@ struct StatsTab: View {
 
 }
 
-// MARK: - Collection Tab
+// MARK: - Kodex Tab
 
-struct CollectionTab: View {
+struct KodexTab: View {
     @ObservedObject var engine: PetEngine
+
+    /// Species ID currently being hovered over in the grid. Nil means the
+    /// cursor isn't over any cell — the details panel falls back to the
+    /// currently active Kodomon's species.
+    @State private var hoveredSpeciesID: String? = nil
+
+    /// The species whose details are shown in the detail panel below.
+    /// Hovering takes priority; otherwise show the active Kodomon's species.
+    private var detailSpecies: SpeciesDefinition? {
+        if let id = hoveredSpeciesID {
+            return SpeciesCatalog.definition(forID: id)
+        }
+        return SpeciesCatalog.definition(forID: engine.activeKodomon.speciesID)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            // Incubating egg section (if any)
+            // Incubating egg at the very top — it's the most urgent thing
             if !engine.player.pendingEggs.isEmpty {
                 incubatingEggSection
                 Divider()
             }
 
-            // Species grid — silhouettes for locked, full details for unlocked
-            Text("Species")
-                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                .foregroundColor(KodomonColors.textPrimary)
-
-            let discoveredIDs = Set(engine.player.collection.map { $0.speciesID })
-            ForEach(SpeciesCatalog.all, id: \.id) { species in
-                let unlocked = discoveredIDs.contains(species.id)
-                if unlocked,
-                   let kodomon = engine.player.collection.first(where: { $0.speciesID == species.id }) {
-                    unlockedRow(species: species, kodomon: kodomon)
-                } else {
-                    lockedRow()
-                }
+            // Pokedex header
+            HStack(alignment: .firstTextBaseline) {
+                Text("KODEX")
+                    .font(.system(size: 13, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.accent)
+                Spacer()
+                Text("\(engine.player.collection.count)/\(SpeciesCatalog.all.count) discovered")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
             }
+
+            // 3×2 grid of species cells
+            speciesGrid
+
+            // Hover-driven details panel below the grid
+            detailPanel
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
@@ -299,8 +314,6 @@ struct CollectionTab: View {
                 .foregroundColor(KodomonColors.textPrimary)
 
             HStack {
-                // Simple egg glyph — pulses conceptually with the accent
-                // color when ready, dim when still incubating.
                 Text("◓")
                     .font(.system(size: 24))
                     .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
@@ -320,7 +333,6 @@ struct CollectionTab: View {
                 color: isReady ? KodomonColors.accent : KodomonColors.teal
             )
 
-            // Hatch button — disabled when not ready, accent when ready
             Button(action: {
                 engine.hatchHeadEggIfReady()
             }) {
@@ -343,83 +355,173 @@ struct CollectionTab: View {
         }
     }
 
-    // MARK: Species rows
+    // MARK: Grid
 
-    private func unlockedRow(species: SpeciesDefinition, kodomon: KodomonState) -> some View {
-        let isActive = kodomon.id == engine.player.activeKodomonID
-        return HStack(alignment: .top, spacing: 10) {
-            // Simple tinted disc placeholder — real sprites land in a later phase.
-            Circle()
-                .fill(hueColor(kodomon.hue))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text(String(species.displayName.prefix(1)))
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(.white)
-                )
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(species.displayName)
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundColor(KodomonColors.textPrimary)
-                    if isActive {
-                        Text("ACTIVE")
-                            .font(.system(size: 7, weight: .bold, design: .monospaced))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(KodomonColors.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 3))
-                    }
-                }
-                Text("\(kodomon.name) — \(kodomon.stage.displayName)")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary)
-                Text(species.earnedDescription)
-                    .font(.system(size: 8, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
-                    .lineLimit(2)
+    private var speciesGrid: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+        return LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(Array(SpeciesCatalog.all.enumerated()), id: \.element.id) { index, species in
+                speciesCell(species: species, zukanNumber: index + 1)
             }
-            Spacer()
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
-        .background(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(isActive ? KodomonColors.accent.opacity(0.08) : Color.clear)
-        )
     }
 
-    private func lockedRow() -> some View {
-        HStack(spacing: 10) {
-            // Silhouette placeholder
-            Circle()
-                .fill(KodomonColors.textSecondary.opacity(0.25))
-                .frame(width: 32, height: 32)
-                .overlay(
-                    Text("?")
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
-                )
+    private func speciesCell(species: SpeciesDefinition, zukanNumber: Int) -> some View {
+        let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
+        let kodomon = engine.player.collection.first { $0.speciesID == species.id }
+        let isActive = kodomon?.id == engine.player.activeKodomonID
+        let isHovered = hoveredSpeciesID == species.id
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("???")
-                    .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary)
-                Text("Undiscovered")
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+        return VStack(spacing: 4) {
+            // Zukan number badge
+            HStack {
+                Text(String(format: "#%03d", zukanNumber))
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                Spacer()
+                if isActive {
+                    Circle()
+                        .fill(KodomonColors.accent)
+                        .frame(width: 6, height: 6)
+                }
             }
-            Spacer()
+
+            // Sprite placeholder box — stays square-ish
+            ZStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(KodomonColors.background.opacity(0.8))
+                if unlocked, let k = kodomon {
+                    Circle()
+                        .fill(hueColor(k.hue))
+                        .frame(width: 28, height: 28)
+                        .overlay(
+                            Text(String(species.displayName.prefix(1)))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                        )
+                } else {
+                    Circle()
+                        .fill(KodomonColors.textSecondary.opacity(0.25))
+                        .frame(width: 28, height: 28)
+                        .overlay(
+                            Text("?")
+                                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                                .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                        )
+                }
+            }
+            .frame(height: 54)
+
+            // Name label
+            Text(unlocked ? species.displayName : "???")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.6))
+                .lineLimit(1)
         }
-        .padding(.vertical, 6)
-        .padding(.horizontal, 8)
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(isHovered ? KodomonColors.accent.opacity(0.1) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(
+                    isActive ? KodomonColors.accent
+                        : (isHovered ? KodomonColors.accent.opacity(0.5) : KodomonColors.border.opacity(0.3)),
+                    lineWidth: isActive ? 2 : 1
+                )
+        )
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            hoveredSpeciesID = hovering ? species.id : (hoveredSpeciesID == species.id ? nil : hoveredSpeciesID)
+        }
+    }
+
+    // MARK: Detail panel
+
+    @ViewBuilder
+    private var detailPanel: some View {
+        if let species = detailSpecies {
+            let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
+            let kodomon = engine.player.collection.first { $0.speciesID == species.id }
+            let isActive = kodomon?.id == engine.player.activeKodomonID
+
+            VStack(alignment: .leading, spacing: 8) {
+                if unlocked, let k = kodomon {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(species.displayName)
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(KodomonColors.accent)
+                        Text("— \(k.stage.displayName)")
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                        Spacer()
+                        if isActive {
+                            Text("DEPLOYED")
+                                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(KodomonColors.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                        }
+                    }
+
+                    Text("\"\(k.name)\"")
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(KodomonColors.textPrimary)
+
+                    Text("\(Int(k.speciesXP)) species XP")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+
+                    Text(species.earnedDescription)
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
+                        .padding(.top, 2)
+
+                    if !isActive {
+                        Button(action: {
+                            engine.setActive(kodomonID: k.id)
+                        }) {
+                            Text("Deploy \(k.name)")
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(KodomonColors.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+                } else {
+                    // Locked species — stays fully mysterious
+                    HStack {
+                        Text("???")
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                        Spacer()
+                    }
+                    Text("Undiscovered species")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                    Text("Keep coding. You'll find it eventually.")
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                }
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(KodomonColors.border.opacity(0.15))
+            )
+        }
     }
 
     // MARK: Helpers
 
-    /// Convert a stored hue (0.0-1.0) back into a Color for the placeholder disc.
     private func hueColor(_ hue: Double) -> Color {
         Color(hue: hue, saturation: 0.75, brightness: 0.85)
     }
