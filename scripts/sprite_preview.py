@@ -5,14 +5,17 @@ sprite_preview.py — standalone preview tool for Kodomon pixel sprites.
 Renders sprites from the same [[P]] enum grid format used in SpriteData
 (Kodomon/PixelSpriteView.swift), with the same hue-tinted palette, and
 writes the result to an HTML file that auto-opens in your browser.
+Sprites are laid out side by side in a flex grid so evolution stages or
+species comparisons can sit next to each other.
 
 Usage:
-    python3 scripts/sprite_preview.py [sprite_name] [hue]
+    python3 scripts/sprite_preview.py [sprite_name ...] [--hue H]
 
 Examples:
-    python3 scripts/sprite_preview.py               # all drafts
-    python3 scripts/sprite_preview.py kozuchi_kobito
-    python3 scripts/sprite_preview.py kozuchi_kobito 0.57   # blue tint
+    python3 scripts/sprite_preview.py                              # all drafts
+    python3 scripts/sprite_preview.py kozuchi_kobito                # one sprite
+    python3 scripts/sprite_preview.py kozuchi_kobito kozuchi_kani   # side by side
+    python3 scripts/sprite_preview.py fukuron_kobito --hue 0.57     # blue tint
 
 Drafts are stored in the SPRITES dict below. Add or edit them to iterate;
 no dependencies beyond the Python stdlib.
@@ -75,6 +78,35 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,D,D,D,D,D,D,D,D,D,D,n,n,n,n,n],
     ],
 
+    # Kozuchi — Kani stage. Scaled-up T-mallet (24×20) with two small
+    # hammer-fist arms sticking out from the handle, plus a bigger base
+    # with two feet. Everything is now symmetric around col 11.5 — the
+    # head is 20 cols wide (even so it centers cleanly), arms sit at the
+    # outermost cols 0-2 and 21-23, handle is 4 cols wide at cols 10-13,
+    # base trapezoid widens symmetrically, feet are mirrored around center.
+    "kozuchi_kani": [
+        [n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n],   # flat top (20-wide head)
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head + side highlights
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],
+        [n,n,D,L,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,L,D,n,n],   # eyes row 1
+        [n,n,D,B,B,B,B,E,E,E,B,B,B,B,E,E,E,B,B,B,B,D,n,n],   # eyes row 2
+        [n,n,D,B,B,B,B,E,W,E,B,B,B,B,E,W,E,B,B,B,B,D,n,n],   # eyes row 3 w/ highlights
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],
+        [n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n],   # head bottom
+        [D,D,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,D,D],   # arm tops + handle top
+        [D,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,D],   # arm fists + handle
+        [D,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,D],
+        [D,D,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,D,D],   # arm bottoms
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n],   # handle continues
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n],   # base widens (6)
+        [n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n],   # base widens (8)
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],   # base widens (10)
+        [n,n,n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n,n,n],   # base plate (12 wide)
+        [n,n,n,n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,D,D,D,D,n,n,n,n,D,D,D,D,n,n,n,n,n,n],   # feet bottom
+    ],
+
     # Draft #2: Kozuchi (committer) — Kobito stage. Full T-mallet silhouette.
     # Flat-topped rectangular mallet head, thin vertical handle, small flared
     # base. Clearly NOT a rounded blob — the silhouette reads as a tool first.
@@ -93,6 +125,36 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n],   # base widens
         [n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n],   # base flares
         [n,n,n,n,n,n,D,D,D,D,D,D,D,D,n,n,n,n,n,n],   # base cap
+    ],
+
+    # Fukuron — Kani stage. The evolution adds a NEW feature that Kobito
+    # doesn't have: detached floating wings on the sides (3-wide D,B,D
+    # tubes at cols 0-2 and 21-23) clearly separated from the body by
+    # visible empty gaps at cols 3 and 20 — same "floating appendage"
+    # pattern Kozuchi Kani uses for its hammer-fist arms. Rest of the
+    # creature (tufts, head, eyes, neck, body, feet) stays proportional
+    # to Kobito so the evolution feels additive, not just "bigger".
+    "fukuron_kani": [
+        [n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n],   # ear tuft tips
+        [n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n],   # tuft tubes
+        [n,n,n,n,n,D,B,B,B,D,n,n,n,n,D,B,B,B,D,n,n,n,n,n],   # tufts widen
+        [n,n,D,D,D,D,B,B,B,D,D,D,D,D,D,B,B,B,D,D,D,D,n,n],   # tufts merge w/ head
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
+        [n,n,D,B,B,n,E,E,n,B,B,B,B,B,B,n,E,E,n,B,B,D,n,n],   # eye top (rounded)
+        [n,n,D,B,B,E,W,W,E,B,B,B,B,B,B,E,W,W,E,B,B,D,n,n],   # eye middle w/ highlights
+        [n,n,D,B,B,n,E,E,n,B,B,D,D,B,B,n,E,E,n,B,B,D,n,n],   # eye bottom + beak
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below eyes
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom taper
+        [n,n,n,n,n,D,D,B,B,B,B,B,B,B,B,B,B,D,D,n,n,n,n,n],   # NARROW NECK
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # body starts
+        [D,D,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,D,D],   # wing tops + body
+        [D,B,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,B,D],   # wing tubes (floating)
+        [D,B,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,B,D],
+        [D,D,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,D,D],   # wing bottoms
+        [n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],   # body taper
+        [n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n],   # body narrow
+        [n,n,n,n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,D,D,D,D,n,n,n,n,D,D,D,D,n,n,n,n,n,n],   # feet bottom
     ],
 
     # Draft #5: Fukuron (night owl) — Kobito stage.
@@ -114,6 +176,35 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # body
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],   # body taper
         [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
+    ],
+
+    # Tanuki — Kani stage. The evolution adds a LIGHTER BELLY PATCH (L
+    # pixels forming an oval in the middle of the body) — tanukis are
+    # iconic for their pale underside, and no other Kodomon species has
+    # an internal lighter-toned pattern inside its body. The body also
+    # grows rounder and wider than the head, reaching the full grid
+    # width (cols 0 and 23) at the midsection for a drum-belly look.
+    "tanuki_kani": [
+        [n,n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n,n],   # ear tips
+        [n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n],   # ears 4 wide
+        [n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n],   # ears 6 wide
+        [n,n,D,B,B,B,B,B,D,D,D,D,D,D,D,D,B,B,B,B,B,D,n,n],   # ears merge w/ head
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
+        [n,n,D,L,B,D,D,D,D,D,B,B,B,B,D,D,D,D,D,B,L,D,n,n],   # mask top
+        [n,n,D,B,B,D,E,W,E,D,B,B,B,B,D,E,W,E,D,B,B,D,n,n],   # eyes in mask
+        [n,n,D,B,B,D,D,D,D,D,B,B,B,B,D,D,D,D,D,B,B,D,n,n],   # mask bottom
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below mask
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body widens
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # body full width
+        [D,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly starts (L)
+        [D,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,D],   # belly wider
+        [D,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,D],   # belly widest
+        [D,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly narrows
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body narrows
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # body tapers
+        [n,n,n,n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,D,D,D,D,n,n,n,n,D,D,D,D,n,n,n,n,n,n],   # feet bottom
     ],
 
     # Draft #6: Tanuki (polyglot) — Kobito stage.
@@ -138,6 +229,35 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
     ],
 
+    # Kirimaru — Kani stage. Structural evolution: Kobito was a diamond
+    # with only a top point and a FLAT BASE. Kani has a FULL DIAMOND with
+    # both top and bottom points, symmetric top-to-bottom, like a true cut
+    # gem. The cyclops eye doubles in size from 3×3 to 6×3 with double
+    # W highlights in the middle suggesting a "gem glint". Widest at
+    # rows 9-10 (20 cols wide). All perfectly symmetric around col 11.5.
+    "kirimaru_kani": [
+        [n,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,n],   # top point
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n],
+        [n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],
+        [n,n,n,D,B,B,B,B,B,n,E,E,E,E,n,B,B,B,B,B,D,n,n,n],   # eye top (rounded)
+        [n,n,D,B,B,B,B,B,B,E,E,W,W,E,E,B,B,B,B,B,B,D,n,n],   # WIDEST + eye mid
+        [n,n,D,B,B,B,B,B,B,n,E,E,E,E,n,B,B,B,B,B,B,D,n,n],   # widest + eye bot
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # narrowing
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],
+        [n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],
+        [n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,n],   # bottom point
+    ],
+
     # Draft #7: Kirimaru (refactorer) — Kobito stage.
     # Angular DIAMOND silhouette (point at top, widest in the middle,
     # narrows to a flat base), with a single CYCLOPS eye dead center —
@@ -158,6 +278,36 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],
         [n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n],   # flat base
+    ],
+
+    # Houou — Kani stage. The evolution adds TWO HORNS on top of the head
+    # AND TWO MORE WHISKERS for 4 total. The outer pair still curves all
+    # the way to the bottom corners of the grid (like a long dragon
+    # beard), while the inner pair hangs straight down from the head
+    # bottom as shorter 3-wide tubes, tapering to 2-wide tips at row 15.
+    # The 4 whiskers together make Houou feel like a fuller, more
+    # anatomically rich dragon than Kobito's 2-whisker version.
+    "houou_kani": [
+        [n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n],   # horn tips
+        [n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n],   # horn tubes
+        [n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n],   # horns widen
+        [n,n,D,D,D,B,B,B,D,D,D,D,D,D,D,D,B,B,B,D,D,D,n,n],   # horns merge w/ head
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
+        [n,n,D,B,B,B,E,E,E,B,B,B,B,B,B,E,E,E,B,B,B,D,n,n],   # eyes top
+        [n,n,D,B,B,B,E,W,E,B,B,B,B,B,B,E,W,E,B,B,B,D,n,n],   # eye highlights
+        [n,n,D,B,B,B,E,E,E,B,B,B,B,B,B,E,E,E,B,B,B,D,n,n],   # eyes bottom
+        [n,n,D,B,B,B,B,B,B,B,B,D,D,B,B,B,B,B,B,B,B,D,n,n],   # beak
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head mid
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom taper
+        [n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n],   # head bottom
+        [n,n,n,n,D,B,D,n,D,B,D,n,n,D,B,D,n,D,B,D,n,n,n,n],   # 4 whiskers start
+        [n,n,n,D,B,B,D,n,D,B,D,n,n,D,B,D,n,D,B,B,D,n,n,n],   # outer widens
+        [n,n,D,B,B,D,n,n,D,B,D,n,n,D,B,D,n,n,D,B,B,D,n,n],   # outer shifts left/right
+        [n,D,B,B,D,n,n,n,n,D,D,n,n,D,D,n,n,n,n,D,B,B,D,n],   # inner tapers to tips
+        [D,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,D],   # outer reach corners
+        [D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D],   # outer narrows
+        [D,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,D],   # outer 2-wide tips
+        [D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D],   # outer final fade
     ],
 
     # Draft #11: Houou (legendary graduation) — Kobito stage.
@@ -204,7 +354,17 @@ def render_html(sprites_to_show: list[tuple[str, list[list[int]]]], hue: float) 
     }}
     h1 {{ color: #d83632; font-size: 18px; margin: 0 0 8px 0; }}
     .meta {{ color: #888; font-size: 11px; margin-bottom: 30px; }}
-    .sprite-group {{ margin-bottom: 50px; }}
+    .grid {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      align-items: flex-start;
+    }}
+    .sprite-group {{
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }}
     .sprite-name {{
       font-size: 14px;
       color: #f5f0e1;
@@ -259,23 +419,41 @@ def render_html(sprites_to_show: list[tuple[str, list[list[int]]]], hue: float) 
 <body>
   <h1>Kodomon Sprite Preview</h1>
   <div class="meta">hue = {hue:.2f} — edit scripts/sprite_preview.py to add drafts</div>
-  {parts}
+  <div class="grid">{parts}</div>
 </body>
 </html>"""
 
 
 def main() -> None:
     args = sys.argv[1:]
-    sprite_name = args[0] if len(args) >= 1 else None
-    hue = float(args[1]) if len(args) >= 2 else 0.07  # default peach
+    hue = 0.07  # default peach
+    sprite_names: list[str] = []
 
-    if sprite_name:
-        if sprite_name not in SPRITES:
-            print(f"unknown sprite '{sprite_name}'. available:")
-            for k in SPRITES:
-                print(f"  {k}")
-            sys.exit(1)
-        sprites_to_show = [(sprite_name, SPRITES[sprite_name])]
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--hue" and i + 1 < len(args):
+            hue = float(args[i + 1])
+            i += 2
+            continue
+        if arg in SPRITES:
+            sprite_names.append(arg)
+            i += 1
+            continue
+        # Back-compat: a bare float as the last arg was the old hue syntax.
+        try:
+            hue = float(arg)
+            i += 1
+            continue
+        except ValueError:
+            pass
+        print(f"unknown argument '{arg}'. available sprites:")
+        for k in SPRITES:
+            print(f"  {k}")
+        sys.exit(1)
+
+    if sprite_names:
+        sprites_to_show = [(n, SPRITES[n]) for n in sprite_names]
     else:
         sprites_to_show = list(SPRITES.items())
 
