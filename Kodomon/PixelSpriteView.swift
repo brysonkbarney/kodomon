@@ -545,6 +545,7 @@ struct SpriteData {
 }
 
 struct PixelSpriteView: View {
+    let speciesID: String
     let stage: Stage
     let pixelSize: CGFloat
     let evolveProgress: Double
@@ -561,7 +562,13 @@ struct PixelSpriteView: View {
     @State private var currentFrame: [[P]]? = nil
     @State private var animationTimers: [Timer] = []
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = [], neglectState: NeglectState = .none) {
+    /// Resolved sprite set for the active species.
+    private var sprites: SpeciesSpriteSet? {
+        SpriteRegistry.sprites(forSpeciesID: speciesID)
+    }
+
+    init(speciesID: String = "tamago_crab", stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = [], neglectState: NeglectState = .none) {
+        self.speciesID = speciesID
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
@@ -576,7 +583,7 @@ struct PixelSpriteView: View {
     private let accPaddingSide: CGFloat = 4
 
     var body: some View {
-        let baseFrame = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        let baseFrame = currentFrame ?? spriteForCurrentStage()
         let grid = SpriteData.applyNeglect(baseFrame, neglectState: neglectState)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
@@ -627,6 +634,22 @@ struct PixelSpriteView: View {
         .onChange(of: stage) { if !isStatic { startAnimations() } }
     }
 
+    /// Resolve the base sprite for the current species + stage.
+    private func spriteForCurrentStage() -> [[P]] {
+        if stage == .tamago {
+            return SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        }
+        guard let ss = sprites else {
+            return SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        }
+        switch stage {
+        case .tamago: return SpriteData.tamago
+        case .kobito: return ss.kobito
+        case .kani: return ss.kani
+        case .kamisama: return ss.kamisama
+        }
+    }
+
     private func startAnimations() {
         // Cancel all previous timers
         for timer in animationTimers { timer.invalidate() }
@@ -668,15 +691,16 @@ struct PixelSpriteView: View {
             break
         }
 
+        guard let ss = sprites else { return }
         switch stage {
         case .tamago:
             animateTamago()
         case .kobito:
-            animateKobito()
+            animateKobito(ss)
         case .kani:
-            animateKani()
+            animateKani(ss)
         case .kamisama:
-            animateKamisama()
+            animateKamisama(ss)
         }
     }
 
@@ -717,28 +741,40 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKobito() {
-        currentFrame = SpriteData.kobito
+    private func animateKobito(_ ss: SpeciesSpriteSet) {
+        currentFrame = ss.kobito
 
+        // Look around (only species with look frames)
         addTimer(2.0) {
-            let frames = [SpriteData.kobito, SpriteData.kobitoLeft, SpriteData.kobitoRight, SpriteData.kobitoUp, SpriteData.kobito]
+            var frames: [[[P]]] = [ss.kobito]
+            if let left = ss.kobitoLeft { frames.append(left) }
+            if let right = ss.kobitoRight { frames.append(right) }
+            // Tamago crab has an extra "up" frame
+            if speciesID == "tamago_crab" { frames.append(TamagoCrabSprites.kobitoUp) }
+            frames.append(ss.kobito)
             currentFrame = frames.randomElement()!
         }
 
+        // Blink
         addTimer(3.5) {
-            currentFrame = SpriteData.kobitoBlink
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = SpriteData.kobito }
+            currentFrame = ss.kobitoBlink
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = ss.kobito }
         }
 
+        // Hop + squish/action
         addTimer(4.0) {
             withAnimation(.easeOut(duration: 0.15)) { bobOffset = -8 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 withAnimation(.easeIn(duration: 0.1)) { bobOffset = 0 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    currentFrame = SpriteData.kobitoSquish
-                    withAnimation(.easeOut(duration: 0.08)) { scaleX = 1.1; scaleY = 0.9 }
+                    // Use species action frame if available, else tamago_crab squish
+                    let squishFrame = ss.kobitoAction ?? (speciesID == "tamago_crab" ? TamagoCrabSprites.kobitoSquish : nil)
+                    if let squish = squishFrame {
+                        currentFrame = squish
+                        withAnimation(.easeOut(duration: 0.08)) { scaleX = 1.1; scaleY = 0.9 }
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                        currentFrame = SpriteData.kobito
+                        currentFrame = ss.kobito
                         withAnimation(.easeInOut(duration: 0.1)) { scaleX = 1.0; scaleY = 1.0 }
                     }
                 }
@@ -746,25 +782,30 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKani() {
-        currentFrame = SpriteData.kani
+    private func animateKani(_ ss: SpeciesSpriteSet) {
+        currentFrame = ss.kani
 
-        // Look around
+        // Look around (only species with look frames)
         addTimer(2.5) {
-            let frames = [SpriteData.kani, SpriteData.kaniLeft, SpriteData.kaniRight, SpriteData.kani]
+            var frames: [[[P]]] = [ss.kani]
+            if let left = ss.kaniLeft { frames.append(left) }
+            if let right = ss.kaniRight { frames.append(right) }
+            frames.append(ss.kani)
             currentFrame = frames.randomElement()!
         }
 
         // Blink
         addTimer(4.0) {
-            currentFrame = SpriteData.kaniBlink
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = SpriteData.kani }
+            currentFrame = ss.kaniBlink
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = ss.kani }
         }
 
-        // Wave arm occasionally
-        addTimer(6.0) {
-            currentFrame = SpriteData.kaniWave
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { currentFrame = SpriteData.kani }
+        // Unique action (wave, slam, drum, flap, pulse, roar)
+        if let action = ss.kaniAction {
+            addTimer(6.0) {
+                currentFrame = action
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { currentFrame = ss.kani }
+            }
         }
 
         // Walk side to side — waddle while moving
@@ -772,16 +813,12 @@ struct PixelSpriteView: View {
             let direction: CGFloat = Bool.random() ? 1 : -1
             let target = direction * 30
 
-            // Start walking with waddle
             withAnimation(.easeInOut(duration: 0.8)) { slideOffset = target }
-            // Waddle steps during the walk
             withAnimation(.easeInOut(duration: 0.1).repeatCount(8, autoreverses: true)) { wiggleAngle = 4 * direction }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
                 wiggleAngle = 0
-                // Pause at destination
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    // Walk back with waddle
                     withAnimation(.easeInOut(duration: 0.8)) { slideOffset = 0 }
                     withAnimation(.easeInOut(duration: 0.1).repeatCount(8, autoreverses: true)) { wiggleAngle = -4 * direction }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
@@ -792,7 +829,8 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKamisama() {
+    private func animateKamisama(_ ss: SpeciesSpriteSet) {
+        currentFrame = ss.kamisama
         // Slow majestic float
         withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bobOffset = -8 }
 

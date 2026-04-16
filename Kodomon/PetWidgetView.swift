@@ -146,6 +146,7 @@ struct PetWidgetView: View {
                             }
                         } else {
                             PixelSpriteView(
+                                speciesID: engine.activeKodomon.speciesID,
                                 stage: displayStage,
                                 pixelSize: spritePixelSize,
                                 evolveProgress: xpProgress,
