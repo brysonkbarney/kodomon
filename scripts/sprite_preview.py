@@ -78,6 +78,37 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,D,D,D,D,D,D,D,D,D,D,n,n,n,n,n],
     ],
 
+    # Kozuchi — Kamisama stage (33×20). The legendary deity form adds
+    # TWO new features beyond Kani: a 3-point CROWN on top of the mallet
+    # head, and FOUR arms total (upper pair at grid edges cols 0-2 and
+    # 30-32, lower pair at inner cols 10-12 and 20-22) like a multi-
+    # armed buddhist deity wielding a ceremonial mallet. Handle widened
+    # to 5-wide (D,B,B,B,D at cols 14-18) so it sits perfectly centered
+    # on the odd 33-col grid. Head is now 29 cols wide × 8 rows tall
+    # with L highlights on the upper edges.
+    "kozuchi_kamisama": [
+        [n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n],   # crown tips (3)
+        [n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n],   # crown bodies
+        [n,n,D,D,D,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,D,D,D,n,n],   # crowns merge w/ head top
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head w/ highlights
+        [n,n,D,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,D,n,n],   # eyes top
+        [n,n,D,B,B,B,B,B,B,E,W,E,B,B,B,B,B,B,B,B,B,E,W,E,B,B,B,B,B,B,D,n,n],   # eye highlights
+        [n,n,D,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,D,n,n],   # eyes bottom
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below eyes
+        [n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n],   # head bottom (flat)
+        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],   # upper arms top + handle
+        [D,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,D],   # upper arms + handle
+        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],   # upper arms bot + handle
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # handle spacer
+        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],   # lower arms top + handle
+        [n,n,n,n,n,n,n,n,n,n,D,B,D,n,D,B,B,B,D,n,D,B,D,n,n,n,n,n,n,n,n,n,n],   # lower arms + handle
+        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],   # lower arms bot + handle
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # base widens
+        [n,n,n,n,n,n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n,n,n,n,n,n],   # base plate
+        [n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n],   # feet
+    ],
+
     # Kozuchi — Kani stage. Scaled-up T-mallet (24×20) with two small
     # hammer-fist arms sticking out from the handle, plus a bigger base
     # with two feet. Everything is now symmetric around col 11.5 — the
@@ -125,6 +156,37 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n],   # base widens
         [n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n],   # base flares
         [n,n,n,n,n,n,D,D,D,D,D,D,D,D,n,n,n,n,n,n],   # base cap
+    ],
+
+    # Fukuron — Kamisama stage (33×20). Night-owl deity form. Kani
+    # evolved to add floating wings; Kamisama now adds a 5-POINT
+    # FEATHERED CROWN on top (instead of just 2 ear tufts), a wider
+    # 3-wide beak, and larger 4×3 rounded eyes with double W highlights.
+    # Wings stay as floating D,B,D tubes at cols 0-2 and 30-32 with
+    # visible gaps separating them from the body — the pattern that
+    # worked for Kani. Talons at the bottom are 4-wide each, matching
+    # Kozuchi Kamisama's foot style.
+    "fukuron_kamisama": [
+        [n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n],   # 5 crest tips
+        [n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n],   # crest bodies
+        [n,n,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,n,n],   # crest merges w/ head
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head w/ highlights
+        [n,n,D,B,B,B,B,B,B,n,E,E,n,B,B,B,B,B,B,B,n,E,E,n,B,B,B,B,B,B,D,n,n],   # eyes top (rounded)
+        [n,n,D,B,B,B,B,B,B,E,W,W,E,B,B,B,B,B,B,B,E,W,W,E,B,B,B,B,B,B,D,n,n],   # eye highlights
+        [n,n,D,B,B,B,B,B,B,n,E,E,n,B,B,D,D,D,B,B,n,E,E,n,B,B,B,B,B,B,D,n,n],   # eyes bot + 3-wide beak
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom taper
+        [n,n,n,n,n,n,n,D,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,D,n,n,n,n,n,n,n],   # NARROW NECK
+        [n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],   # body starts
+        [D,D,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,D,D],   # wings + body
+        [D,B,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,B,D],   # wings continue
+        [D,B,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,B,D],
+        [D,D,D,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,D,D,D],   # wings end
+        [n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],   # body narrows
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],   # body narrow
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n],   # talons
+        [n,n,n,n,n,n,n,n,n,n,D,D,D,D,n,n,n,n,n,D,D,D,D,n,n,n,n,n,n,n,n,n,n],   # talons bottom
     ],
 
     # Fukuron — Kani stage. The evolution adds a NEW feature that Kobito
@@ -178,6 +240,37 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
     ],
 
+    # Tanuki — Kamisama stage (33×20). Deity form. Evolves Kani's
+    # lighter-belly idea into a two-feature Kamisama: a FOREHEAD GEM
+    # (3-wide D,W,D pattern centered at col 16 between ears and mask)
+    # for a divine bindi mark, and a BIGGER LAYERED BELLY — the L
+    # oval is now 11 wide at its smallest and widens to 15 L's at
+    # the center row for a glowing multi-layer "inner light" effect.
+    # Mask is widened to 7 cells (2 D's on each side of each eye,
+    # up from 1 at Kani) for a heavier bandit look.
+    "tanuki_kamisama": [
+        [n,n,n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n,n,n],   # ear tips
+        [n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n],   # ears 4-wide
+        [n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n],   # ears 6-wide
+        [n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n],   # ears 8-wide
+        [n,n,D,D,B,B,B,B,B,B,D,D,D,D,D,D,D,D,D,D,D,D,D,B,B,B,B,B,B,D,D,n,n],   # ears merge w/ head
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,W,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head w/ FOREHEAD GEM
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head clean
+        [n,n,D,L,B,B,B,B,D,D,D,D,D,D,D,B,B,B,D,D,D,D,D,D,D,B,B,B,B,L,D,n,n],   # mask top (7-wide)
+        [n,n,D,B,B,B,B,B,D,D,E,W,E,D,D,B,B,B,D,D,E,W,E,D,D,B,B,B,B,B,D,n,n],   # eyes in mask
+        [n,n,D,B,B,B,B,B,D,D,D,D,D,D,D,B,B,B,D,D,D,D,D,D,D,B,B,B,B,B,D,n,n],   # mask bottom
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below mask
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom taper
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body widens
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # body full width
+        [D,B,B,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,B,B,B,D],   # belly starts (11 wide)
+        [D,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly widest (15)
+        [D,B,B,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,B,B,B,D],   # belly narrows back
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body narrows
+        [n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,n,n,n,D,D,D,D,n,n,n,n,n,n,n,D,D,D,D,n,n,n,n,n,n,n,n,n],   # feet bottom
+    ],
+
     # Tanuki — Kani stage. The evolution adds a LIGHTER BELLY PATCH (L
     # pixels forming an oval in the middle of the body) — tanukis are
     # iconic for their pale underside, and no other Kodomon species has
@@ -229,6 +322,40 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
     ],
 
+    # Kirimaru — Kamisama stage (33×20). The legendary gem form adds
+    # FOUR NEW FEATURES beyond Kani: (1) a detached FLOATING CROWN
+    # SHARD above the main diamond — a tiny 3-row gem separated by a
+    # full row gap, (2) TWO DETACHED ORBITING SHARDS on the left and
+    # right sides, also separated by a clear gap — like lesser gems
+    # circling the main crystal, (3) an INNER FOREHEAD GEM — a 3-wide
+    # D,W,D jewel inset above the cyclops eye suggesting a third-eye
+    # power source, (4) a bigger 5-wide cyclops eye with a W,W,W
+    # tri-highlight center (up from the 6×3 two-W gem-glint at Kani).
+    # Single eye preserved — Kirimaru is still a cyclops, just a
+    # divine one now.
+    "kirimaru_kamisama": [
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # crown tip
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # crown body
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # GAP (detached)
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # main top
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,W,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # FOREHEAD GEM (D,W,D)
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],
+        [n,n,D,n,n,n,n,n,n,D,B,B,B,B,E,E,E,E,E,B,B,B,B,D,n,n,n,n,n,n,D,n,n],   # eye top + L/R shard tips
+        [n,D,B,D,n,n,n,n,D,B,B,B,B,B,E,W,W,W,E,B,B,B,B,B,D,n,n,n,n,D,B,D,n],   # eye mid + widest + shards
+        [D,B,B,B,D,n,n,n,n,D,B,B,B,B,E,E,E,E,E,B,B,B,B,D,n,n,n,n,D,B,B,B,D],   # eye bot + shards widest
+        [n,D,B,D,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,D,B,D,n],   # shards narrow
+        [n,n,D,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,D,n,n],   # shard tips
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # main bottom
+    ],
+
     # Kirimaru — Kani stage. Structural evolution: Kobito was a diamond
     # with only a top point and a FLAT BASE. Kani has a FULL DIAMOND with
     # both top and bottom points, symmetric top-to-bottom, like a true cut
@@ -278,6 +405,37 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],
         [n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n],   # flat base
+    ],
+
+    # Houou — Kamisama stage (33×20). Legendary dragon deity form — all
+    # connected, no floating pieces. Three new features vs Kani:
+    # (1) FOUR HORNS (up from 2) forming a full dragon crown,
+    # (2) L-HIGHLIGHT MANE on head edges — glowing energy aura,
+    # (3) DRAGON PEARL (5-wide W orb) held between the whiskers —
+    # classic Japanese dragon motif. Head fills cols 2-30 (29 wide).
+    # Inner whiskers end short to frame the pearl; outer pair still
+    # curves down to the bottom corners.
+    "houou_kamisama": [
+        [n,n,n,n,n,n,n,n,n,D,n,n,n,D,n,n,n,n,n,D,n,n,n,D,n,n,n,n,n,n,n,n,n],   # 4 horn tips
+        [n,n,n,n,n,n,n,n,D,B,D,n,D,B,D,n,n,n,D,B,D,n,D,B,D,n,n,n,n,n,n,n,n],   # horn tubes
+        [n,n,D,D,D,D,D,D,D,B,D,D,D,B,D,D,D,D,D,B,D,D,D,B,D,D,D,D,D,D,D,n,n],   # horns merge head top
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head + L MANE highlights
+        [n,n,D,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,D,n,n],   # eyes top
+        [n,n,D,B,B,B,B,B,B,B,E,W,E,B,B,B,B,B,B,B,E,W,E,B,B,B,B,B,B,B,D,n,n],   # eye highlights
+        [n,n,D,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,D,n,n],   # eyes bottom
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # beak
+        [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head mid + L MANE
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head taper
+        [n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n],   # head bottom (flat)
+        [n,n,n,n,n,n,n,n,D,B,D,n,D,B,D,n,n,n,D,B,D,n,D,B,D,n,n,n,n,n,n,n,n],   # 4 whiskers start
+        [n,n,n,n,n,n,n,D,B,D,n,n,D,B,D,n,n,n,D,B,D,n,n,D,B,D,n,n,n,n,n,n,n],   # outer shift, inner hold
+        [n,n,n,n,n,n,D,B,D,n,n,n,n,D,n,D,W,D,n,D,n,n,n,n,D,B,D,n,n,n,n,n,n],   # inner taper, PEARL top
+        [n,n,n,n,n,D,B,D,n,n,n,n,n,n,D,W,W,W,D,n,n,n,n,n,n,D,B,D,n,n,n,n,n],   # PEARL widest (5)
+        [n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,D,W,D,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n],   # pearl bot
+        [n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n],   # outer continue
+        [n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n],
+        [n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n],
+        [D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D],   # outer reach corners
     ],
 
     # Houou — Kani stage. The evolution adds TWO HORNS on top of the head
