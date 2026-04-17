@@ -566,7 +566,8 @@ struct PixelSpriteView: View {
         let grid = SpriteData.applyNeglect(baseFrame, neglectState: neglectState)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
-        let speciesHue = SpeciesCatalog.all.first(where: { $0.id == speciesID })?.fixedHue ?? petHue
+        let species = SpeciesCatalog.all.first(where: { $0.id == speciesID })
+        let speciesHue = (speciesID == "tamago_crab") ? petHue : (species?.fixedHue ?? petHue)
         let activeHue = stage == .tamago ? 0.07 : speciesHue
         let padTop = accPaddingTop * pixelSize
         let padSide = accPaddingSide * pixelSize
@@ -612,6 +613,7 @@ struct PixelSpriteView: View {
         .onAppear { if !isStatic { startAnimations() } }
         .onChange(of: evolveProgress) { if !isStatic { startAnimations() } }
         .onChange(of: stage) { if !isStatic { startAnimations() } }
+        .onChange(of: speciesID) { if !isStatic { startAnimations() } }
         .onDisappear {
             for timer in animationTimers { timer.invalidate() }
             animationTimers = []

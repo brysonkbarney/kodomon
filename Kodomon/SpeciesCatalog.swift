@@ -216,7 +216,7 @@ enum SpeciesCatalog {
             spriteBundle: "night_owl",
             trigger: .sessionCrossesMidnight,
             earnedDescription: "Fukuron appears after a coding session that crosses midnight.",
-            fixedHue: 0.60   // blue
+            fixedHue: 0.42   // green
         ),
         SpeciesDefinition(
             id: "refactorer",
@@ -234,7 +234,7 @@ enum SpeciesCatalog {
             spriteBundle: "graduation",
             trigger: .anyKodomonReachesStage(.kamisama),
             earnedDescription: "Houou appears the first time one of your Kodomon reaches Kamisama.",
-            fixedHue: 0.42   // green
+            fixedHue: 0.0    // red
         ),
     ]
 

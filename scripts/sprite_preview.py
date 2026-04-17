@@ -305,11 +305,11 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,D,B,D,n,n,n,n,D,B,D,n,n,n,n,n],   # ear tuft bases
         [n,n,n,n,D,B,B,D,D,D,D,D,D,B,B,D,n,n,n,n],   # tufts meet head
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head top
-        [n,n,D,B,B,E,E,E,B,B,B,E,E,E,B,B,D,n,n,n],   # eyes top (3x3 solid)
-        [n,n,D,B,B,E,W,E,B,B,B,E,W,E,B,B,D,n,n,n],   # eye highlights
-        [n,n,D,B,B,E,E,E,D,D,B,E,E,E,B,B,D,n,n,n],   # eyes bottom + beak
-        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # head bottom
-        [n,n,n,n,D,D,B,B,B,B,B,B,D,D,n,n,n,n,n,n],   # NARROW NECK
+        [n,n,D,B,B,E,E,E,B,B,B,B,E,E,E,B,B,D,n,n],   # eyes top (centered)
+        [n,n,D,B,B,E,W,E,B,B,B,B,E,W,E,B,B,D,n,n],   # eye highlights
+        [n,n,D,B,B,E,E,E,B,D,D,B,E,E,E,B,B,D,n,n],   # eyes bottom + beak
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom
+        [n,n,n,n,n,D,D,B,B,B,B,B,B,D,D,n,n,n,n,n],   # NARROW NECK (centered)
         [n,n,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,n,n],   # body starts
         [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body widest (wings)
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # body
@@ -591,8 +591,8 @@ _register_eyes("tanuki_kobito", [(5,5),(5,12)], [5], 5)
 # Tanuki Kani — W at (6,7) and (6,16). Single eye row.
 _register_eyes("tanuki_kani", [(6,7),(6,16)], [6], 6)
 
-# Fukuron — owl, standard 3x3 eyes. W at (5,6) and (5,12).
-_register_eyes("fukuron_kobito", [(5,6),(5,12)], [4,5,6], 5)
+# Fukuron — owl, standard 3x3 eyes. W at (5,7) and (5,14).
+_register_eyes("fukuron_kobito", [(5,7),(5,14)], [4,5,6], 5)
 # Fukuron Kani — W at (6,6),(6,7),(6,16),(6,17). Eyes span rows 5-7.
 _register_eyes("fukuron_kani", [(6,6),(6,7),(6,16),(6,17)], [5,6,7], 6)
 
