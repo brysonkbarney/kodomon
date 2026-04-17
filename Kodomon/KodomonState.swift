@@ -77,6 +77,32 @@ struct KodomonState: Codable, Identifiable {
     }
 }
 
+// MARK: - Defensive decoding
+
+extension KodomonState {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let now = Date()
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        speciesID = try c.decodeIfPresent(String.self, forKey: .speciesID) ?? ""
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        hue = try c.decodeIfPresent(Double.self, forKey: .hue) ?? 0
+        speciesXP = try c.decodeIfPresent(Double.self, forKey: .speciesXP) ?? 0
+        stage = try c.decodeIfPresent(Stage.self, forKey: .stage) ?? .tamago
+        stageReachedDate = try c.decodeIfPresent(Date.self, forKey: .stageReachedDate)
+        daysAlive = try c.decodeIfPresent(Int.self, forKey: .daysAlive) ?? 0
+        activeDays = try c.decodeIfPresent(Int.self, forKey: .activeDays) ?? 0
+        lastActiveWhileEquipped = try c.decodeIfPresent(Date.self, forKey: .lastActiveWhileEquipped) ?? now
+        mood = try c.decodeIfPresent(Double.self, forKey: .mood) ?? 50
+        neglectState = try c.decodeIfPresent(NeglectState.self, forKey: .neglectState) ?? .none
+        equippedAccessories = try c.decodeIfPresent([String].self, forKey: .equippedAccessories) ?? []
+        hasRevived = try c.decodeIfPresent(Bool.self, forKey: .hasRevived) ?? false
+        pendingEvolutionFrom = try c.decodeIfPresent(String.self, forKey: .pendingEvolutionFrom)
+        pendingEvolutionTo = try c.decodeIfPresent(String.self, forKey: .pendingEvolutionTo)
+        caughtDate = try c.decodeIfPresent(Date.self, forKey: .caughtDate) ?? now
+    }
+}
+
 // MARK: - Factory
 
 extension KodomonState {
@@ -138,6 +164,19 @@ struct PendingEgg: Codable, Identifiable {
             incubationActiveDays: 0,
             triggeredDate: Date()
         )
+    }
+}
+
+// MARK: - PendingEgg defensive decoding
+
+extension PendingEgg {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        speciesID = try c.decodeIfPresent(String.self, forKey: .speciesID) ?? ""
+        incubationXP = try c.decodeIfPresent(Double.self, forKey: .incubationXP) ?? 0
+        incubationActiveDays = try c.decodeIfPresent(Int.self, forKey: .incubationActiveDays) ?? 0
+        triggeredDate = try c.decodeIfPresent(Date.self, forKey: .triggeredDate) ?? Date()
     }
 }
 

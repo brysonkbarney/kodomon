@@ -127,7 +127,7 @@ def generate_anim_frames(sprites: dict[str, list[list[int]]]):
 
 SPRITES: dict[str, list[list[int]]] = {
 
-    # Reference: the existing Tamago Crab kobito sprite from PixelSpriteView.swift
+    # Reference: the existing Tamago kobito sprite from PixelSpriteView.swift
     # Kept here as a visual reference so new species can be compared side by side.
     "tamago_crab_kobito": [
         [n,n,n,n,n,n,D,D,D,D,D,D,D,D,n,n,n,n,n,n],

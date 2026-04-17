@@ -55,7 +55,7 @@ struct PlayerState: Codable {
     var triggersArmedAt: Date
     /// Stable species IDs whose discovery trigger has already fired. Each
     /// entry means "this species has already dropped an egg for the player
-    /// and should never drop another one." Starter Tamago crab is not in
+    /// and should never drop another one." Starter Tamago is not in
     /// this set — its trigger is `.defaultStarter` and not runtime-evaluated.
     var triggersFired: Set<String>
 
@@ -99,6 +99,42 @@ struct PlayerState: Codable {
     /// incubating and shown on the widget.
     var headPendingEgg: PendingEgg? {
         pendingEggs.first
+    }
+}
+
+// MARK: - Defensive decoding
+
+extension PlayerState {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let now = Date()
+        lifetimeXP = try c.decodeIfPresent(Double.self, forKey: .lifetimeXP) ?? 0
+        totalCommits = try c.decodeIfPresent(Int.self, forKey: .totalCommits) ?? 0
+        totalSessionMins = try c.decodeIfPresent(Int.self, forKey: .totalSessionMins) ?? 0
+        totalLinesWritten = try c.decodeIfPresent(Int.self, forKey: .totalLinesWritten) ?? 0
+        biggestCommitLines = try c.decodeIfPresent(Int.self, forKey: .biggestCommitLines) ?? 0
+        currentStreak = try c.decodeIfPresent(Int.self, forKey: .currentStreak) ?? 0
+        longestStreak = try c.decodeIfPresent(Int.self, forKey: .longestStreak) ?? 0
+        lastActiveDate = try c.decodeIfPresent(Date.self, forKey: .lastActiveDate) ?? now
+        lastMidnightReset = try c.decodeIfPresent(Date.self, forKey: .lastMidnightReset) ?? Calendar.current.startOfDay(for: now)
+        todayXP = try c.decodeIfPresent(Double.self, forKey: .todayXP) ?? 0
+        todaySessionMins = try c.decodeIfPresent(Int.self, forKey: .todaySessionMins) ?? 0
+        todayFileTypes = try c.decodeIfPresent(Set<String>.self, forKey: .todayFileTypes) ?? []
+        todayFilesWritten = try c.decodeIfPresent(Set<String>.self, forKey: .todayFilesWritten) ?? []
+        todayIsActive = try c.decodeIfPresent(Bool.self, forKey: .todayIsActive) ?? false
+        todayCommitCount = try c.decodeIfPresent(Int.self, forKey: .todayCommitCount) ?? 0
+        activeEvent = try c.decodeIfPresent(RandomEvent.self, forKey: .activeEvent)
+        activeEventExpiry = try c.decodeIfPresent(Date.self, forKey: .activeEventExpiry)
+        activeKodomonID = try c.decodeIfPresent(UUID.self, forKey: .activeKodomonID) ?? UUID()
+        collection = try c.decodeIfPresent([KodomonState].self, forKey: .collection) ?? []
+        pendingEggs = try c.decodeIfPresent([PendingEgg].self, forKey: .pendingEggs) ?? []
+        triggersArmedAt = try c.decodeIfPresent(Date.self, forKey: .triggersArmedAt) ?? now
+        triggersFired = try c.decodeIfPresent(Set<String>.self, forKey: .triggersFired) ?? []
+        unlockedItems = try c.decodeIfPresent(Set<String>.self, forKey: .unlockedItems) ?? []
+        activeBackground = try c.decodeIfPresent(String.self, forKey: .activeBackground) ?? "none"
+        isReviving = try c.decodeIfPresent(Bool.self, forKey: .isReviving) ?? false
+        revivalSessionStart = try c.decodeIfPresent(Date.self, forKey: .revivalSessionStart)
+        schemaVersion = try c.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 2
     }
 }
 

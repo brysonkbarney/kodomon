@@ -20,6 +20,12 @@ enum Stage: String, Codable, CaseIterable {
     case kani = "kani"
     case kamisama = "kamisama"
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = Stage(rawValue: raw) ?? .tamago
+    }
+
     var displayName: String {
         switch self {
         case .tamago: return "Tamago 卵"
@@ -76,4 +82,10 @@ enum NeglectState: String, Codable {
     case sick      // 2-4 missed days
     case critical  // 5-6 missed days
     case ranAway   // 7+ missed days
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = NeglectState(rawValue: raw) ?? .none
+    }
 }

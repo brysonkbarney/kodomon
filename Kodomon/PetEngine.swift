@@ -784,18 +784,14 @@ class PetEngine: ObservableObject {
     /// or the head isn't ready yet. Called by the Kodex tab's Hatch
     /// button — hatching is never automatic.
     func hatchHeadEggIfReady() {
+        // Drop stale eggs whose species was removed in a newer version
+        while let head = player.pendingEggs.first, head.species == nil {
+            NSLog("[Kodomon] Dropping pending egg with unknown speciesID: %@", head.speciesID)
+            player.pendingEggs.removeFirst()
+        }
         guard headEggIsReady else { return }
         guard let head = player.pendingEggs.first,
-              let species = head.species else {
-            // Stale entry (species was removed in a future version) —
-            // drop it so the queue isn't blocked forever.
-            if !player.pendingEggs.isEmpty {
-                NSLog("[Kodomon] Dropping pending egg with unknown speciesID")
-                player.pendingEggs.removeFirst()
-                save()
-            }
-            return
-        }
+              let species = head.species else { return }
         hatchHeadEgg(species: species)
         save()
     }

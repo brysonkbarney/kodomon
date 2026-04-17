@@ -164,6 +164,7 @@ struct LeaderboardView: View {
             // Sprite
             let stage = Stage(rawValue: entry.stage) ?? .tamago
             PixelSpriteView(
+                speciesID: entry.species_id,
                 stage: stage,
                 pixelSize: 1,
                 evolveProgress: 0,

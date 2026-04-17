@@ -19,7 +19,7 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
     case legendary
 
     /// XP required to evolve a species of this rarity to the given stage from Tamago.
-    /// Common matches v1 Tamago crab thresholds exactly.
+    /// Common matches v1 Tamago thresholds exactly.
     func xpThreshold(for stage: Stage) -> Double {
         switch stage {
         case .tamago:
@@ -77,7 +77,7 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
     /// XP floor below which a species of this rarity begins de-evolving from
     /// the given stage. Includes a grace buffer — this is the point at which
     /// de-evolution *triggers*, not the stage entry threshold. Common
-    /// matches v1 Tamago crab thresholds exactly.
+    /// matches v1 Tamago thresholds exactly.
     func deEvolveFloor(for stage: Stage) -> Double {
         switch stage {
         case .tamago:
@@ -184,7 +184,7 @@ enum SpeciesCatalog {
     nonisolated static let all: [SpeciesDefinition] = [
         SpeciesDefinition(
             id: "tamago_crab",
-            displayName: "Tamago Crab",
+            displayName: "Tamago",
             rarity: .common,
             spriteBundle: "tamago_crab",
             trigger: .defaultStarter,

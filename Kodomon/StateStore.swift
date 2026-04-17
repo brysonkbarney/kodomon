@@ -12,7 +12,7 @@
 //    1. state.v2.json present    → decode PlayerState directly
 //    2. state.json present       → decode LegacyV1PetState, migrate, write
 //                                  state.v2.json, leave state.json alone
-//    3. neither present          → fresh install with a starter Tamago crab
+//    3. neither present          → fresh install with a starter Tamago
 //
 //  Save always writes state.v2.json atomically. state.json is never touched
 //  after migration, so a Sparkle v2→v1 rollback preserves the v1 snapshot.
@@ -49,7 +49,7 @@ enum StateStore {
 
     /// Returns a PlayerState from disk, migrating v1 state if needed. Never
     /// returns nil — a fresh install produces an empty PlayerState with a
-    /// default Tamago crab starter.
+    /// default Tamago starter.
     static func load() -> PlayerState {
         #if DEBUG
         // First-launch seeding for the debug sandbox. If the debug file
@@ -60,16 +60,27 @@ enum StateStore {
         seedDebugSandboxIfNeeded()
         #endif
 
+        let v2Exists = FileManager.default.fileExists(atPath: v2URL.path)
+
         if let player = loadV2() {
             NSLog("[Kodomon] Loaded %@ — %d Kodomon in collection",
                   v2URL.lastPathComponent, player.collection.count)
             return player
         }
+
+        // If the v2 file exists on disk but failed to decode, do NOT fall
+        // through to v1 migration — that would overwrite v2 progress with
+        // stale v1 data. Return a fresh install instead.
+        if v2Exists {
+            NSLog("[Kodomon] CRITICAL: %@ exists but failed to decode — refusing to migrate from v1. Starting fresh.", v2URL.lastPathComponent)
+            return freshInstall()
+        }
+
         if let migrated = migrateFromV1() {
             NSLog("[Kodomon] Migrated v1 state.json to %@", v2URL.lastPathComponent)
             return migrated
         }
-        NSLog("[Kodomon] Fresh install — creating starter Tamago crab")
+        NSLog("[Kodomon] Fresh install — creating starter Tamago")
         return freshInstall()
     }
 
@@ -143,7 +154,7 @@ enum StateStore {
     static func buildPlayerState(fromV1 v1: LegacyV1PetState) -> PlayerState {
         let now = Date()
 
-        // The existing v1 crab becomes a Tamago Crab species KodomonState.
+        // The existing v1 crab becomes a Tamago species KodomonState.
         // Important mapping: v1 `totalXP` seeds `speciesXP` (because v1
         // totalXP drove stage progression and continues to do so in v2).
         // v1 `lifetimeXP` stays as `lifetimeXP` (cosmetics/leaderboard).

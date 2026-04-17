@@ -18,6 +18,12 @@ enum RandomEvent: String, Codable, CaseIterable {
     case ancientBug     // -200 XP but +5 base XP/commit forever
     case developerGod   // Kamisama appears briefly
 
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = RandomEvent(rawValue: raw) ?? .goodVibes
+    }
+
     var isPositive: Bool {
         switch self {
         case .codingStorm, .goodVibes, .luckyCommit, .flowState,
