@@ -266,6 +266,9 @@ struct KodexTab: View {
     /// selectedSpeciesID. Reset on cell click, hatch, or egg dismissal.
     @State private var eggSelected: Bool = false
 
+    /// Brief reveal state after hatching — shows species name + sprite
+    @State private var hatchReveal: (speciesID: String, speciesName: String, kodomonName: String)? = nil
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Section header — matches the Stats/Style/Info tab pattern
@@ -464,11 +467,71 @@ struct KodexTab: View {
 
     @ViewBuilder
     private var detailPanel: some View {
-        if eggSelected {
+        if let reveal = hatchReveal {
+            hatchRevealPanel(reveal: reveal)
+        } else if eggSelected {
             eggDetailPanel
         } else if let species = detailSpecies {
             speciesDetailPanel(species: species)
         }
+    }
+
+    private func hatchRevealPanel(reveal: (speciesID: String, speciesName: String, kodomonName: String)) -> some View {
+        VStack(spacing: 8) {
+            Text("「はじめまして！」")
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.accent)
+
+            if let species = SpeciesCatalog.definition(forID: reveal.speciesID) {
+                let hue = species.fixedHue
+                PixelSpriteView(
+                    speciesID: reveal.speciesID,
+                    stage: .tamago,
+                    pixelSize: 3,
+                    petHue: hue,
+                    isStatic: true
+                )
+            }
+
+            Text(reveal.kodomonName)
+                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            Text("the \(reveal.speciesName)")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+
+            Text("has hatched!")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+
+            Button(action: {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    hatchReveal = nil
+                }
+            }) {
+                Text("Nice!")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(KodomonColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.accent.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(KodomonColors.accent.opacity(0.3), lineWidth: 1)
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
     }
 
     private var eggDetailPanel: some View {
@@ -514,7 +577,19 @@ struct KodexTab: View {
                 .padding(.top, 2)
 
             Button(action: {
-                engine.hatchHeadEggIfReady()
+                // Capture species info before hatching (egg gets removed)
+                if let head = engine.player.pendingEggs.first,
+                   let species = head.species {
+                    let name = engine.player.pendingEggs.first.flatMap { _ in
+                        // Hatch first, then grab the newest Kodomon's name
+                        engine.hatchHeadEggIfReady()
+                        return engine.player.collection.last?.name
+                    } ?? "Kodomon"
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        eggSelected = false
+                        hatchReveal = (speciesID: species.id, speciesName: species.displayName, kodomonName: name)
+                    }
+                }
             }) {
                 Text(isReady ? "Hatch" : "Keep coding...")
                     .font(.system(size: 10, weight: .bold, design: .monospaced))

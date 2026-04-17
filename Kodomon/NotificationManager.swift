@@ -22,6 +22,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         case evolutionReady   = "kodomon.evolutionReady"
         case petRanAway       = "kodomon.petRanAway"
         case eggDiscovered    = "kodomon.eggDiscovered"
+        case eggReady         = "kodomon.eggReady"
         case eggHatched       = "kodomon.eggHatched"
     }
 
@@ -150,6 +151,15 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         deliver(
             identifier: .eggDiscovered,
             body: "「たまご！」 A mysterious egg appeared in your collection. Keep coding to hatch it!"
+        )
+    }
+
+    /// Egg ready: the head egg has met all incubation requirements and is
+    /// waiting for the player to tap Hatch.
+    func sendEggReadyNotification() {
+        deliver(
+            identifier: .eggReady,
+            body: "「準備完了！」 Your egg is ready to hatch! Open the Kodex to reveal it."
         )
     }
 

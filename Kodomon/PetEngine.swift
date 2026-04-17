@@ -243,7 +243,11 @@ class PetEngine: ObservableObject {
         // Hatching is NOT automatic — the user must explicitly click Hatch
         // in the Collection tab once the egg reaches the ready state.
         if !player.pendingEggs.isEmpty {
+            let wasReady = headEggIsReady
             player.pendingEggs[0].incubationXP += xp
+            if !wasReady && headEggIsReady {
+                NotificationManager.shared.sendEggReadyNotification()
+            }
         }
 
         checkEvolution()
