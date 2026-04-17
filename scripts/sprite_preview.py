@@ -157,7 +157,7 @@ SPRITES: dict[str, list[list[int]]] = {
     "kozuchi_kamisama": [
         [n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n],   # crown tips (3)
         [n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n],   # crown bodies
-        [n,n,D,D,D,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,D,D,D,n,n],   # crowns merge w/ head top
+        [n,n,D,D,D,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,B,D,D,D,D,D,D,D,D,n,n],   # crowns merge w/ head
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head top
         [n,n,D,L,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,L,D,n,n],   # head w/ highlights
         [n,n,D,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,D,n,n],   # eyes top
@@ -165,16 +165,25 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,D,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,B,B,B,E,E,E,B,B,B,B,B,B,D,n,n],   # eyes bottom
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below eyes
         [n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n],   # head bottom (flat)
-        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],   # upper arms top + handle
-        [D,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,D],   # upper arms + handle
-        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],   # upper arms bot + handle
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # handle spacer
-        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],   # lower arms top + handle
-        [n,n,n,n,n,n,n,n,n,n,D,B,D,n,D,B,B,B,D,n,D,B,D,n,n,n,n,n,n,n,n,n,n],   # lower arms + handle
-        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],   # lower arms bot + handle
-        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # base widens
+        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],   # upper arms + handle
+        [D,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,D],
+        [D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # long handle
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],   # lower arms + handle
+        [n,n,n,n,n,n,n,n,n,n,D,B,D,n,D,B,B,B,D,n,D,B,D,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,D,D,D,n,D,B,B,B,D,n,D,D,D,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # handle continues
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],   # base widens
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # base wider
+        [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # base widest
         [n,n,n,n,n,n,n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n,n,n,n,n,n,n],   # base plate
-        [n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,n,n,n,D,D,D,D,D,n,n,n,n,n,D,D,D,D,D,n,n,n,n,n,n,n,n,n],   # feet bottom
     ],
 
     # Kozuchi — Kani stage. Scaled-up T-mallet (24×20) with two small
@@ -301,11 +310,11 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,D,B,B,E,E,E,D,D,B,E,E,E,B,B,D,n,n,n],   # eyes bottom + beak
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # head bottom
         [n,n,n,n,D,D,B,B,B,B,B,B,D,D,n,n,n,n,n,n],   # NARROW NECK
-        [n,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,n,n,n],   # body starts
-        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # body widest (wings)
-        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # body
-        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n],   # body taper
-        [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
+        [n,n,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,n,n],   # body starts
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body widest (wings)
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # body
+        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # body taper
+        [n,n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n],   # small feet
     ],
 
     # Tanuki — Kamisama stage (33×20). Deity form. Evolves Kani's
@@ -317,26 +326,33 @@ SPRITES: dict[str, list[list[int]]] = {
     # Mask is widened to 7 cells (2 D's on each side of each eye,
     # up from 1 at Kani) for a heavier bandit look.
     "tanuki_kamisama": [
-        [n,n,n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n,n,n],   # ear tips
-        [n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n],   # ears 4-wide
-        [n,n,n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n,n,n],   # ears 6-wide
-        [n,n,n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n,n,n],   # ears 8-wide
-        [n,n,D,D,B,B,B,B,B,B,D,D,D,D,D,D,D,D,D,D,D,D,D,B,B,B,B,B,B,D,D,n,n],   # ears merge w/ head
-        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,W,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head w/ FOREHEAD GEM
-        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head clean
-        [n,n,D,L,B,B,B,B,D,D,D,D,D,D,D,B,B,B,D,D,D,D,D,D,D,B,B,B,B,L,D,n,n],   # mask top (7-wide)
-        [n,n,D,B,B,B,B,B,D,D,E,W,E,D,D,B,B,B,D,D,E,W,E,D,D,B,B,B,B,B,D,n,n],   # eyes in mask
-        [n,n,D,B,B,B,B,B,D,D,D,D,D,D,D,B,B,B,D,D,D,D,D,D,D,B,B,B,B,B,D,n,n],   # mask bottom
-        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head below mask
-        [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head bottom taper
+        [n,n,n,n,D,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,D,n,n,n,n],   # ear tips
+        [n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n],   # ears
+        [n,n,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,n,n],   # ears wider
+        [n,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,n],   # ears widest
+        [n,D,D,B,B,B,B,B,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,B,B,B,B,B,D,D,n],   # ears merge
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,D,W,D,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # FOREHEAD GEM
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # head clean
+        [n,D,L,B,B,B,B,D,D,D,D,D,D,D,B,B,B,B,B,D,D,D,D,D,D,D,B,B,B,L,B,D,n],   # mask top
+        [n,D,B,B,B,B,B,D,D,E,W,E,D,D,B,B,B,B,B,D,D,E,W,E,D,D,B,B,B,B,B,D,n],   # eyes in mask
+        [n,D,B,B,B,B,B,D,D,D,D,D,D,D,B,B,B,B,B,D,D,D,D,D,D,D,B,B,B,B,B,D,n],   # mask bottom
+        [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # head below mask
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # head bottom
         [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body widens
         [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # body full width
-        [D,B,B,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,B,B,B,D],   # belly starts (11 wide)
-        [D,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly widest (15)
-        [D,B,B,B,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,B,B,B,D],   # belly narrows back
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # body
+        [D,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly starts (17 L)
+        [D,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,D],   # belly wider (21 L)
+        [D,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,D],   # belly WIDEST (25 L)
+        [D,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,D],   # belly continues
+        [D,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,D],   # belly narrows
+        [D,B,B,B,B,B,B,B,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,L,B,B,B,B,B,B,B,D],   # belly tapers
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # body below belly
         [n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n],   # body narrows
-        [n,n,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,D,B,B,D,n,n,n,n,n,n,n,n,n],   # feet
-        [n,n,n,n,n,n,n,n,n,D,D,D,D,n,n,n,n,n,n,n,D,D,D,D,n,n,n,n,n,n,n,n,n],   # feet bottom
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # body tapers
+        [n,n,n,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,n,n,n],   # flat base
+        [n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n],   # feet
+        [n,n,n,n,n,n,D,D,D,D,D,n,n,n,n,n,n,n,n,n,n,n,D,D,D,D,D,n,n,n,n,n,n],   # feet bottom
     ],
 
     # Tanuki — Kani stage. The evolution adds a LIGHTER BELLY PATCH (L
@@ -400,17 +416,22 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # top spike tip
         [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 3
         [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 5
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 5
         [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 7
         [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # 9
         [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # 11
-        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,W,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # 13 + FOREHEAD GEM
-        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,E,E,E,E,E,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # L arm + eye top + R arm
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # 13
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n],   # 15
+        [n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,D,W,D,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n],   # 17 + FOREHEAD GEM
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],   # 19
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,E,E,E,E,E,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # L arm + eye top
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,E,W,W,W,E,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # wider + eye mid
         [D,B,B,B,B,B,B,B,B,B,B,B,B,B,E,E,E,E,E,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # FULL WIDTH + eye bot
         [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # arms narrow
         [n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # arms narrower
-        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # diamond resumes 13
+        [n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n],   # diamond resumes 19
+        [n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n],   # 17
+        [n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n],   # 15
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # 13
         [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # 11
         [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # 9
         [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 7

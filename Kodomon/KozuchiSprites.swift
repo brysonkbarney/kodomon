@@ -229,12 +229,21 @@ enum KozuchiSprites {
         [D,B,D,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,D,B,D],
         [D,D,D,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,D,D,D],
         [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
         [x,x,x,x,x,x,x,x,x,x,D,D,D,x,D,B,B,B,D,x,D,D,D,x,x,x,x,x,x,x,x,x,x],
         [x,x,x,x,x,x,x,x,x,x,D,B,D,x,D,B,B,B,D,x,D,B,D,x,x,x,x,x,x,x,x,x,x],
         [x,x,x,x,x,x,x,x,x,x,D,D,D,x,D,B,B,B,D,x,D,D,D,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x,x],
         [x,x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,x,x,D,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x,x,x,x,x,x,x],
         [x,x,x,x,x,x,x,x,x,D,D,D,D,D,D,D,D,D,D,D,D,D,D,D,x,x,x,x,x,x,x,x,x],
-        [x,x,x,x,x,x,x,x,x,D,B,B,D,x,x,x,x,x,x,x,D,B,B,D,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,D,B,B,B,D,x,x,x,x,x,x,x,x,x],
+        [x,x,x,x,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,D,D,D,D,D,x,x,x,x,x,x,x,x,x],
     ]
 
     static let spriteSet = SpeciesSpriteSet(

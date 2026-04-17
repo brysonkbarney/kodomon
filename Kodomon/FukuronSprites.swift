@@ -24,11 +24,11 @@ enum FukuronSprites {
         [x,x,D,B,B,E,E,E,D,D,B,E,E,E,B,B,D,x,x,x],
         [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x],
         [x,x,x,x,D,D,B,B,B,B,B,B,D,D,x,x,x,x,x,x],
-        [x,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
-        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
-        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
-        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x],
-        [x,x,x,D,B,B,D,x,x,x,x,D,B,B,D,x,x,x,x,x],
+        [x,x,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,x,x,D,B,B,D,x,x,x,x,D,B,B,D,x,x,x,x],
     ]
 
     static let kobitoBlink: [[P]] = [
@@ -41,11 +41,11 @@ enum FukuronSprites {
         [x,x,D,B,B,B,B,B,D,D,B,B,B,B,B,B,D,x,x,x],
         [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x],
         [x,x,x,x,D,D,B,B,B,B,B,B,D,D,x,x,x,x,x,x],
-        [x,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,x,x,x],
-        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
-        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
-        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x,x,x],
-        [x,x,x,D,B,B,D,x,x,x,x,D,B,B,D,x,x,x,x,x],
+        [x,x,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,x,x],
+        [x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x],
+        [x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x],
+        [x,x,x,D,B,B,B,B,B,B,B,B,B,B,B,B,D,x,x,x],
+        [x,x,x,x,D,B,B,D,x,x,x,x,D,B,B,D,x,x,x,x],
     ]
 
     static let kobitoAction: [[P]] = [
