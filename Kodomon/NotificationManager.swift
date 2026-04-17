@@ -24,6 +24,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         case eggDiscovered    = "kodomon.eggDiscovered"
         case eggReady         = "kodomon.eggReady"
         case eggHatched       = "kodomon.eggHatched"
+        case evolutionComplete = "kodomon.evolutionComplete"
     }
 
     // MARK: - Init
@@ -160,6 +161,15 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         deliver(
             identifier: .eggReady,
             body: "「準備完了！」 Your egg is ready to hatch! Open the Kodex to reveal it."
+        )
+    }
+
+    /// Evolution complete: fired when the cutscene is dismissed, confirming
+    /// the new stage for the player.
+    func sendEvolutionCompleteNotification(petName: String, stageName: String) {
+        deliver(
+            identifier: .evolutionComplete,
+            body: "「進化！」 \(petName) evolved into \(stageName)!"
         )
     }
 

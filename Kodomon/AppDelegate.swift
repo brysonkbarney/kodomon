@@ -511,6 +511,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     #endif
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Persist any in-memory state that hasn't hit an event-driven save yet
+        StateStore.save(engine.player)
         watcher.stopWatching()
         if let w = window {
             let frame = w.frame

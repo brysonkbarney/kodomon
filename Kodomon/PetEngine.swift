@@ -335,6 +335,12 @@ class PetEngine: ObservableObject {
     }
 
     func clearEvolutionEvent() {
+        if let event = evolutionEvent {
+            NotificationManager.shared.sendEvolutionCompleteNotification(
+                petName: activeKodomon.name,
+                stageName: event.to.displayName
+            )
+        }
         evolutionEvent = nil
     }
 
@@ -556,11 +562,13 @@ class PetEngine: ObservableObject {
 
     private func updateNeglectState() {
         let kodomon = activeKodomon
-        let elapsed = Date().timeIntervalSince(player.lastActiveDate)
+        // Use per-Kodomon lastActiveWhileEquipped so swapping to a different
+        // Kodomon properly pauses/resumes neglect tracking for each creature.
+        let elapsed = Date().timeIntervalSince(kodomon.lastActiveWhileEquipped)
         let hours = elapsed / 3600
         let oldState = kodomon.neglectState
 
-        let daysMissed = Calendar.current.dateComponents([.day], from: player.lastActiveDate, to: Date()).day ?? 0
+        let daysMissed = Calendar.current.dateComponents([.day], from: kodomon.lastActiveWhileEquipped, to: Date()).day ?? 0
         var updated = kodomon
         if daysMissed >= 7 {
             updated.neglectState = .ranAway
@@ -772,6 +780,12 @@ class PetEngine: ObservableObject {
     /// active. Bumps the new active's `lastActiveWhileEquipped` timestamp so
     /// decay math starts fresh from the moment of the swap.
     func setActive(kodomonID: UUID) {
+        // Block switching mid-cutscene so the evolution view doesn't render
+        // with a mismatched species vs stage tuple.
+        guard evolutionEvent == nil && deEvolutionEvent == nil else {
+            NSLog("[Kodomon] setActive: blocked during cutscene")
+            return
+        }
         guard kodomonID != player.activeKodomonID else { return }
         guard let idx = player.collection.firstIndex(where: { $0.id == kodomonID }) else {
             NSLog("[Kodomon] setActive: id %@ not in collection", kodomonID.uuidString)
