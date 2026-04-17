@@ -198,7 +198,7 @@ enum SpeciesCatalog {
             spriteBundle: "committer",
             trigger: .commitsInDay(count: 10),
             earnedDescription: "Kozuchi appears after you ship 10 commits in a day.",
-            fixedHue: 0.0    // red
+            fixedHue: 0.55   // teal
         ),
         SpeciesDefinition(
             id: "polyglot",
@@ -207,7 +207,7 @@ enum SpeciesCatalog {
             spriteBundle: "polyglot",
             trigger: .distinctExtensionsInDay(count: 5),
             earnedDescription: "Tanuki appears after you touch 5 different file types in a day.",
-            fixedHue: 0.10   // amber/brown
+            fixedHue: 0.15   // golden yellow
         ),
         SpeciesDefinition(
             id: "night_owl",

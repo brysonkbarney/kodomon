@@ -376,8 +376,8 @@ struct KodexTab: View {
             RoundedRectangle(cornerRadius: 4)
                 .stroke(
                     isSelected ? KodomonColors.accent.opacity(0.6)
-                        : (isReady ? KodomonColors.accent.opacity(0.4) : KodomonColors.border.opacity(0.3)),
-                    lineWidth: 1
+                        : KodomonColors.border.opacity(0.3),
+                    lineWidth: isSelected ? 1 : 0.5
                 )
         )
         .contentShape(Rectangle())

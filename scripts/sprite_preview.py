@@ -296,9 +296,9 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,n,n,D,B,D,n,n,n,n,D,B,D,n,n,n,n,n],   # ear tuft bases
         [n,n,n,n,D,B,B,D,D,D,D,D,D,B,B,D,n,n,n,n],   # tufts meet head
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n],   # head top
-        [n,n,D,B,n,E,E,n,B,B,n,E,E,n,B,B,D,n,n,n],   # eyes top (rounded)
-        [n,n,D,B,E,W,W,E,B,B,E,W,W,E,B,B,D,n,n,n],   # eye highlights
-        [n,n,D,B,n,E,E,n,D,D,n,E,E,n,B,B,D,n,n,n],   # eyes bottom + beak
+        [n,n,D,B,B,E,E,E,B,B,B,E,E,E,B,B,D,n,n,n],   # eyes top (3x3 solid)
+        [n,n,D,B,B,E,W,E,B,B,B,E,W,E,B,B,D,n,n,n],   # eye highlights
+        [n,n,D,B,B,E,E,E,D,D,B,E,E,E,B,B,D,n,n,n],   # eyes bottom + beak
         [n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # head bottom
         [n,n,n,n,D,D,B,B,B,B,B,B,D,D,n,n,n,n,n,n],   # NARROW NECK
         [n,D,D,B,B,B,B,B,B,B,B,B,B,B,B,D,D,n,n,n],   # body starts
@@ -390,38 +390,33 @@ SPRITES: dict[str, list[list[int]]] = {
         [n,n,n,D,B,B,D,n,n,n,n,D,B,B,D,n,n,n,n,n],   # small feet
     ],
 
-    # Kirimaru — Kamisama stage (33×20). The legendary gem form adds
-    # FOUR NEW FEATURES beyond Kani: (1) a detached FLOATING CROWN
-    # SHARD above the main diamond — a tiny 3-row gem separated by a
-    # full row gap, (2) TWO DETACHED ORBITING SHARDS on the left and
-    # right sides, also separated by a clear gap — like lesser gems
-    # circling the main crystal, (3) an INNER FOREHEAD GEM — a 3-wide
-    # D,W,D jewel inset above the cyclops eye suggesting a third-eye
-    # power source, (4) a bigger 5-wide cyclops eye with a W,W,W
-    # tri-highlight center (up from the 6×3 two-W gem-glint at Kani).
-    # Single eye preserved — Kirimaru is still a cyclops, just a
-    # divine one now.
+    # Kirimaru — Kamisama stage (33×20). Legendary 4-POINTED STAR that
+    # fills nearly the entire grid. Top/bottom spikes taper from the
+    # central diamond, left/right spikes reach the grid edges at row 10.
+    # Forehead gem (D,W,D) above the 5-wide cyclops eye. The star shape
+    # is a massive evolution beyond the Kani diamond — unmistakably
+    # legendary and godlike.
     "kirimaru_kamisama": [
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # crown tip
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # crown body
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # GAP (detached)
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # main top
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,W,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # FOREHEAD GEM (D,W,D)
-        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],
-        [n,n,D,n,n,n,n,n,n,D,B,B,B,B,E,E,E,E,E,B,B,B,B,D,n,n,n,n,n,n,D,n,n],   # eye top + L/R shard tips
-        [n,D,B,D,n,n,n,n,D,B,B,B,B,B,E,W,W,W,E,B,B,B,B,B,D,n,n,n,n,D,B,D,n],   # eye mid + widest + shards
-        [D,B,B,B,D,n,n,n,n,D,B,B,B,B,E,E,E,E,E,B,B,B,B,D,n,n,n,n,D,B,B,B,D],   # eye bot + shards widest
-        [n,D,B,D,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,D,B,D,n],   # shards narrow
-        [n,n,D,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,D,n,n],   # shard tips
-        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],
-        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # main bottom
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # top spike tip
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 3
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 5
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 5
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 7
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # 9
+        [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # 11
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,D,W,D,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # 13 + FOREHEAD GEM
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,E,E,E,E,E,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # L arm + eye top + R arm
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,E,W,W,W,E,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # wider + eye mid
+        [D,B,B,B,B,B,B,B,B,B,B,B,B,B,E,E,E,E,E,B,B,B,B,B,B,B,B,B,B,B,B,B,D],   # FULL WIDTH + eye bot
+        [n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n],   # arms narrow
+        [n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n],   # arms narrower
+        [n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n],   # diamond resumes 13
+        [n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n],   # 11
+        [n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n],   # 9
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 7
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,B,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 5
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,B,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # 3
+        [n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,D,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n,n],   # bottom spike tip
     ],
 
     # Kirimaru — Kani stage. Structural evolution: Kobito was a diamond
@@ -575,8 +570,8 @@ _register_eyes("tanuki_kobito", [(5,5),(5,12)], [5], 5)
 # Tanuki Kani — W at (6,7) and (6,16). Single eye row.
 _register_eyes("tanuki_kani", [(6,7),(6,16)], [6], 6)
 
-# Fukuron — owl, 2-wide W highlights per eye. W at (5,5),(5,6),(5,11),(5,12).
-_register_eyes("fukuron_kobito", [(5,5),(5,6),(5,11),(5,12)], [4,5,6], 5)
+# Fukuron — owl, standard 3x3 eyes. W at (5,6) and (5,12).
+_register_eyes("fukuron_kobito", [(5,6),(5,12)], [4,5,6], 5)
 # Fukuron Kani — W at (6,6),(6,7),(6,16),(6,17). Eyes span rows 5-7.
 _register_eyes("fukuron_kani", [(6,6),(6,7),(6,16),(6,17)], [5,6,7], 6)
 
