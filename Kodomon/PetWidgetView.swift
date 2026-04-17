@@ -287,6 +287,7 @@ struct PetWidgetView: View {
             // Evolution cutscenes — inside the main container
             if let evo = engine.evolutionEvent {
                 EvolutionCutsceneView(
+                    speciesID: engine.activeKodomon.speciesID,
                     fromStage: evo.from,
                     toStage: evo.to,
                     petHue: engine.activeKodomon.hue
@@ -297,6 +298,7 @@ struct PetWidgetView: View {
             }
             if let deEvo = engine.deEvolutionEvent {
                 DeEvolutionView(
+                    speciesID: engine.activeKodomon.speciesID,
                     fromStage: deEvo.from,
                     toStage: deEvo.to,
                     petHue: engine.activeKodomon.hue

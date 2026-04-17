@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EvolutionCutsceneView: View {
+    let speciesID: String
     let fromStage: Stage
     let toStage: Stage
     let petHue: Double
@@ -24,6 +25,7 @@ struct EvolutionCutsceneView: View {
             // Old sprite shaking (phase 0)
             if phase == 0 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: fromStage,
                     pixelSize: 4,
                     evolveProgress: 0.99,
@@ -38,6 +40,7 @@ struct EvolutionCutsceneView: View {
             // New sprite appearing (phase 2+)
             if phase >= 2 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: toStage,
                     pixelSize: 4,
                     petHue: petHue

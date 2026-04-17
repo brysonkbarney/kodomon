@@ -59,6 +59,7 @@ struct ShareCardView: View {
 
                     // Pet sprite
                     PixelSpriteView(
+                        speciesID: kodomon.speciesID,
                         stage: kodomon.stage,
                         pixelSize: 8,
                         evolveProgress: {

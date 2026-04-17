@@ -407,6 +407,7 @@ struct KodexTab: View {
             ZStack {
                 if unlocked, let k = kodomon {
                     PixelSpriteView(
+                        speciesID: k.speciesID,
                         stage: k.stage,
                         pixelSize: 1,
                         evolveProgress: 0,
