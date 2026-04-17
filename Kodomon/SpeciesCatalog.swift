@@ -169,6 +169,9 @@ struct SpeciesDefinition: Equatable, Sendable {
     let trigger: SpeciesTrigger
     /// Copy shown on the collection card after the player earns this species.
     let earnedDescription: String
+    /// Fixed hue for this species (0.0–1.0). Every instance of this species
+    /// renders in the same color so species are instantly recognizable.
+    let fixedHue: Double
 }
 
 // MARK: - Catalog
@@ -185,7 +188,8 @@ enum SpeciesCatalog {
             rarity: .common,
             spriteBundle: "tamago_crab",
             trigger: .defaultStarter,
-            earnedDescription: "The original. Your first Kodomon."
+            earnedDescription: "The original. Your first Kodomon.",
+            fixedHue: 0.07   // warm peach/orange
         ),
         SpeciesDefinition(
             id: "committer",
@@ -193,7 +197,8 @@ enum SpeciesCatalog {
             rarity: .common,
             spriteBundle: "committer",
             trigger: .commitsInDay(count: 10),
-            earnedDescription: "Kozuchi appears after you ship 10 commits in a day."
+            earnedDescription: "Kozuchi appears after you ship 10 commits in a day.",
+            fixedHue: 0.0    // red
         ),
         SpeciesDefinition(
             id: "polyglot",
@@ -201,7 +206,8 @@ enum SpeciesCatalog {
             rarity: .common,
             spriteBundle: "polyglot",
             trigger: .distinctExtensionsInDay(count: 5),
-            earnedDescription: "Tanuki appears after you touch 5 different file types in a day."
+            earnedDescription: "Tanuki appears after you touch 5 different file types in a day.",
+            fixedHue: 0.10   // amber/brown
         ),
         SpeciesDefinition(
             id: "night_owl",
@@ -209,7 +215,8 @@ enum SpeciesCatalog {
             rarity: .uncommon,
             spriteBundle: "night_owl",
             trigger: .sessionCrossesMidnight,
-            earnedDescription: "Fukuron appears after a coding session that crosses midnight."
+            earnedDescription: "Fukuron appears after a coding session that crosses midnight.",
+            fixedHue: 0.60   // blue
         ),
         SpeciesDefinition(
             id: "refactorer",
@@ -217,7 +224,8 @@ enum SpeciesCatalog {
             rarity: .rare,
             spriteBundle: "refactorer",
             trigger: .commitDeletionsExceedInsertions,
-            earnedDescription: "Kirimaru appears after a commit that deletes more lines than it adds."
+            earnedDescription: "Kirimaru appears after a commit that deletes more lines than it adds.",
+            fixedHue: 0.80   // purple
         ),
         SpeciesDefinition(
             id: "graduation",
@@ -225,7 +233,8 @@ enum SpeciesCatalog {
             rarity: .legendary,
             spriteBundle: "graduation",
             trigger: .anyKodomonReachesStage(.kamisama),
-            earnedDescription: "Houou appears the first time one of your Kodomon reaches Kamisama."
+            earnedDescription: "Houou appears the first time one of your Kodomon reaches Kamisama.",
+            fixedHue: 0.42   // green
         ),
     ]
 

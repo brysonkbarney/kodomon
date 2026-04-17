@@ -587,7 +587,8 @@ struct PixelSpriteView: View {
         let grid = SpriteData.applyNeglect(baseFrame, neglectState: neglectState)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
-        let activeHue = stage == .tamago ? 0.07 : petHue
+        let speciesHue = SpeciesCatalog.all.first(where: { $0.id == speciesID })?.fixedHue ?? petHue
+        let activeHue = stage == .tamago ? 0.07 : speciesHue
         let padTop = accPaddingTop * pixelSize
         let padSide = accPaddingSide * pixelSize
 
