@@ -51,7 +51,7 @@ struct MenuPanelView: View {
                                 // Red dot on Kodex tab when pending eggs exist,
                                 // so users know where to find them after opening
                                 // the panel from the widget's menu button.
-                                if t == .kodex && !engine.player.pendingEggs.isEmpty && tab != t {
+                                if t == .kodex && engine.hasUnseenEgg && tab != t {
                                     Circle()
                                         .fill(KodomonColors.accent)
                                         .frame(width: 6, height: 6)
