@@ -312,21 +312,6 @@ struct PetWidgetView: View {
         .clipped()
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
-        .overlay {
-            // v1.1.0 intro overlay — shown inside the widget on first launch
-            // after upgrading, on top of everything else so it's always visible.
-            if engine.showV2Announcement {
-                ZStack {
-                    Color.black.opacity(0.6)
-                    V2AnnouncementView {
-                        UserDefaults.standard.set(true, forKey: "hasSeenV2Announcement")
-                        engine.showV2Announcement = false
-                    }
-                }
-                .frame(width: 240, height: 380)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-        }
         .onTapGesture {
             engine.triggerPendingEvolution()
         }

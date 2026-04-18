@@ -36,8 +36,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             setupPanel()
             // Show v2 intro once for users upgrading from v1.0.x
             if !UserDefaults.standard.bool(forKey: "hasSeenV2Announcement") {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-                    self.engine.showV2Announcement = true
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                    self.showV2AnnouncementWindow()
                 }
             }
         }
@@ -45,21 +45,35 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     private var announcementWindow: NSWindow?
 
-    private func showV2Announcement_unused() {
+    /// Shows the v2 intro as a floating window positioned directly on top of
+    /// the widget. Uses a real NSWindow at `.modalPanel` level rather than a
+    /// SwiftUI overlay so it can't be clipped or hidden by any other view.
+    private func showV2AnnouncementWindow() {
+        let size = NSSize(width: 260, height: 320)
         let w = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 260, height: 260),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         w.level = .modalPanel
-        w.collectionBehavior = [.canJoinAllSpaces, .moveToActiveSpace]
+        w.collectionBehavior = [.canJoinAllSpaces]
         w.isOpaque = false
         w.backgroundColor = .clear
         w.hasShadow = true
         w.isMovableByWindowBackground = true
 
-        w.center()
+        // Position: centered over the widget if one exists, else center screen.
+        if let widget = window {
+            let wf = widget.frame
+            let origin = NSPoint(
+                x: wf.midX - size.width / 2,
+                y: wf.midY - size.height / 2
+            )
+            w.setFrameOrigin(origin)
+        } else {
+            w.center()
+        }
 
         let view = V2AnnouncementView { [weak self] in
             UserDefaults.standard.set(true, forKey: "hasSeenV2Announcement")
@@ -67,7 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             self?.announcementWindow = nil
         }
         let host = NSHostingView(rootView: view)
-        host.frame = NSRect(x: 0, y: 0, width: 260, height: 260)
+        host.frame = NSRect(origin: .zero, size: size)
         w.contentView = host
         NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
