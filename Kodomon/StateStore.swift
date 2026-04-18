@@ -203,6 +203,7 @@ enum StateStore {
             pendingEggs: [],
             triggersArmedAt: now, // historical v1 activity never retroactively triggers
             triggersFired: [],
+            seenEggIDs: [],
             unlockedItems: v1.unlockedItems,
             activeBackground: v1.activeBackground,
             isReviving: v1.isReviving,

@@ -59,6 +59,11 @@ struct PlayerState: Codable {
     /// this set — its trigger is `.defaultStarter` and not runtime-evaluated.
     var triggersFired: Set<String>
 
+    /// Pending-egg IDs the user has seen (opened the Kodex with this egg
+    /// in the queue). Used to hide the widget's red dot once the user has
+    /// acknowledged an egg, while keeping the dot for newly discovered ones.
+    var seenEggIDs: Set<UUID>
+
     // MARK: - Cosmetics (player-wide unlocks, driven by lifetime XP)
     var unlockedItems: Set<String>
     var activeBackground: String
@@ -130,6 +135,7 @@ extension PlayerState {
         pendingEggs = try c.decodeIfPresent([PendingEgg].self, forKey: .pendingEggs) ?? []
         triggersArmedAt = try c.decodeIfPresent(Date.self, forKey: .triggersArmedAt) ?? now
         triggersFired = try c.decodeIfPresent(Set<String>.self, forKey: .triggersFired) ?? []
+        seenEggIDs = try c.decodeIfPresent(Set<UUID>.self, forKey: .seenEggIDs) ?? []
         unlockedItems = try c.decodeIfPresent(Set<String>.self, forKey: .unlockedItems) ?? []
         activeBackground = try c.decodeIfPresent(String.self, forKey: .activeBackground) ?? "none"
         isReviving = try c.decodeIfPresent(Bool.self, forKey: .isReviving) ?? false
@@ -169,6 +175,7 @@ extension PlayerState {
             pendingEggs: [],
             triggersArmedAt: now,
             triggersFired: [],
+            seenEggIDs: [],
             unlockedItems: [],
             activeBackground: "none",
             isReviving: false,

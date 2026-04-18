@@ -47,6 +47,17 @@ struct MenuPanelView: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 32)
                             .background(tab == t ? KodomonColors.accent : Color.clear)
+                            .overlay(alignment: .topTrailing) {
+                                // Red dot on Kodex tab when pending eggs exist,
+                                // so users know where to find them after opening
+                                // the panel from the widget's menu button.
+                                if t == .kodex && !engine.player.pendingEggs.isEmpty && tab != t {
+                                    Circle()
+                                        .fill(KodomonColors.accent)
+                                        .frame(width: 6, height: 6)
+                                        .offset(x: -6, y: 6)
+                                }
+                            }
                             .contentShape(Rectangle())
                             .onTapGesture { tab = t }
                     }
@@ -290,6 +301,9 @@ struct KodexTab: View {
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
+        // Opening the Kodex acknowledges any pending eggs so the widget's
+        // red dot stops nagging (dot returns when a new egg triggers).
+        .onAppear { engine.markPendingEggsAsSeen() }
         // If the egg queue empties (hatched or dismissed), drop egg selection.
         .onChange(of: engine.player.pendingEggs.count) { _, newCount in
             if newCount == 0 && eggSelected {
@@ -394,8 +408,10 @@ struct KodexTab: View {
         let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
         let kodomon = engine.player.collection.first { $0.speciesID == species.id }
         let isActive = kodomon?.id == engine.player.activeKodomonID
+        // Active fallback only kicks in when nothing else is selected.
+        // If the egg cell is selected, no species cell should show as selected.
         let isSelected = selectedSpeciesID == species.id
-            || (selectedSpeciesID == nil && isActive)
+            || (selectedSpeciesID == nil && !eggSelected && isActive)
 
         return VStack(spacing: 3) {
             // Zukan number — small corner label
@@ -885,9 +901,51 @@ struct InfoTab: View {
                 moodRow("20-39", "0.85x XP", "Stressed")
                 moodRow("0-19", "0.6x XP", "Miserable")
             }
+
+            Divider()
+
+            Text("Kodex (Collection)")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: 6) {
+                infoLine("Find", "6 species of Kodomon to collect.")
+                infoLine("Eggs", "Different coding patterns reveal different species. Keep coding to draw them out.")
+                infoLine("Incubate", "Only the head egg in your queue incubates. It earns XP alongside your active Kodomon.")
+                infoLine("Hatch", "When an egg meets its XP, active-day, and streak thresholds, tap Hatch in the Kodex to reveal the species.")
+                infoLine("Deploy", "Swap your active Kodomon anytime. Inactive Kodomon freeze in place — no decay, no XP.")
+                infoLine("Evolve", "Each Kodomon evolves independently from Tamago → Kobito → Kani → Kamisama.")
+            }
+
+            Divider()
+
+            Text("Keep Your Streak")
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            VStack(alignment: .leading, spacing: 6) {
+                infoLine("Daily", "Any coding activity counts for the day.")
+                infoLine("Miss 1", "-3% XP, Kodomon gets sad.")
+                infoLine("Miss 2-4", "-8% XP, Kodomon gets sick.")
+                infoLine("Miss 5-6", "-15% XP, Kodomon goes critical.")
+                infoLine("Miss 7+", "Kodomon runs away. Code 30 min to bring it back one stage lower.")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.bottom, 16)
+    }
+
+    private func infoLine(_ label: String, _ text: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(label)
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.accent)
+                .frame(width: 54, alignment: .leading)
+            Text(text)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func moodRow(_ range: String, _ multiplier: String, _ label: String) -> some View {

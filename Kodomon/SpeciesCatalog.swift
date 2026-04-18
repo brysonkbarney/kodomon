@@ -118,8 +118,10 @@ enum SpeciesTrigger: Sendable {
     case commitsInDay(count: Int)
     /// Fires when the player touches `count` or more distinct file extensions in a single local day.
     case distinctExtensionsInDay(count: Int)
-    /// Fires when a coding session's start and stop timestamps straddle local midnight.
-    case sessionCrossesMidnight
+    /// Fires when a file-write or git-commit event's timestamp falls in the
+    /// hour range `[startHour, endHour)` in local time. Use for "night owl"
+    /// style triggers that depend on the wall clock, not session boundaries.
+    case activityBetweenHours(startHour: Int, endHour: Int)
     /// Fires when a git commit has more deletions than insertions.
     case commitDeletionsExceedInsertions
     /// Fires the first time any of the player's Kodomon evolves into the given stage.
@@ -140,8 +142,8 @@ extension SpeciesTrigger: Equatable {
             return l == r
         case let (.distinctExtensionsInDay(l), .distinctExtensionsInDay(r)):
             return l == r
-        case (.sessionCrossesMidnight, .sessionCrossesMidnight):
-            return true
+        case let (.activityBetweenHours(ls, le), .activityBetweenHours(rs, re)):
+            return ls == rs && le == re
         case (.commitDeletionsExceedInsertions, .commitDeletionsExceedInsertions):
             return true
         case let (.anyKodomonReachesStage(l), .anyKodomonReachesStage(r)):
@@ -214,8 +216,8 @@ enum SpeciesCatalog {
             displayName: "Fukuron",
             rarity: .uncommon,
             spriteBundle: "night_owl",
-            trigger: .sessionCrossesMidnight,
-            earnedDescription: "Fukuron appears after a coding session that crosses midnight.",
+            trigger: .activityBetweenHours(startHour: 1, endHour: 5),
+            earnedDescription: "Fukuron appears after you write code between 1am and 5am.",
             fixedHue: 0.42   // green
         ),
         SpeciesDefinition(

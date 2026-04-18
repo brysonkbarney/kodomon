@@ -34,7 +34,45 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         } else {
             // Returning user — show game card directly
             setupPanel()
+            // Show v2 intro once for users upgrading from v1.0.x
+            if !UserDefaults.standard.bool(forKey: "hasSeenV2Announcement") {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    self.engine.showV2Announcement = true
+                }
+            }
         }
+    }
+
+    private var announcementWindow: NSWindow?
+
+    private func showV2Announcement_unused() {
+        let w = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 260, height: 260),
+            styleMask: [.borderless, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        w.level = .modalPanel
+        w.collectionBehavior = [.canJoinAllSpaces, .moveToActiveSpace]
+        w.isOpaque = false
+        w.backgroundColor = .clear
+        w.hasShadow = true
+        w.isMovableByWindowBackground = true
+
+        w.center()
+
+        let view = V2AnnouncementView { [weak self] in
+            UserDefaults.standard.set(true, forKey: "hasSeenV2Announcement")
+            self?.announcementWindow?.orderOut(nil)
+            self?.announcementWindow = nil
+        }
+        let host = NSHostingView(rootView: view)
+        host.frame = NSRect(x: 0, y: 0, width: 260, height: 260)
+        w.contentView = host
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+        w.orderFrontRegardless()
+        announcementWindow = w
     }
 
     private func setupPanel() {

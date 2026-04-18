@@ -6,6 +6,9 @@ class PetEngine: ObservableObject {
     @Published var player: PlayerState
     @Published var evolutionEvent: (from: Stage, to: Stage)? = nil
     @Published var deEvolutionEvent: (from: Stage, to: Stage)? = nil
+    /// True to show the v1.1.0 intro overlay on the widget. Set by AppDelegate
+    /// on first launch after upgrading from v1.0.x.
+    @Published var showV2Announcement: Bool = false
     private let watcher: ActivityWatcher
     private var cancellables = Set<AnyCancellable>()
     private var midnightTimer: Timer?
@@ -701,12 +704,19 @@ class PetEngine: ObservableObject {
             }
             return false
 
-        case .sessionCrossesMidnight:
-            if case .sessionStop(let sessionId, let stopTime) = event,
-               let startTime = activeSessions[sessionId] {
-                return sessionStraddlesMidnight(start: startTime, end: stopTime)
+        case .activityBetweenHours(let startHour, let endHour):
+            // Fire only on real coding activity (file writes or commits) — a
+            // session that just spans midnight because it was left idle should
+            // not count. The hour is computed from the event's own timestamp
+            // in the local timezone.
+            let ts: Date
+            switch event {
+            case .fileWrite(_, _, let t): ts = t
+            case .gitCommit(_, _, _, let t): ts = t
+            default: return false
             }
-            return false
+            let hour = Calendar.current.component(.hour, from: ts)
+            return hour >= startHour && hour < endHour
 
         case .commitDeletionsExceedInsertions:
             if case .gitCommit(let linesAdded, let linesRemoved, _, _) = event {
@@ -779,6 +789,25 @@ class PetEngine: ObservableObject {
     /// next event. No-op if the id isn't in the collection or is already
     /// active. Bumps the new active's `lastActiveWhileEquipped` timestamp so
     /// decay math starts fresh from the moment of the swap.
+    /// Record every currently-pending egg ID as seen by the user. Called when
+    /// the user views the Kodex tab. Drives whether the widget's ≡ menu button
+    /// shows the red dot — after the user has acknowledged an egg by opening
+    /// the Kodex, the dot goes away even if the egg hasn't hatched yet.
+    func markPendingEggsAsSeen() {
+        let ids = player.pendingEggs.map { $0.id }
+        guard !ids.isEmpty else { return }
+        let before = player.seenEggIDs.count
+        for id in ids { player.seenEggIDs.insert(id) }
+        if player.seenEggIDs.count != before { save() }
+    }
+
+    /// True if any pending egg hasn't been seen yet. The widget's red dot
+    /// uses this instead of `pendingEggs.isEmpty` so the dot disappears
+    /// after the user views the Kodex, not only after hatching.
+    var hasUnseenEgg: Bool {
+        player.pendingEggs.contains { !player.seenEggIDs.contains($0.id) }
+    }
+
     func setActive(kodomonID: UUID) {
         // Block switching mid-cutscene so the evolution view doesn't render
         // with a mismatched species vs stage tuple.
@@ -840,18 +869,6 @@ class PetEngine: ObservableObject {
         case .fileWrite(_, _, let ts): return ts
         case .gitCommit(_, _, _, let ts): return ts
         }
-    }
-
-    /// True if a session's start and stop straddle local midnight
-    /// (start before midnight, end at/after midnight of the same rollover).
-    private func sessionStraddlesMidnight(start: Date, end: Date) -> Bool {
-        let cal = Calendar.current
-        // The midnight boundary that falls between start and end, if any.
-        // Walk forward from the start day's next midnight and check.
-        guard let nextMidnight = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: start)) else {
-            return false
-        }
-        return start < nextMidnight && end >= nextMidnight
     }
 
     // MARK: - Debug affordances
