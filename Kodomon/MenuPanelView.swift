@@ -584,9 +584,30 @@ struct KodexTab: View {
                 color: isReady ? KodomonColors.accent : KodomonColors.teal
             )
 
+            // Per-dimension breakdown so users know what's blocking the hatch.
+            // The overall bar shows the min of all three, which can feel stuck
+            // when e.g. XP is accumulating but active-days hasn't ticked yet.
+            if let head = engine.player.pendingEggs.first,
+               let species = head.species {
+                let rarity = species.rarity
+                let xpReq = rarity.hatchXP
+                let daysReq = rarity.hatchActiveDays
+                let streakReq = rarity.hatchStreak
+
+                VStack(alignment: .leading, spacing: 3) {
+                    reqRow("XP", "\(Int(head.incubationXP))/\(Int(xpReq))",
+                           head.incubationXP >= xpReq)
+                    reqRow("Active days", "\(head.incubationActiveDays)/\(daysReq)",
+                           head.incubationActiveDays >= daysReq)
+                    reqRow("Streak", "\(engine.player.currentStreak)/\(streakReq)",
+                           engine.player.currentStreak >= streakReq)
+                }
+                .padding(.top, 4)
+            }
+
             Text(isReady
                 ? "Tap Hatch to reveal the species."
-                : "Keep coding to fill the incubation bar.")
+                : "Keep coding to fill all three.")
                 .font(.system(size: 8, design: .monospaced))
                 .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
                 .fixedSize(horizontal: false, vertical: true)
@@ -625,6 +646,25 @@ struct KodexTab: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(KodomonColors.border.opacity(0.2))
         )
+    }
+
+    /// One row in the egg requirement breakdown. Green checkmark when met,
+    /// neutral color while still counting up.
+    private func reqRow(_ label: String, _ value: String, _ met: Bool) -> some View {
+        HStack(spacing: 6) {
+            Text(met ? "✓" : "•")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(met ? KodomonColors.teal : KodomonColors.textSecondary)
+                .frame(width: 10, alignment: .leading)
+            Text(label)
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+                .frame(width: 78, alignment: .leading)
+            Text(value)
+                .font(.system(size: 9, weight: met ? .bold : .medium, design: .monospaced))
+                .foregroundColor(met ? KodomonColors.teal : KodomonColors.textPrimary)
+            Spacer()
+        }
     }
 
     private func speciesDetailPanel(species: SpeciesDefinition) -> some View {

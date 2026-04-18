@@ -370,6 +370,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func checkUpdates() {
+        // Bring app to front so Sparkle's update dialog isn't hidden behind
+        // whatever the user was doing when they clicked.
+        NSApp.activate(ignoringOtherApps: true)
         UpdateChecker.shared.checkForUpdates()
     }
 
