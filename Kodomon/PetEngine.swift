@@ -773,15 +773,10 @@ class PetEngine: ObservableObject {
     var headEggProgress: Double {
         guard let head = player.pendingEggs.first else { return 0 }
         guard let species = head.species else { return 0 }
-        let rarity = species.rarity
-        let xpFrac = min(1.0, head.incubationXP / rarity.hatchXP)
-        let daysFrac = rarity.hatchActiveDays == 0
-            ? 1.0
-            : min(1.0, Double(head.incubationActiveDays) / Double(rarity.hatchActiveDays))
-        let streakFrac = rarity.hatchStreak == 0
-            ? 1.0
-            : min(1.0, Double(player.currentStreak) / Double(rarity.hatchStreak))
-        return min(xpFrac, daysFrac, streakFrac)
+        // Bar reflects XP progress — that's the thing that grows as you code.
+        // Active-days and streak are separate gates shown in the detail panel;
+        // hatching still requires all three (see `headEggIsReady`).
+        return min(1.0, head.incubationXP / species.rarity.hatchXP)
     }
 
     /// Swap the active Kodomon to the one with the given id. The old active
