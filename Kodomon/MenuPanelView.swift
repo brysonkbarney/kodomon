@@ -8,6 +8,7 @@ struct MenuPanelView: View {
 
     enum MenuTab: String, CaseIterable {
         case stats = "Stats"
+        case kodex = "Kodex"
         case customize = "Style"
         case info = "Info"
     }
@@ -60,6 +61,8 @@ struct MenuPanelView: View {
                     switch tab {
                     case .stats:
                         StatsTab(engine: engine, showingLeaderboard: $showingLeaderboard)
+                    case .kodex:
+                        KodexTab(engine: engine)
                     case .customize:
                         CustomizeTab(engine: engine)
                     case .info:
@@ -79,22 +82,27 @@ struct StatsTab: View {
     @Binding var showingLeaderboard: Bool
 
     private var xpProgress: Double {
-        guard let next = engine.state.stage.nextStage else { return 1.0 }
-        let current = engine.state.stage.xpThreshold
-        let needed = next.xpThreshold - current
-        let progress = (engine.state.totalXP - current) / needed
+        let kodomon = engine.activeKodomon
+        guard let next = kodomon.stage.nextStage else { return 1.0 }
+        let rarity = kodomon.rarity
+        let current = rarity.xpThreshold(for: kodomon.stage)
+        let needed = rarity.xpThreshold(for: next) - current
+        guard needed > 0 else { return 1.0 }
+        let progress = (kodomon.speciesXP - current) / needed
         return min(max(progress, 0), 1.0)
     }
 
     var body: some View {
+        let kodomon = engine.activeKodomon
+        let rarity = kodomon.rarity
         VStack(alignment: .leading, spacing: 10) {
             // Pet name + stage
             HStack {
-                Text(engine.state.petName.isEmpty ? "Kodomon" : engine.state.petName)
+                Text(kodomon.name.isEmpty ? "Kodomon" : kodomon.name)
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .foregroundColor(KodomonColors.accent)
                 Spacer()
-                Text(engine.state.stage.displayName)
+                Text(kodomon.stage.displayName)
                     .font(.system(size: 10, weight: .medium, design: .monospaced))
                     .foregroundColor(KodomonColors.textSecondary)
             }
@@ -106,12 +114,12 @@ struct StatsTab: View {
                     color: KodomonColors.purple
                 )
                 HStack {
-                    Text("\(Int(engine.state.totalXP)) XP")
+                    Text("\(Int(kodomon.speciesXP)) XP")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.textPrimary)
                     Spacer()
-                    if let next = engine.state.stage.nextStage {
-                        Text("\(Int(next.xpThreshold)) to \(next.displayName)")
+                    if let next = kodomon.stage.nextStage {
+                        Text("\(Int(rarity.xpThreshold(for: next))) to \(next.displayName)")
                             .font(.system(size: 9, design: .monospaced))
                             .foregroundColor(KodomonColors.textSecondary)
                     } else {
@@ -123,26 +131,27 @@ struct StatsTab: View {
             }
 
             // Evolution requirements
-            if let next = engine.state.stage.nextStage {
+            if let next = kodomon.stage.nextStage {
+                let nextXPThreshold = rarity.xpThreshold(for: next)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Evolve to \(next.displayName)")
                         .font(.system(size: 9, weight: .bold, design: .monospaced))
                         .foregroundColor(KodomonColors.textSecondary)
 
                     evolveReq(
-                        met: engine.state.totalXP >= next.xpThreshold,
+                        met: kodomon.speciesXP >= nextXPThreshold,
                         label: "XP",
-                        value: "\(Int(engine.state.totalXP))/\(Int(next.xpThreshold))"
+                        value: "\(Int(kodomon.speciesXP))/\(Int(nextXPThreshold))"
                     )
                     evolveReq(
-                        met: engine.state.activeDays >= next.requiredActiveDays,
+                        met: kodomon.activeDays >= next.requiredActiveDays,
                         label: "Active days",
-                        value: "\(engine.state.activeDays)/\(next.requiredActiveDays)"
+                        value: "\(kodomon.activeDays)/\(next.requiredActiveDays)"
                     )
                     evolveReq(
-                        met: engine.state.currentStreak >= next.requiredStreak,
+                        met: engine.player.currentStreak >= next.requiredStreak,
                         label: "Streak",
-                        value: "\(engine.state.currentStreak)/\(next.requiredStreak)"
+                        value: "\(engine.player.currentStreak)/\(next.requiredStreak)"
                     )
                 }
                 .padding(10)
@@ -154,21 +163,29 @@ struct StatsTab: View {
 
             Divider()
 
-            statRow("Days Alive", "\(engine.state.daysAlive)")
-            statRow("Active Days", "\(engine.state.activeDays)")
-            statRow("Code Streak", "\(engine.state.currentStreak)d")
-            statRow("Best Streak", "\(engine.state.longestStreak)d")
-            statRow("Mood", "\(Int(engine.state.mood))/100")
+            statRow("Days Alive", "\(kodomon.daysAlive)")
+            statRow("Active Days", "\(kodomon.activeDays)")
+            statRow("Code Streak", "\(engine.player.currentStreak)d")
+            statRow("Best Streak", "\(engine.player.longestStreak)d")
+            statRow("Mood", "\(Int(kodomon.mood))/100")
 
             Divider()
 
-            statRow("Today's XP", "+\(Int(engine.state.todayXP))")
-            statRow("Session Time", "\(engine.state.totalSessionMins / 60)h \(engine.state.totalSessionMins % 60)m")
-            statRow("Lifetime XP", "\(Int(engine.state.lifetimeXP))")
-            statRow("Total Commits", "\(engine.state.totalCommits)")
-            statRow("Lines Written", "\(engine.state.totalLinesWritten)")
+            statRow("Today's XP", "+\(Int(engine.player.todayXP))")
+            statRow("Total Coding Time", "\(engine.player.totalSessionMins / 60)h \(engine.player.totalSessionMins % 60)m")
+            statRow("Lifetime XP", "\(Int(engine.player.lifetimeXP))")
+            statRow("Total Commits", "\(engine.player.totalCommits)")
+            statRow("Lines Written", "\(engine.player.totalLinesWritten)")
 
-            if let event = engine.state.activeEvent {
+            Divider()
+
+            // Collection size. Full egg / species details live in the
+            // Collection tab — this is just a summary on the Stats page.
+            let totalSpecies = SpeciesCatalog.all.count
+            let discovered = engine.player.collection.count
+            statRow("Collection", "\(discovered)/\(totalSpecies)")
+
+            if let event = engine.player.activeEvent {
                 Divider()
                 HStack {
                     Text("Active Event")
@@ -235,6 +252,453 @@ struct StatsTab: View {
 
 }
 
+// MARK: - Kodex Tab
+
+struct KodexTab: View {
+    @ObservedObject var engine: PetEngine
+
+    /// Species ID currently selected (click-to-select). Nil = fall back to
+    /// the currently active Kodomon's species.
+    @State private var selectedSpeciesID: String? = nil
+
+    /// True when the egg cell is selected — details panel shows egg info
+    /// with Hatch button instead of a species. Takes priority over
+    /// selectedSpeciesID. Reset on cell click, hatch, or egg dismissal.
+    @State private var eggSelected: Bool = false
+
+    /// Brief reveal state after hatching — shows species name + sprite
+    @State private var hatchReveal: (speciesID: String, speciesName: String, kodomonName: String)? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Section header — matches the Stats/Style/Info tab pattern
+            HStack(alignment: .firstTextBaseline) {
+                Text("Kodex")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textPrimary)
+                Spacer()
+                Text("\(engine.player.collection.count)/\(SpeciesCatalog.all.count) discovered")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+            }
+
+            // Grid of cells (egg cell when a pending egg exists, then species)
+            speciesGrid
+
+            // Persistent details panel below the grid
+            detailPanel
+        }
+        .padding(.horizontal, 16)
+        .padding(.bottom, 16)
+        // If the egg queue empties (hatched or dismissed), drop egg selection.
+        .onChange(of: engine.player.pendingEggs.count) { _, newCount in
+            if newCount == 0 && eggSelected {
+                eggSelected = false
+            }
+        }
+    }
+
+    // MARK: Grid
+
+    /// A slot in the Kodex grid — either an incubating egg cell or a species cell.
+    private enum KodexSlot: Identifiable {
+        case egg
+        case species(SpeciesDefinition, Int)
+
+        var id: String {
+            switch self {
+            case .egg: return "__egg__"
+            case let .species(s, _): return s.id
+            }
+        }
+    }
+
+    private var gridSlots: [KodexSlot] {
+        var result: [KodexSlot] = []
+        if !engine.player.pendingEggs.isEmpty {
+            result.append(.egg)
+        }
+        for (index, species) in SpeciesCatalog.all.enumerated() {
+            result.append(.species(species, index + 1))
+        }
+        return result
+    }
+
+    private var speciesGrid: some View {
+        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 3)
+        return LazyVGrid(columns: columns, spacing: 8) {
+            ForEach(gridSlots) { slot in
+                switch slot {
+                case .egg:
+                    eggCell()
+                case let .species(species, zukanNumber):
+                    speciesCell(species: species, zukanNumber: zukanNumber)
+                }
+            }
+        }
+    }
+
+    private func eggCell() -> some View {
+        let isReady = engine.headEggIsReady
+        let pct = Int(engine.headEggProgress * 100)
+        let queueExtra = engine.player.pendingEggs.count - 1
+        let isSelected = eggSelected
+
+        return VStack(spacing: 3) {
+            HStack {
+                Text("EGG")
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary.opacity(0.6))
+                Spacer()
+                if queueExtra > 0 {
+                    Text("+\(queueExtra)")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.7))
+                }
+            }
+
+            ZStack {
+                Text("◓")
+                    .font(.system(size: 28))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary.opacity(0.8))
+            }
+            .frame(height: 48)
+
+            Text(isReady ? "READY" : "\(pct)%")
+                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textSecondary)
+                .lineLimit(1)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? KodomonColors.accent.opacity(0.1) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(
+                    isSelected ? KodomonColors.accent.opacity(0.6)
+                        : KodomonColors.border.opacity(0.3),
+                    lineWidth: isSelected ? 1 : 0.5
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            eggSelected = true
+            selectedSpeciesID = nil
+        }
+    }
+
+    private func speciesCell(species: SpeciesDefinition, zukanNumber: Int) -> some View {
+        let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
+        let kodomon = engine.player.collection.first { $0.speciesID == species.id }
+        let isActive = kodomon?.id == engine.player.activeKodomonID
+        let isSelected = selectedSpeciesID == species.id
+            || (selectedSpeciesID == nil && isActive)
+
+        return VStack(spacing: 3) {
+            // Zukan number — small corner label
+            HStack {
+                Text(String(format: "#%03d", zukanNumber))
+                    .font(.system(size: 8, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                Spacer()
+            }
+
+            // Sprite area — actual PixelSpriteView for unlocked, silhouette for locked
+            ZStack {
+                if unlocked, let k = kodomon {
+                    PixelSpriteView(
+                        speciesID: k.speciesID,
+                        stage: k.stage,
+                        pixelSize: 1,
+                        evolveProgress: 0,
+                        petHue: k.hue,
+                        isStatic: true,
+                        equippedAccessories: [],
+                        neglectState: .none
+                    )
+                } else {
+                    Text("?")
+                        .font(.system(size: 22, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.4))
+                }
+            }
+            .frame(height: 48)
+
+            // Name label
+            Text(unlocked ? species.displayName : "???")
+                .font(.system(size: 9, weight: unlocked ? .bold : .medium, design: .monospaced))
+                .foregroundColor(unlocked ? KodomonColors.textPrimary : KodomonColors.textSecondary.opacity(0.5))
+                .lineLimit(1)
+        }
+        .padding(.vertical, 6)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isSelected ? KodomonColors.accent.opacity(0.1) : Color.clear)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 4)
+                .stroke(
+                    isSelected ? KodomonColors.accent.opacity(0.6) : KodomonColors.border.opacity(0.3),
+                    lineWidth: 1
+                )
+        )
+        .contentShape(Rectangle())
+        .onTapGesture {
+            selectedSpeciesID = species.id
+            eggSelected = false
+        }
+    }
+
+    // MARK: Detail panel
+
+    /// Species currently shown in the detail panel. Only meaningful when
+    /// `eggSelected` is false. Explicit selection takes priority; falls back
+    /// to active.
+    private var detailSpecies: SpeciesDefinition? {
+        if let id = selectedSpeciesID {
+            return SpeciesCatalog.definition(forID: id)
+        }
+        return SpeciesCatalog.definition(forID: engine.activeKodomon.speciesID)
+    }
+
+    @ViewBuilder
+    private var detailPanel: some View {
+        if let reveal = hatchReveal {
+            hatchRevealPanel(reveal: reveal)
+        } else if eggSelected {
+            eggDetailPanel
+        } else if let species = detailSpecies {
+            speciesDetailPanel(species: species)
+        }
+    }
+
+    private func hatchRevealPanel(reveal: (speciesID: String, speciesName: String, kodomonName: String)) -> some View {
+        VStack(spacing: 8) {
+            Text("「はじめまして！」")
+                .font(.system(size: 12, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.accent)
+
+            if let species = SpeciesCatalog.definition(forID: reveal.speciesID) {
+                let hue = species.fixedHue
+                PixelSpriteView(
+                    speciesID: reveal.speciesID,
+                    stage: .tamago,
+                    pixelSize: 3,
+                    petHue: hue,
+                    isStatic: true
+                )
+            }
+
+            Text(reveal.kodomonName)
+                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                .foregroundColor(KodomonColors.textPrimary)
+
+            Text("the \(reveal.speciesName)")
+                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+
+            Text("has hatched!")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary)
+
+            Button(action: {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    hatchReveal = nil
+                }
+            }) {
+                Text("Nice!")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(KodomonColors.accent)
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 4)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.accent.opacity(0.05))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(KodomonColors.accent.opacity(0.3), lineWidth: 1)
+        )
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+    }
+
+    private var eggDetailPanel: some View {
+        let isReady = engine.headEggIsReady
+        let progress = engine.headEggProgress
+        let pct = Int(progress * 100)
+        let queueExtra = engine.player.pendingEggs.count - 1
+
+        return VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Incubating Egg")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.accent)
+                Text("— ???")
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Spacer()
+                if queueExtra > 0 {
+                    Text("+\(queueExtra) in queue")
+                        .font(.system(size: 8, weight: .bold, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary)
+                }
+            }
+
+            HStack {
+                Text(isReady ? "Ready to hatch" : "\(pct)% incubated")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(isReady ? KodomonColors.accent : KodomonColors.textPrimary)
+                Spacer()
+            }
+
+            PixelXPBar(
+                progress: progress,
+                color: isReady ? KodomonColors.accent : KodomonColors.teal
+            )
+
+            Text(isReady
+                ? "Tap Hatch to reveal the species."
+                : "Keep coding to fill the incubation bar.")
+                .font(.system(size: 8, design: .monospaced))
+                .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+
+            Button(action: {
+                // Capture species info before hatching (egg gets removed)
+                if let head = engine.player.pendingEggs.first,
+                   let species = head.species {
+                    let name = engine.player.pendingEggs.first.flatMap { _ in
+                        // Hatch first, then grab the newest Kodomon's name
+                        engine.hatchHeadEggIfReady()
+                        return engine.player.collection.last?.name
+                    } ?? "Kodomon"
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        eggSelected = false
+                        hatchReveal = (speciesID: species.id, speciesName: species.displayName, kodomonName: name)
+                    }
+                }
+            }) {
+                Text(isReady ? "Hatch" : "Keep coding...")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                    .foregroundColor(isReady ? .white : KodomonColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 7)
+                    .background(isReady ? KodomonColors.accent : KodomonColors.border.opacity(0.3))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            }
+            .buttonStyle(.plain)
+            .disabled(!isReady)
+            .padding(.top, 4)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.border.opacity(0.2))
+        )
+    }
+
+    private func speciesDetailPanel(species: SpeciesDefinition) -> some View {
+        let unlocked = engine.player.collection.contains { $0.speciesID == species.id }
+        let kodomon = engine.player.collection.first { $0.speciesID == species.id }
+        let isActive = kodomon?.id == engine.player.activeKodomonID
+
+        return VStack(alignment: .leading, spacing: 6) {
+                if unlocked, let k = kodomon {
+                    // Header: name + stage + deployed badge
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(species.displayName)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .foregroundColor(KodomonColors.accent)
+                        Text("— \(k.stage.displayName)")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                        Spacer()
+                        if isActive {
+                            Text("DEPLOYED")
+                                .font(.system(size: 7, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(KodomonColors.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 3))
+                        }
+                    }
+
+                    // Pet name + XP — matches statRow style from Stats tab
+                    HStack {
+                        Text("\"\(k.name)\"")
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundColor(KodomonColors.textPrimary)
+                        Spacer()
+                        Text("\(Int(k.speciesXP)) XP")
+                            .font(.system(size: 9, weight: .medium, design: .monospaced))
+                            .foregroundColor(KodomonColors.textSecondary)
+                    }
+
+                    Text(species.earnedDescription)
+                        .font(.system(size: 8, design: .monospaced))
+                        .foregroundColor(KodomonColors.textSecondary.opacity(0.8))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 2)
+
+                    if !isActive {
+                        Button(action: {
+                            engine.setActive(kodomonID: k.id)
+                        }) {
+                            Text("Deploy \(k.name)")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 7)
+                                .background(KodomonColors.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.top, 4)
+                    }
+            } else {
+                // Locked species — stays fully mysterious
+                Text("???")
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary)
+                Text("Undiscovered")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.6))
+                Text("Keep coding. You'll find it eventually.")
+                    .font(.system(size: 8, design: .monospaced))
+                    .foregroundColor(KodomonColors.textSecondary.opacity(0.5))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(KodomonColors.border.opacity(0.2))
+        )
+    }
+
+    // MARK: Helpers
+
+    private func hueColor(_ hue: Double) -> Color {
+        Color(hue: hue, saturation: 0.75, brightness: 0.85)
+    }
+}
+
 // MARK: - Customize Tab
 
 struct CustomizeTab: View {
@@ -248,8 +712,8 @@ struct CustomizeTab: View {
                 .foregroundColor(KodomonColors.textPrimary)
 
             ForEach(UnlockSystem.backgrounds) { bg in
-                let unlocked = bg.xpRequired <= engine.state.lifetimeXP
-                let selected = engine.state.activeBackground == bg.id
+                let unlocked = bg.xpRequired <= engine.player.lifetimeXP
+                let selected = engine.player.activeBackground == bg.id
 
                 HStack {
                     Text(bg.displayName)
@@ -273,8 +737,8 @@ struct CustomizeTab: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if unlocked {
-                        engine.state.activeBackground = bg.id
-                        StateStore.save(engine.state)
+                        engine.player.activeBackground = bg.id
+                        StateStore.save(engine.player)
                     }
                 }
             }
@@ -287,8 +751,8 @@ struct CustomizeTab: View {
                 .foregroundColor(KodomonColors.textPrimary)
 
             ForEach(UnlockSystem.accessories) { acc in
-                let unlocked = acc.xpRequired <= engine.state.lifetimeXP
-                let equipped = engine.state.equippedAccessories.contains(acc.id)
+                let unlocked = acc.xpRequired <= engine.player.lifetimeXP
+                let equipped = engine.activeKodomon.equippedAccessories.contains(acc.id)
 
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
@@ -317,14 +781,16 @@ struct CustomizeTab: View {
                 .contentShape(Rectangle())
                 .onTapGesture {
                     if unlocked {
+                        var kodomon = engine.activeKodomon
                         if equipped {
-                            engine.state.equippedAccessories.removeAll { $0 == acc.id }
+                            kodomon.equippedAccessories.removeAll { $0 == acc.id }
                         } else {
                             let sameSlot = UnlockSystem.accessories.filter { $0.slot == acc.slot }.map { $0.id }
-                            engine.state.equippedAccessories.removeAll { sameSlot.contains($0) }
-                            engine.state.equippedAccessories.append(acc.id)
+                            kodomon.equippedAccessories.removeAll { sameSlot.contains($0) }
+                            kodomon.equippedAccessories.append(acc.id)
                         }
-                        StateStore.save(engine.state)
+                        engine.activeKodomon = kodomon
+                        StateStore.save(engine.player)
                     }
                 }
             }

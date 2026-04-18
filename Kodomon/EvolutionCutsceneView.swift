@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct EvolutionCutsceneView: View {
+    let speciesID: String
     let fromStage: Stage
     let toStage: Stage
     let petHue: Double
@@ -16,6 +17,13 @@ struct EvolutionCutsceneView: View {
     @State private var sparkleOpacity: Double = 0
     @State private var bgDim: Double = 0
 
+    /// Use the species' fixed hue for sparkles so Houou evolutions are red,
+    /// Kirimaru purple, etc. Tamago starters keep the per-player petHue.
+    private var effectiveHue: Double {
+        let species = SpeciesCatalog.all.first(where: { $0.id == speciesID })
+        return (speciesID == "tamago_crab") ? petHue : (species?.fixedHue ?? petHue)
+    }
+
     var body: some View {
         ZStack {
             // Dim background
@@ -24,6 +32,7 @@ struct EvolutionCutsceneView: View {
             // Old sprite shaking (phase 0)
             if phase == 0 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: fromStage,
                     pixelSize: 4,
                     evolveProgress: 0.99,
@@ -38,6 +47,7 @@ struct EvolutionCutsceneView: View {
             // New sprite appearing (phase 2+)
             if phase >= 2 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: toStage,
                     pixelSize: 4,
                     petHue: petHue
@@ -51,7 +61,7 @@ struct EvolutionCutsceneView: View {
                 ZStack {
                     ForEach(0..<sparkles.count, id: \.self) { i in
                         let s = sparkles[i]
-                        SparklePixel(hue: petHue)
+                        SparklePixel(hue: effectiveHue)
                             .position(x: s.x, y: s.y)
                             .opacity(sparkleOpacity)
                     }

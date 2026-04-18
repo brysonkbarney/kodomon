@@ -21,6 +21,10 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         case streakWarning    = "kodomon.streakWarning"
         case evolutionReady   = "kodomon.evolutionReady"
         case petRanAway       = "kodomon.petRanAway"
+        case eggDiscovered    = "kodomon.eggDiscovered"
+        case eggReady         = "kodomon.eggReady"
+        case eggHatched       = "kodomon.eggHatched"
+        case evolutionComplete = "kodomon.evolutionComplete"
     }
 
     // MARK: - Init
@@ -138,6 +142,43 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         deliver(
             identifier: .petRanAway,
             body: "「さようなら…」 \(name) has left."
+        )
+    }
+
+    /// Egg discovered: a species trigger just fired, a new egg is incubating.
+    /// Intentionally does NOT reveal the species — the reveal is the hatch
+    /// notification. Keeps the "what did I get?" surprise.
+    func sendEggDiscoveredNotification() {
+        deliver(
+            identifier: .eggDiscovered,
+            body: "「たまご！」 A mysterious egg appeared in your collection. Keep coding to hatch it!"
+        )
+    }
+
+    /// Egg ready: the head egg has met all incubation requirements and is
+    /// waiting for the player to tap Hatch.
+    func sendEggReadyNotification() {
+        deliver(
+            identifier: .eggReady,
+            body: "「準備完了！」 Your egg is ready to hatch! Open the Kodex to reveal it."
+        )
+    }
+
+    /// Evolution complete: fired when the cutscene is dismissed, confirming
+    /// the new stage for the player.
+    func sendEvolutionCompleteNotification(petName: String, stageName: String) {
+        deliver(
+            identifier: .evolutionComplete,
+            body: "「進化！」 \(petName) evolved into \(stageName)!"
+        )
+    }
+
+    /// Egg hatched: the head of the pending-egg queue finished incubation and
+    /// just produced a new Kodomon in the collection.
+    func sendEggHatchedNotification(speciesName: String, kodomonName: String) {
+        deliver(
+            identifier: .eggHatched,
+            body: "「はじめまして！」 \(kodomonName) the \(speciesName) hatched! Check your collection."
         )
     }
 

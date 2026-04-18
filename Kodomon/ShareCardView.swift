@@ -2,12 +2,14 @@ import SwiftUI
 import AppKit
 
 struct ShareCardView: View {
-    let state: PetState
+    let kodomon: KodomonState
+    let player: PlayerState
 
     private let cardWidth: CGFloat = 480
     private let cardHeight: CGFloat = 640
 
     var body: some View {
+        let rarity = kodomon.rarity
         ZStack {
             // Card background — cream
             Color(red: 0.96, green: 0.94, blue: 0.88)
@@ -20,10 +22,10 @@ struct ShareCardView: View {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(state.petName.isEmpty ? "Kodomon" : state.petName)
+                        Text(kodomon.name.isEmpty ? "Kodomon" : kodomon.name)
                             .font(.system(size: 24, weight: .bold, design: .monospaced))
                             .foregroundColor(Color(red: 0.16, green: 0.16, blue: 0.16))
-                        Text(state.stage.displayName)
+                        Text(kodomon.stage.displayName)
                             .font(.system(size: 11, weight: .medium, design: .monospaced))
                             .foregroundColor(Color(red: 0.42, green: 0.40, blue: 0.38))
                     }
@@ -44,7 +46,7 @@ struct ShareCardView: View {
                 // Sprite area with background image
                 ZStack(alignment: .bottom) {
                     // Background image or dark fill
-                    if let bgImage = NSImage(named: state.activeBackground) {
+                    if let bgImage = NSImage(named: player.activeBackground) {
                         Image(nsImage: bgImage)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -57,17 +59,19 @@ struct ShareCardView: View {
 
                     // Pet sprite
                     PixelSpriteView(
-                        stage: state.stage,
+                        speciesID: kodomon.speciesID,
+                        stage: kodomon.stage,
                         pixelSize: 8,
                         evolveProgress: {
-                            guard let next = state.stage.nextStage else { return 1.0 }
-                            let current = state.stage.xpThreshold
-                            let needed = next.xpThreshold - current
-                            return min(max((state.totalXP - current) / needed, 0), 1.0)
+                            guard let next = kodomon.stage.nextStage else { return 1.0 }
+                            let current = rarity.xpThreshold(for: kodomon.stage)
+                            let needed = rarity.xpThreshold(for: next) - current
+                            guard needed > 0 else { return 1.0 }
+                            return min(max((kodomon.speciesXP - current) / needed, 0), 1.0)
                         }(),
-                        petHue: state.petHue,
+                        petHue: kodomon.hue,
                         isStatic: true,
-                        equippedAccessories: state.equippedAccessories
+                        equippedAccessories: kodomon.equippedAccessories
                     )
                     .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 4)
                     .padding(.bottom, 8)
@@ -86,12 +90,12 @@ struct ShareCardView: View {
 
                     // Stats grid
                     HStack(spacing: 0) {
-                        ShareStat(value: formatXP(state.totalXP), label: "XP")
+                        ShareStat(value: formatXP(player.lifetimeXP), label: "LIFETIME XP")
                         ShareStatDivider()
-                        ShareStat(value: "\(state.currentStreak)d", label: "STREAK")
+                        ShareStat(value: "\(player.currentStreak)d", label: "STREAK")
                         ShareStatDivider()
-                        ShareStat(value: "\(state.activeDays)", label: "ACTIVE DAYS")
-                        if state.hasRevived {
+                        ShareStat(value: "\(kodomon.activeDays)", label: "ACTIVE DAYS")
+                        if kodomon.hasRevived {
                             ShareStatDivider()
                             ShareStat(value: "★", label: "SURVIVOR")
                         }
@@ -152,31 +156,35 @@ struct ShareStatDivider: View {
 @MainActor
 class ShareCardGenerator {
 
-    static func generate(state: PetState) -> NSImage? {
-        let view = ShareCardView(state: state)
+    static func generate(player: PlayerState) -> NSImage? {
+        let view = ShareCardView(kodomon: player.activeKodomon, player: player)
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2.0
         return renderer.nsImage
     }
 
-    static func copyToClipboard(state: PetState) {
-        guard let image = generate(state: state) else { return }
+    static func copyToClipboard(player: PlayerState) {
+        guard let image = generate(player: player) else { return }
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
         NSLog("[Kodomon] Share card copied to clipboard")
     }
 
-    static func saveToDesktop(state: PetState) {
-        guard let image = generate(state: state) else { return }
+    static func saveToDesktop(player: PlayerState) {
+        guard let image = generate(player: player) else { return }
         guard let tiffData = image.tiffRepresentation,
               let bitmap = NSBitmapImageRep(data: tiffData),
               let pngData = bitmap.representation(using: .png, properties: [:])
         else { return }
 
+        // Filename includes the species ID to prevent collisions when the
+        // player has two Kodomon with the same name.
+        let kodomon = player.activeKodomon
+        let safeName = kodomon.name.isEmpty ? "Kodomon" : kodomon.name
         let desktop = FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Desktop")
-            .appendingPathComponent("Kodomon-\(state.petName).png")
+            .appendingPathComponent("Kodomon-\(safeName)-\(kodomon.speciesID).png")
 
         try? pngData.write(to: desktop)
         NSLog("[Kodomon] Share card saved to %@", desktop.path)

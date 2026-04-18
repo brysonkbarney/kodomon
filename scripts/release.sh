@@ -20,15 +20,13 @@ RESET="\033[0m"
 
 VERSION="$1"
 if [[ -z "$VERSION" ]]; then
-    echo "${RED}Usage: ./scripts/release.sh v1.0.9${RESET}"
+    echo "${RED}Usage: ./scripts/release.sh v1.0.9 [build]${RESET}"
+    echo "  build defaults to auto-increment from current Info.plist value"
     exit 1
 fi
 
 # Strip leading 'v' for version strings (v1.0.9 → 1.0.9)
 MARKETING_VERSION="${VERSION#v}"
-
-# Extract build number from version (1.0.9 → 9)
-BUILD_NUMBER=$(echo "$MARKETING_VERSION" | awk -F. '{print $NF}')
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
@@ -38,6 +36,16 @@ DMG_NAME="Kodomon.dmg"
 DMG_PATH="$RELEASES_DIR/$DMG_NAME"
 PLIST="$REPO_DIR/Kodomon/Info.plist"
 PBXPROJ="$REPO_DIR/Kodomon.xcodeproj/project.pbxproj"
+
+# Build number: use second arg if provided, else auto-increment from current.
+# This decouples the build number (monotonic for Sparkle) from the marketing
+# version (semver), so we can jump to 1.1.0 without resetting the build to 0.
+if [[ -n "$2" ]]; then
+    BUILD_NUMBER="$2"
+else
+    CURRENT_BUILD=$(plutil -extract CFBundleVersion raw -o - "$PLIST" 2>/dev/null || echo "0")
+    BUILD_NUMBER=$((CURRENT_BUILD + 1))
+fi
 
 # Find Sparkle tools in DerivedData
 DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData"

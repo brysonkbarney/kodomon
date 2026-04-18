@@ -3,7 +3,7 @@ import SwiftUI
 struct LeaderboardView: View {
     @ObservedObject var engine: PetEngine
     @ObservedObject var leaderboard = LeaderboardService.shared
-    @State private var sortBy = "total_xp"
+    @State private var sortBy = "lifetime_xp"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -49,7 +49,7 @@ struct LeaderboardView: View {
 
             Button(action: {
                 leaderboard.optIn()
-                leaderboard.sync(state: engine.state, force: true)
+                leaderboard.sync(player: engine.player, force: true)
                 // Delay fetch so the sync has time to write to DB
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                     leaderboard.fetch(sort: sortBy)
@@ -95,7 +95,7 @@ struct LeaderboardView: View {
                 }
                 .buttonStyle(.plain)
                 Button(action: {
-                    leaderboard.sync(state: engine.state, force: true)
+                    leaderboard.sync(player: engine.player, force: true)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         leaderboard.fetch(sort: sortBy)
                     }
@@ -109,7 +109,7 @@ struct LeaderboardView: View {
 
             // Sort picker
             HStack(spacing: 0) {
-                sortButton("XP", "total_xp")
+                sortButton("XP", "lifetime_xp")
                 sortButton("Streak", "current_streak")
                 sortButton("Days", "active_days")
                 sortButton("Lines", "lines_written")
@@ -152,7 +152,7 @@ struct LeaderboardView: View {
     }
 
     private func leaderboardRow(rank: Int, entry: LeaderboardEntry) -> some View {
-        let isMe = entry.pet_name == engine.state.petName
+        let isMe = entry.pet_name == engine.activeKodomon.name
 
         return HStack(alignment: .center, spacing: 8) {
             // Rank
@@ -164,6 +164,7 @@ struct LeaderboardView: View {
             // Sprite
             let stage = Stage(rawValue: entry.stage) ?? .tamago
             PixelSpriteView(
+                speciesID: entry.species_id,
                 stage: stage,
                 pixelSize: 1,
                 evolveProgress: 0,
@@ -209,6 +210,7 @@ struct LeaderboardView: View {
         case "current_streak": return "\(entry.current_streak)d"
         case "active_days": return "\(entry.active_days)"
         case "lines_written": return "\(entry.lines_written)"
+        case "lifetime_xp": return "\(Int(entry.lifetime_xp))"
         default: return "\(Int(entry.total_xp))"
         }
     }
@@ -218,6 +220,7 @@ struct LeaderboardView: View {
         case "current_streak": return "streak"
         case "active_days": return "days"
         case "lines_written": return "lines"
+        case "lifetime_xp": return "XP"
         default: return "XP"
         }
     }

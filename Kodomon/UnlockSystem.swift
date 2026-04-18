@@ -22,6 +22,7 @@ struct UnlockSystem {
         UnlockableBackground(id: "sakura", displayName: "Sakura", xpRequired: 5000, description: "Cherry blossom garden"),
         UnlockableBackground(id: "mountFuji", displayName: "Mount Fuji", xpRequired: 20000, description: "Snow-capped mountain"),
         UnlockableBackground(id: "toriiGate", displayName: "Torii Gate", xpRequired: 40000, description: "Sacred shrine entrance"),
+        UnlockableBackground(id: "beach", displayName: "Beach", xpRequired: 50000, description: "Sunset paradise"),
     ]
 
     static let accessories: [UnlockableAccessory] = [

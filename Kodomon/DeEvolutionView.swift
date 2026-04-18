@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct DeEvolutionView: View {
+    let speciesID: String
     let fromStage: Stage
     let toStage: Stage
     let petHue: Double
@@ -22,6 +23,7 @@ struct DeEvolutionView: View {
             // Old sprite shrinking away
             if phase < 2 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: fromStage,
                     pixelSize: 4,
                     petHue: petHue,
@@ -39,6 +41,7 @@ struct DeEvolutionView: View {
             // New (lower) sprite
             if phase >= 2 {
                 PixelSpriteView(
+                    speciesID: speciesID,
                     stage: toStage,
                     pixelSize: 4,
                     petHue: petHue,

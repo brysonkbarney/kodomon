@@ -26,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         setupMenuBar()
         setupSleepWakeObservers()
 
-        if engine.state.petName.isEmpty {
+        if engine.activeKodomon.name.isEmpty {
             // First launch — show welcome, don't show game card yet
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.promptForName()
@@ -152,6 +152,27 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         debugMenu.addItem(notifItem)
 
         debugMenu.addItem(NSMenuItem.separator())
+
+        // v2 egg/trigger testing
+        let triggerMenu = NSMenu()
+        for species in SpeciesCatalog.all {
+            // Skip starter (always present) and Graduation (fires from evolution, not events)
+            if case .defaultStarter = species.trigger { continue }
+            let item = NSMenuItem(
+                title: "Force: \(species.displayName)",
+                action: #selector(forceFireTrigger(_:)),
+                keyEquivalent: ""
+            )
+            item.representedObject = species.id
+            triggerMenu.addItem(item)
+        }
+        let triggerItem = NSMenuItem(title: "Force Trigger", action: nil, keyEquivalent: "")
+        triggerItem.submenu = triggerMenu
+        debugMenu.addItem(triggerItem)
+
+        debugMenu.addItem(NSMenuItem(title: "Instant Hatch Head Egg", action: #selector(instantHatchHeadEgg), keyEquivalent: ""))
+
+        debugMenu.addItem(NSMenuItem.separator())
         debugMenu.addItem(NSMenuItem(title: "Reset State", action: #selector(resetDebugState), keyEquivalent: ""))
 
         let debugItem = NSMenuItem(title: "Debug", action: nil, keyEquivalent: "")
@@ -187,7 +208,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func handleSleep() {
-        StateStore.save(engine.state)
+        StateStore.save(engine.player)
     }
 
     private func openMenuPanel() {
@@ -282,10 +303,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var menuWindow: NSWindow?
 
     @objc private func shareCard() {
-        ShareCardGenerator.copyToClipboard(state: engine.state)
+        ShareCardGenerator.copyToClipboard(player: engine.player)
 
         // Also save to desktop
-        ShareCardGenerator.saveToDesktop(state: engine.state)
+        ShareCardGenerator.saveToDesktop(player: engine.player)
 
         // Show confirmation
         let alert = NSAlert()
@@ -307,13 +328,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         alert.addButton(withTitle: "Cancel")
         alert.alertStyle = .informational
         let input = NSTextField(frame: NSRect(x: 0, y: 0, width: 200, height: 24))
-        input.stringValue = engine.state.petName
+        input.stringValue = engine.activeKodomon.name
         alert.accessoryView = input
         if alert.runModal() == .alertFirstButtonReturn {
             let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             if !name.isEmpty {
-                engine.state.petName = name
-                StateStore.save(engine.state)
+                var kodomon = engine.activeKodomon
+                kodomon.name = name
+                engine.activeKodomon = kodomon
+                StateStore.save(engine.player)
             }
         }
     }
@@ -321,8 +344,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func promptForName() {
         let welcomeView = WelcomeView { [weak self] name in
             guard let self = self else { return }
-            self.engine.state.petName = name
-            StateStore.save(self.engine.state)
+            var kodomon = self.engine.activeKodomon
+            kodomon.name = name
+            self.engine.activeKodomon = kodomon
+            StateStore.save(self.engine.player)
             // Show loading screen, then transition to game card
             DispatchQueue.main.async {
                 self.welcomeWindow?.orderOut(nil)
@@ -356,93 +381,110 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func setDebugStage(_ sender: NSMenuItem) {
         guard let rawValue = sender.representedObject as? String,
               let stage = Stage(rawValue: rawValue) else { return }
-        engine.state.stage = stage
-        engine.state.totalXP = stage.xpThreshold
-        engine.state.activeDays = stage.requiredActiveDays
-        engine.state.currentStreak = stage.requiredStreak
-        engine.state.stageReachedDate = Date()
-        engine.state.neglectState = .none
-        StateStore.save(engine.state)
+        var kodomon = engine.activeKodomon
+        kodomon.stage = stage
+        kodomon.speciesXP = kodomon.rarity.xpThreshold(for: stage)
+        kodomon.activeDays = stage.requiredActiveDays
+        kodomon.stageReachedDate = Date()
+        kodomon.neglectState = .none
+        engine.activeKodomon = kodomon
+        engine.player.currentStreak = stage.requiredStreak
+        StateStore.save(engine.player)
     }
 
     @objc private func setDebugXP(_ sender: NSMenuItem) {
         guard let pct = sender.representedObject as? Double else { return }
-        guard let next = engine.state.stage.nextStage else { return }
-        let current = engine.state.stage.xpThreshold
-        let range = next.xpThreshold - current
-        engine.state.totalXP = current + (range * max(0, min(1, pct)))
-        StateStore.save(engine.state)
+        var kodomon = engine.activeKodomon
+        guard let next = kodomon.stage.nextStage else { return }
+        let rarity = kodomon.rarity
+        let current = rarity.xpThreshold(for: kodomon.stage)
+        let range = rarity.xpThreshold(for: next) - current
+        kodomon.speciesXP = current + (range * max(0, min(1, pct)))
+        engine.activeKodomon = kodomon
+        StateStore.save(engine.player)
     }
 
     @objc private func addDebugXPLarge() {
-        engine.state.totalXP += 10000
-        engine.state.todayXP += 10000
-        engine.state.lifetimeXP += 10000
-        StateStore.save(engine.state)
+        var kodomon = engine.activeKodomon
+        kodomon.speciesXP += 10000
+        engine.activeKodomon = kodomon
+        engine.player.todayXP += 10000
+        engine.player.lifetimeXP += 10000
+        StateStore.save(engine.player)
     }
 
     @objc private func addDebugXP() {
-        engine.state.totalXP += 100
-        engine.state.todayXP += 100
-        engine.state.lifetimeXP += 100
-        StateStore.save(engine.state)
+        var kodomon = engine.activeKodomon
+        kodomon.speciesXP += 100
+        engine.activeKodomon = kodomon
+        engine.player.todayXP += 100
+        engine.player.lifetimeXP += 100
+        StateStore.save(engine.player)
     }
 
     @objc private func setDebugBackground(_ sender: NSMenuItem) {
         guard let rawValue = sender.representedObject as? String else { return }
-        engine.state.activeBackground = rawValue
-        StateStore.save(engine.state)
+        engine.player.activeBackground = rawValue
+        StateStore.save(engine.player)
     }
 
     @objc private func testEvolution() {
-        let from = engine.state.stage
+        var kodomon = engine.activeKodomon
+        let from = kodomon.stage
         guard let to = from.nextStage else { return }
-        engine.state.stage = to
-        engine.state.totalXP = to.xpThreshold
-        engine.state.activeDays = to.requiredActiveDays
-        engine.state.currentStreak = to.requiredStreak
-        engine.state.stageReachedDate = Date()
+        let rarity = kodomon.rarity
+        kodomon.stage = to
+        kodomon.speciesXP = rarity.xpThreshold(for: to)
+        kodomon.activeDays = to.requiredActiveDays
+        kodomon.stageReachedDate = Date()
         // Use pending system so cutscene plays on next tap, just like real evolution
-        engine.state.pendingEvolutionFrom = from.rawValue
-        engine.state.pendingEvolutionTo = to.rawValue
-        StateStore.save(engine.state)
+        kodomon.pendingEvolutionFrom = from.rawValue
+        kodomon.pendingEvolutionTo = to.rawValue
+        engine.activeKodomon = kodomon
+        engine.player.currentStreak = to.requiredStreak
+        StateStore.save(engine.player)
         // Immediately trigger for debug convenience
         engine.triggerPendingEvolution()
     }
 
     @objc private func testDeEvolution() {
-        let from = engine.state.stage
+        var kodomon = engine.activeKodomon
+        let from = kodomon.stage
         guard let to = from.previousStage else { return }
-        engine.state.stage = to
-        engine.state.totalXP = to.xpThreshold
-        engine.state.activeDays = to.requiredActiveDays
-        engine.state.currentStreak = to.requiredStreak
-        engine.state.stageReachedDate = Date()
-        StateStore.save(engine.state)
+        let rarity = kodomon.rarity
+        kodomon.stage = to
+        kodomon.speciesXP = rarity.xpThreshold(for: to)
+        kodomon.activeDays = to.requiredActiveDays
+        kodomon.stageReachedDate = Date()
+        engine.activeKodomon = kodomon
+        engine.player.currentStreak = to.requiredStreak
+        StateStore.save(engine.player)
         engine.deEvolutionEvent = (from: from, to: to)
     }
 
     @objc private func setDebugNeglect(_ sender: NSMenuItem) {
         guard let rawValue = sender.representedObject as? String,
               let state = NeglectState(rawValue: rawValue) else { return }
-        engine.state.neglectState = state
-        StateStore.save(engine.state)
+        var kodomon = engine.activeKodomon
+        kodomon.neglectState = state
+        engine.activeKodomon = kodomon
+        StateStore.save(engine.player)
     }
 
     @objc private func testNotifTired() {
-        NotificationManager.shared.sendTiredNotification(petName: engine.state.petName)
+        NotificationManager.shared.sendTiredNotification(petName: engine.activeKodomon.name)
     }
 
     @objc private func testNotifStreak() {
-        NotificationManager.shared.sendStreakWarningNow(petName: engine.state.petName)
+        NotificationManager.shared.sendStreakWarningNow(petName: engine.activeKodomon.name)
     }
 
     @objc private func testNotifEvolution() {
-        NotificationManager.shared.sendEvolutionReadyNotification(petName: engine.state.petName)
+        NotificationManager.shared.sendEvolutionReadyNotification(petName: engine.activeKodomon.name)
     }
 
     @objc private func testNotifRanAway() {
-        NotificationManager.shared.sendPetRanAwayNotification(petName: engine.state.petName)
+        NotificationManager.shared.sendPetRanAwayNotification(petName: engine.activeKodomon.name)
     }
 
     @objc private func resetDebugState() {
@@ -453,12 +495,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         alert.addButton(withTitle: "Reset")
         alert.addButton(withTitle: "Cancel")
         guard alert.runModal() == .alertFirstButtonReturn else { return }
-        engine.state = PetState.initial()
-        StateStore.save(engine.state)
+        let starter = KodomonState.fresh(speciesID: "tamago_crab", name: "")
+        engine.player = PlayerState.initial(starter: starter)
+        StateStore.save(engine.player)
+    }
+
+    @objc private func forceFireTrigger(_ sender: NSMenuItem) {
+        guard let speciesID = sender.representedObject as? String else { return }
+        engine.debugForceFireTrigger(speciesID: speciesID)
+    }
+
+    @objc private func instantHatchHeadEgg() {
+        engine.debugInstantHatchHeadEgg()
     }
     #endif
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Persist any in-memory state that hasn't hit an event-driven save yet
+        StateStore.save(engine.player)
         watcher.stopWatching()
         if let w = window {
             let frame = w.frame

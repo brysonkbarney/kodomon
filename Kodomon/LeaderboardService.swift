@@ -7,6 +7,7 @@ struct LeaderboardEntry: Codable, Identifiable {
     let total_xp: Double
     let lifetime_xp: Double
     let stage: String
+    let species_id: String
     let current_streak: Int
     let longest_streak: Int
     let active_days: Int
@@ -17,6 +18,25 @@ struct LeaderboardEntry: Codable, Identifiable {
     let active_background: String
     let pet_hue: Double
     let updated_at: String
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        pet_name = try c.decode(String.self, forKey: .pet_name)
+        total_xp = try c.decode(Double.self, forKey: .total_xp)
+        lifetime_xp = try c.decode(Double.self, forKey: .lifetime_xp)
+        stage = try c.decode(String.self, forKey: .stage)
+        species_id = try c.decodeIfPresent(String.self, forKey: .species_id) ?? "tamago_crab"
+        current_streak = try c.decode(Int.self, forKey: .current_streak)
+        longest_streak = try c.decode(Int.self, forKey: .longest_streak)
+        active_days = try c.decode(Int.self, forKey: .active_days)
+        total_commits = try c.decode(Int.self, forKey: .total_commits)
+        lines_written = try c.decode(Int.self, forKey: .lines_written)
+        mood = try c.decode(Double.self, forKey: .mood)
+        equipped_accessories = try c.decode([String].self, forKey: .equipped_accessories)
+        active_background = try c.decode(String.self, forKey: .active_background)
+        pet_hue = try c.decode(Double.self, forKey: .pet_hue)
+        updated_at = try c.decode(String.self, forKey: .updated_at)
+    }
 }
 
 @MainActor
@@ -58,25 +78,32 @@ class LeaderboardService: ObservableObject {
 
     // MARK: - Sync stats to leaderboard
 
-    func sync(state: PetState, force: Bool = false) {
+    /// Sync the currently active Kodomon + player progress to the leaderboard.
+    /// Payload keeps the v1 `total_xp` field for backend compatibility during
+    /// the v2 ramp — it carries the active Kodomon's species XP (which was
+    /// v1's `totalXP` semantics). `lifetime_xp` is the player-wide cumulative
+    /// value used for ranking.
+    func sync(player: PlayerState, force: Bool = false) {
         guard isOptedIn else { return }
         guard force else { return } // Only sync when explicitly forced (midnight, opt-in, evolution)
         isSyncing = true
 
+        let kodomon = player.activeKodomon
         let body: [String: Any] = [
-            "pet_name": state.petName,
-            "total_xp": state.totalXP,
-            "lifetime_xp": state.lifetimeXP,
-            "stage": state.stage.rawValue,
-            "current_streak": state.currentStreak,
-            "longest_streak": state.longestStreak,
-            "active_days": state.activeDays,
-            "total_commits": state.totalCommits,
-            "lines_written": state.totalLinesWritten,
-            "mood": state.mood,
-            "equipped_accessories": state.equippedAccessories,
-            "active_background": state.activeBackground,
-            "pet_hue": state.petHue,
+            "pet_name": kodomon.name,
+            "total_xp": kodomon.speciesXP,
+            "lifetime_xp": player.lifetimeXP,
+            "stage": kodomon.stage.rawValue,
+            "current_streak": player.currentStreak,
+            "longest_streak": player.longestStreak,
+            "active_days": kodomon.activeDays,
+            "total_commits": player.totalCommits,
+            "lines_written": player.totalLinesWritten,
+            "mood": kodomon.mood,
+            "equipped_accessories": kodomon.equippedAccessories,
+            "active_background": player.activeBackground,
+            "pet_hue": kodomon.hue,
+            "species_id": kodomon.speciesID,
         ]
 
         guard let jsonData = try? JSONSerialization.data(withJSONObject: body) else {

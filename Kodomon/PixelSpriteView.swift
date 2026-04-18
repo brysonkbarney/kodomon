@@ -423,71 +423,49 @@ struct SpriteData {
 
     // ── Neglect frames — modify eyes on any base sprite ──
 
-    /// Half-closed eyes (hungry/tired) — top row of eyes becomes body
+    /// Half-closed eyes (hungry/tired) — strip eye highlights for a tired look.
+    /// Works universally: replaces all W (eye highlight) pixels with E so the
+    /// eyes lose their shine and appear half-closed/unfocused.
     static func withDroopyEyes(_ base: [[P]]) -> [[P]] {
         var grid = base
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                // Find the first row of 3x3 eyes (E,E,E) and replace with body
-                if grid[row][col] == .E,
-                   col + 2 < grid[row].count,
-                   grid[row][col+1] == .E,
-                   grid[row][col+2] == .E,
-                   row + 1 < grid.count,
-                   grid[row+1][col] == .E {
-                    // First row of eye — make it body color (half-closed)
-                    grid[row][col] = .B
-                    grid[row][col+1] = .B
-                    grid[row][col+2] = .B
+                if grid[row][col] == .W {
+                    grid[row][col] = .E
                 }
             }
         }
         return grid
     }
 
-    /// X eyes (sick) — replace eye blocks with X pattern
+    /// X eyes (sick) — break up the eye shape into an X-like pattern.
+    /// Works universally: removes all W highlights, then replaces alternating
+    /// E pixels with B (body) using a checkerboard rule to create a fragmented,
+    /// sick-looking eye pattern on any sprite.
     static func withXEyes(_ base: [[P]]) -> [[P]] {
         var grid = base
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                if grid[row][col] == .E,
-                   col + 2 < grid[row].count,
-                   grid[row][col+1] == .E,
-                   grid[row][col+2] == .E,
-                   row + 2 < grid.count,
-                   grid[row+1][col] == .E {
-                    // Replace 3x3 eye with X pattern
-                    grid[row][col] = .E; grid[row][col+1] = .B; grid[row][col+2] = .E
-                    grid[row+1][col] = .B; grid[row+1][col+1] = .E; grid[row+1][col+2] = .B
-                    grid[row+2][col] = .E; grid[row+2][col+1] = .B; grid[row+2][col+2] = .E
+                if grid[row][col] == .W {
+                    grid[row][col] = .B
+                } else if grid[row][col] == .E && (row + col) % 2 != 0 {
+                    grid[row][col] = .B
                 }
             }
         }
         return grid
     }
 
-    /// Flat eyes (critical) — just a line where eyes were
+    /// Flat eyes (critical) — remove eyes entirely for the most severe state.
+    /// Works universally: replaces ALL W and E pixels with B, completely
+    /// erasing the eyes from any sprite.
     static func withFlatEyes(_ base: [[P]]) -> [[P]] {
         var grid = base
         for row in 0..<grid.count {
             for col in 0..<grid[row].count {
-                if grid[row][col] == .E,
-                   col + 2 < grid[row].count,
-                   grid[row][col+1] == .E,
-                   grid[row][col+2] == .E,
-                   row + 2 < grid.count,
-                   grid[row+1][col] == .E {
-                    // Replace with flat line on middle row only
-                    grid[row][col] = .B; grid[row][col+1] = .B; grid[row][col+2] = .B
-                    grid[row+1][col] = .E; grid[row+1][col+1] = .E; grid[row+1][col+2] = .E
-                    grid[row+2][col] = .B; grid[row+2][col+1] = .B; grid[row+2][col+2] = .B
+                if grid[row][col] == .W || grid[row][col] == .E {
+                    grid[row][col] = .B
                 }
-            }
-        }
-        // Also remove W (eye highlights)
-        for row in 0..<grid.count {
-            for col in 0..<grid[row].count {
-                if grid[row][col] == .W { grid[row][col] = .B }
             }
         }
         return grid
@@ -545,6 +523,7 @@ struct SpriteData {
 }
 
 struct PixelSpriteView: View {
+    let speciesID: String
     let stage: Stage
     let pixelSize: CGFloat
     let evolveProgress: Double
@@ -560,8 +539,15 @@ struct PixelSpriteView: View {
     @State private var scaleY: CGFloat = 1.0
     @State private var currentFrame: [[P]]? = nil
     @State private var animationTimers: [Timer] = []
+    @State private var animationGeneration: Int = 0
 
-    init(stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = [], neglectState: NeglectState = .none) {
+    /// Resolved sprite set for the active species.
+    private var sprites: SpeciesSpriteSet? {
+        SpriteRegistry.sprites(forSpeciesID: speciesID)
+    }
+
+    init(speciesID: String = "tamago_crab", stage: Stage, pixelSize: CGFloat = 3, evolveProgress: Double = 0, petHue: Double = 0.07, isStatic: Bool = false, equippedAccessories: [String] = [], neglectState: NeglectState = .none) {
+        self.speciesID = speciesID
         self.stage = stage
         self.pixelSize = pixelSize
         self.evolveProgress = evolveProgress
@@ -576,11 +562,13 @@ struct PixelSpriteView: View {
     private let accPaddingSide: CGFloat = 4
 
     var body: some View {
-        let baseFrame = currentFrame ?? SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        let baseFrame = currentFrame ?? spriteForCurrentStage()
         let grid = SpriteData.applyNeglect(baseFrame, neglectState: neglectState)
         let rows = grid.count
         let cols = grid.first?.count ?? 0
-        let activeHue = stage == .tamago ? 0.07 : petHue
+        let species = SpeciesCatalog.all.first(where: { $0.id == speciesID })
+        let speciesHue = (speciesID == "tamago_crab") ? petHue : (species?.fixedHue ?? petHue)
+        let activeHue = stage == .tamago ? 0.07 : speciesHue
         let padTop = accPaddingTop * pixelSize
         let padSide = accPaddingSide * pixelSize
 
@@ -625,12 +613,36 @@ struct PixelSpriteView: View {
         .onAppear { if !isStatic { startAnimations() } }
         .onChange(of: evolveProgress) { if !isStatic { startAnimations() } }
         .onChange(of: stage) { if !isStatic { startAnimations() } }
+        .onChange(of: speciesID) { if !isStatic { startAnimations() } }
+        .onDisappear {
+            for timer in animationTimers { timer.invalidate() }
+            animationTimers = []
+        }
+    }
+
+    /// Resolve the base sprite for the current species + stage.
+    private func spriteForCurrentStage() -> [[P]] {
+        if stage == .tamago {
+            return SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        }
+        guard let ss = sprites else {
+            return SpriteData.sprite(for: stage, evolveProgress: evolveProgress)
+        }
+        switch stage {
+        case .tamago: return SpriteData.tamago
+        case .kobito: return ss.kobito
+        case .kani: return ss.kani
+        case .kamisama: return ss.kamisama
+        }
     }
 
     private func startAnimations() {
         // Cancel all previous timers
         for timer in animationTimers { timer.invalidate() }
         animationTimers = []
+        // Increment generation so stale asyncAfter closures become no-ops
+        animationGeneration += 1
+        let gen = animationGeneration
         // Reset all animations explicitly to stop repeatForever
         withAnimation(.linear(duration: 0.01)) {
             wiggleAngle = 0
@@ -657,6 +669,7 @@ struct PixelSpriteView: View {
                     wiggleAngle = 1
                 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    guard gen == self.animationGeneration else { return }
                     wiggleAngle = 0
                 }
             }
@@ -668,15 +681,16 @@ struct PixelSpriteView: View {
             break
         }
 
+        if stage == .tamago {
+            animateTamago(gen: gen)
+            return
+        }
+        guard let ss = sprites else { return }
         switch stage {
-        case .tamago:
-            animateTamago()
-        case .kobito:
-            animateKobito()
-        case .kani:
-            animateKani()
-        case .kamisama:
-            animateKamisama()
+        case .tamago: return // unreachable
+        case .kobito: animateKobito(ss, gen: gen)
+        case .kani: animateKani(ss, gen: gen)
+        case .kamisama: animateKamisama(ss, gen: gen)
         }
     }
 
@@ -687,7 +701,7 @@ struct PixelSpriteView: View {
         animationTimers.append(t)
     }
 
-    private func animateTamago() {
+    private func animateTamago(gen: Int) {
         if evolveProgress > 0.9 {
             withAnimation(.easeInOut(duration: 0.08).repeatForever(autoreverses: true)) { wiggleAngle = 6 }
         } else if evolveProgress > 0.8 {
@@ -698,8 +712,10 @@ struct PixelSpriteView: View {
             addTimer(2.0) {
                 withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = 2.5 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    guard gen == self.animationGeneration else { return }
                     withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = -2 }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        guard gen == self.animationGeneration else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { wiggleAngle = 0 }
                     }
                 }
@@ -708,8 +724,10 @@ struct PixelSpriteView: View {
             addTimer(3.0) {
                 withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = 2.5 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    guard gen == self.animationGeneration else { return }
                     withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = -2 }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        guard gen == self.animationGeneration else { return }
                         withAnimation(.easeInOut(duration: 0.2)) { wiggleAngle = 0 }
                     }
                 }
@@ -717,28 +735,46 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKobito() {
-        currentFrame = SpriteData.kobito
+    private func animateKobito(_ ss: SpeciesSpriteSet, gen: Int) {
+        currentFrame = ss.kobito
 
+        // Look around (only species with look frames)
         addTimer(2.0) {
-            let frames = [SpriteData.kobito, SpriteData.kobitoLeft, SpriteData.kobitoRight, SpriteData.kobitoUp, SpriteData.kobito]
+            var frames: [[[P]]] = [ss.kobito]
+            if let left = ss.kobitoLeft { frames.append(left) }
+            if let right = ss.kobitoRight { frames.append(right) }
+            // Tamago has an extra "up" frame
+            if speciesID == "tamago_crab" { frames.append(TamagoCrabSprites.kobitoUp) }
+            frames.append(ss.kobito)
             currentFrame = frames.randomElement()!
         }
 
+        // Blink
         addTimer(3.5) {
-            currentFrame = SpriteData.kobitoBlink
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = SpriteData.kobito }
+            currentFrame = ss.kobitoBlink
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                guard gen == self.animationGeneration else { return }
+                currentFrame = ss.kobito
+            }
         }
 
+        // Hop + squish/action
         addTimer(4.0) {
             withAnimation(.easeOut(duration: 0.15)) { bobOffset = -8 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                guard gen == self.animationGeneration else { return }
                 withAnimation(.easeIn(duration: 0.1)) { bobOffset = 0 }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    currentFrame = SpriteData.kobitoSquish
-                    withAnimation(.easeOut(duration: 0.08)) { scaleX = 1.1; scaleY = 0.9 }
+                    guard gen == self.animationGeneration else { return }
+                    // Use species action frame if available, else tamago_crab squish
+                    let squishFrame = ss.kobitoAction ?? (speciesID == "tamago_crab" ? TamagoCrabSprites.kobitoSquish : nil)
+                    if let squish = squishFrame {
+                        currentFrame = squish
+                        withAnimation(.easeOut(duration: 0.08)) { scaleX = 1.1; scaleY = 0.9 }
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
-                        currentFrame = SpriteData.kobito
+                        guard gen == self.animationGeneration else { return }
+                        currentFrame = ss.kobito
                         withAnimation(.easeInOut(duration: 0.1)) { scaleX = 1.0; scaleY = 1.0 }
                     }
                 }
@@ -746,25 +782,36 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKani() {
-        currentFrame = SpriteData.kani
+    private func animateKani(_ ss: SpeciesSpriteSet, gen: Int) {
+        currentFrame = ss.kani
 
-        // Look around
+        // Look around (only species with look frames)
         addTimer(2.5) {
-            let frames = [SpriteData.kani, SpriteData.kaniLeft, SpriteData.kaniRight, SpriteData.kani]
+            var frames: [[[P]]] = [ss.kani]
+            if let left = ss.kaniLeft { frames.append(left) }
+            if let right = ss.kaniRight { frames.append(right) }
+            frames.append(ss.kani)
             currentFrame = frames.randomElement()!
         }
 
         // Blink
         addTimer(4.0) {
-            currentFrame = SpriteData.kaniBlink
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { currentFrame = SpriteData.kani }
+            currentFrame = ss.kaniBlink
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                guard gen == self.animationGeneration else { return }
+                currentFrame = ss.kani
+            }
         }
 
-        // Wave arm occasionally
-        addTimer(6.0) {
-            currentFrame = SpriteData.kaniWave
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { currentFrame = SpriteData.kani }
+        // Unique action (wave, slam, drum, flap, pulse, roar)
+        if let action = ss.kaniAction {
+            addTimer(6.0) {
+                currentFrame = action
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                    guard gen == self.animationGeneration else { return }
+                    currentFrame = ss.kani
+                }
+            }
         }
 
         // Walk side to side — waddle while moving
@@ -772,19 +819,18 @@ struct PixelSpriteView: View {
             let direction: CGFloat = Bool.random() ? 1 : -1
             let target = direction * 30
 
-            // Start walking with waddle
             withAnimation(.easeInOut(duration: 0.8)) { slideOffset = target }
-            // Waddle steps during the walk
             withAnimation(.easeInOut(duration: 0.1).repeatCount(8, autoreverses: true)) { wiggleAngle = 4 * direction }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                guard gen == self.animationGeneration else { return }
                 wiggleAngle = 0
-                // Pause at destination
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                    // Walk back with waddle
+                    guard gen == self.animationGeneration else { return }
                     withAnimation(.easeInOut(duration: 0.8)) { slideOffset = 0 }
                     withAnimation(.easeInOut(duration: 0.1).repeatCount(8, autoreverses: true)) { wiggleAngle = -4 * direction }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+                        guard gen == self.animationGeneration else { return }
                         wiggleAngle = 0
                     }
                 }
@@ -792,7 +838,8 @@ struct PixelSpriteView: View {
         }
     }
 
-    private func animateKamisama() {
+    private func animateKamisama(_ ss: SpeciesSpriteSet, gen: Int) {
+        currentFrame = ss.kamisama
         // Slow majestic float
         withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bobOffset = -8 }
 
@@ -817,6 +864,7 @@ struct PixelSpriteView: View {
 
             // Settle back
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                guard gen == self.animationGeneration else { return }
                 withAnimation(.easeInOut(duration: 0.5)) {
                     wiggleAngle = 0
                     scaleX = 1.02
@@ -834,6 +882,7 @@ struct PixelSpriteView: View {
                 wiggleAngle = 8
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                guard gen == self.animationGeneration else { return }
                 withAnimation(.easeInOut(duration: 0.15)) { wiggleAngle = 0 }
             }
         }
@@ -843,6 +892,7 @@ struct PixelSpriteView: View {
             let direction: CGFloat = Bool.random() ? 1 : -1
             withAnimation(.easeInOut(duration: 1.2)) { slideOffset = direction * 25 }
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                guard gen == self.animationGeneration else { return }
                 withAnimation(.easeInOut(duration: 1.2)) { slideOffset = 0 }
             }
         }

@@ -35,8 +35,40 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
     if grep -q "kodomon" "$CLAUDE_SETTINGS" 2>/dev/null; then
         echo "  ✓ Claude Code hooks already configured"
     else
-        echo "  ⚠ Claude Code settings exist — please add hooks manually"
-        echo "    See: ~/.kodomon/hooks/README for the config to add"
+        # Existing settings.json has no kodomon hooks — merge via jq if available
+        if command -v jq >/dev/null 2>&1; then
+            BACKUP="$CLAUDE_SETTINGS.kodomon-backup-$(date +%s)"
+            cp "$CLAUDE_SETTINGS" "$BACKUP"
+            echo "  • Backed up existing settings to $BACKUP"
+            KODOMON_HOOKS=$(cat <<'JSON'
+{
+  "hooks": {
+    "SessionStart": [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-start.sh"}]}],
+    "PostToolUse": [
+      {"matcher":"Write|Edit|MultiEdit","hooks":[{"type":"command","command":"~/.kodomon/hooks/file-event.sh"}]},
+      {"matcher":"Bash","hooks":[{"type":"command","command":"~/.kodomon/hooks/bash-event.sh"}]}
+    ],
+    "Stop": [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-stop.sh"}]}]
+  }
+}
+JSON
+)
+            MERGED=$(jq -s '.[0] * .[1]' "$CLAUDE_SETTINGS" <(echo "$KODOMON_HOOKS"))
+            if [ -n "$MERGED" ]; then
+                echo "$MERGED" > "$CLAUDE_SETTINGS"
+                echo "  ✓ Merged Kodomon hooks into existing settings.json"
+            else
+                echo "  ⚠ Merge failed — original settings restored"
+            fi
+        else
+            echo "  ⚠ Claude Code settings exist and jq is not installed."
+            echo "    Install jq (brew install jq) and re-run, or add these to $CLAUDE_SETTINGS manually:"
+            echo '    "hooks": {'
+            echo '      "SessionStart": [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-start.sh"}]}],'
+            echo '      "PostToolUse": [{"matcher":"Write|Edit|MultiEdit","hooks":[{"type":"command","command":"~/.kodomon/hooks/file-event.sh"}]},{"matcher":"Bash","hooks":[{"type":"command","command":"~/.kodomon/hooks/bash-event.sh"}]}],'
+            echo '      "Stop": [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-stop.sh"}]}]'
+            echo '    }'
+        fi
     fi
 else
     mkdir -p "$HOME/.claude"

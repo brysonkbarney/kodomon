@@ -8,6 +8,10 @@ nonisolated(unsafe) let kodomonEventsPath: String = {
 
 @MainActor
 class ActivityWatcher: ObservableObject {
+    /// Rotate events.jsonl when it exceeds this size. Since we always skip to
+    /// EOF on startup, truncation is lossless for the engine.
+    private static let maxEventsLogBytes: UInt64 = 5_000_000
+
     private var fileDescriptor: Int32 = -1
     private var source: DispatchSourceFileSystemObject?
     private var lastReadOffset: UInt64 = 0
@@ -29,6 +33,8 @@ class ActivityWatcher: ObservableObject {
         }
 
         NSLog("[Kodomon] Events file: %@", path)
+
+        rotateEventsLogIfNeeded()
 
         // Skip to end of file — only process new events, don't replay old ones
         if let attrs = try? FileManager.default.attributesOfItem(atPath: path),
@@ -71,6 +77,23 @@ class ActivityWatcher: ObservableObject {
     func resetOffset() {
         lastReadOffset = 0
         lineBuffer = ""
+    }
+
+    /// Truncate events.jsonl if it has grown beyond the size cap. Safe because
+    /// the engine only reads new events — old lines are never replayed.
+    private func rotateEventsLogIfNeeded() {
+        let path = kodomonEventsPath
+        guard let attrs = try? FileManager.default.attributesOfItem(atPath: path),
+              let size = attrs[.size] as? UInt64,
+              size > Self.maxEventsLogBytes else { return }
+        do {
+            try "".write(toFile: path, atomically: true, encoding: .utf8)
+            lastReadOffset = 0
+            lineBuffer = ""
+            NSLog("[Kodomon] Rotated events.jsonl (was %llu bytes)", size)
+        } catch {
+            NSLog("[Kodomon] Failed to rotate events.jsonl: %@", error.localizedDescription)
+        }
     }
 
     private func readNewLines() {
