@@ -38,3 +38,6 @@ Package.resolved
 # Kodomon runtime data (user-specific, not tracked)
 state.json
 events.jsonl
+
+# Claude Code worktrees and local settings
+.claude/
