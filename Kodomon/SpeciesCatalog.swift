@@ -26,24 +26,24 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
             return 0
         case .kobito:
             switch self {
-            case .common: return 1_000
-            case .uncommon: return 1_200
-            case .rare: return 1_500
-            case .legendary: return 2_000
+            case .common: return 3_000
+            case .uncommon: return 5_000
+            case .rare: return 8_000
+            case .legendary: return 15_000
             }
         case .kani:
             switch self {
-            case .common: return 10_000
-            case .uncommon: return 12_000
-            case .rare: return 15_000
-            case .legendary: return 20_000
+            case .common: return 15_000
+            case .uncommon: return 20_000
+            case .rare: return 30_000
+            case .legendary: return 50_000
             }
         case .kamisama:
             switch self {
-            case .common: return 30_000
-            case .uncommon: return 36_000
-            case .rare: return 45_000
-            case .legendary: return 60_000
+            case .common: return 45_000
+            case .uncommon: return 55_000
+            case .rare: return 75_000
+            case .legendary: return 100_000
             }
         }
     }
@@ -51,10 +51,10 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
     /// Species XP required for an egg of this rarity to hatch.
     var hatchXP: Double {
         switch self {
-        case .common: return 1_000
-        case .uncommon: return 1_200
-        case .rare: return 1_500
-        case .legendary: return 2_000
+        case .common: return 3_000
+        case .uncommon: return 5_000
+        case .rare: return 8_000
+        case .legendary: return 15_000
         }
     }
 
@@ -84,24 +84,24 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
             return 0
         case .kobito:
             switch self {
-            case .common: return 500
-            case .uncommon: return 600
-            case .rare: return 750
-            case .legendary: return 1_000
+            case .common: return 1_500
+            case .uncommon: return 2_500
+            case .rare: return 4_000
+            case .legendary: return 7_500
             }
         case .kani:
             switch self {
-            case .common: return 5_000
-            case .uncommon: return 6_000
-            case .rare: return 7_500
-            case .legendary: return 10_000
+            case .common: return 7_500
+            case .uncommon: return 10_000
+            case .rare: return 15_000
+            case .legendary: return 25_000
             }
         case .kamisama:
             switch self {
-            case .common: return 15_000
-            case .uncommon: return 18_000
-            case .rare: return 22_500
-            case .legendary: return 30_000
+            case .common: return 22_500
+            case .uncommon: return 27_500
+            case .rare: return 37_500
+            case .legendary: return 50_000
             }
         }
     }
