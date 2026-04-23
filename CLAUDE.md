@@ -98,6 +98,14 @@ Version format: `v1.0.X` where X is the build number (must increment each releas
 
 **Sparkle keys:** Private key is in macOS Keychain (export with `generate_keys -x`). Public key is in Info.plist (`SUPublicEDKey`). Appcast is hosted at `https://kodomon.app/appcast.xml`.
 
+## Working in worktrees
+
+This repo is often worked from Claude Code worktrees at `.claude/worktrees/*` (gitignored — don't `git add -f` them).
+
+- **`release.sh` must run from the primary checkout** at `/Users/bryson/Documents/GitHub/kodomon` on `main`, never from a worktree. The script uses `git add -A` broadly.
+- Before running `release.sh`, verify `git status` on main is clean except for expected version-bump files.
+- After the release, inspect the release commit diff — it should only touch `Info.plist`, `project.pbxproj`, and `appcast.xml`. Anything else means `git add -A` grabbed something unexpected.
+
 ## Conventions
 
 - All data stays local. No telemetry, no accounts, no cloud sync.
