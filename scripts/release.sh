@@ -110,9 +110,11 @@ fi
 # ── Step 6: Commit + push both repos ─────────────────────────────
 echo "Committing and pushing..."
 
-# Main repo
+# Main repo — stage only the files this script intentionally modifies.
+# Avoid `git add -A` so stray local files (e.g. Claude Code worktrees under
+# .claude/worktrees/*) don't get pulled into the release commit.
 cd "$REPO_DIR"
-git add -A
+git add Kodomon/Info.plist Kodomon.xcodeproj/project.pbxproj
 git commit -m "${VERSION}" || echo "  (nothing to commit in main repo)"
 git push
 echo "  ${GREEN}Pushed kodomon repo${RESET}"

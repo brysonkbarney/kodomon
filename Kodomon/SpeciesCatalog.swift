@@ -19,7 +19,6 @@ enum Rarity: String, Codable, CaseIterable, Sendable {
     case legendary
 
     /// XP required to evolve a species of this rarity to the given stage from Tamago.
-    /// Common matches v1 Tamago thresholds exactly.
     func xpThreshold(for stage: Stage) -> Double {
         switch stage {
         case .tamago:
