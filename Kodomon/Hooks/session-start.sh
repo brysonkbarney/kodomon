@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kodomon — Claude Code SessionStart hook
+# Kodomon — Claude Code / Codex SessionStart hook
 # Reads JSON from stdin, writes session_start event to JSONL
 
 KODOMON_DIR="$HOME/.kodomon"

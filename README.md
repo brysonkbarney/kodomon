@@ -2,7 +2,7 @@
 
 A desktop Kodomon that grows when you code.
 
-Kodomon is a macOS widget — a virtual companion powered by your real Claude Code activity. Earn XP from commits, file edits, and coding sessions. Keep a daily streak to evolve. Neglect it and it runs away.
+Kodomon is a macOS widget — a virtual companion powered by your real Claude Code or Codex activity. Earn XP from commits, file edits, and coding sessions. Keep a daily streak to evolve. Neglect it and it runs away.
 
 100% local. No accounts. No telemetry. Open source. Optional global leaderboard.
 
@@ -12,14 +12,16 @@ Kodomon is a macOS widget — a virtual companion powered by your real Claude Co
 curl -fsSL https://kodomon.app/install.sh | bash
 ```
 
-Requires **macOS 14+** and [Claude Code](https://claude.ai/claude-code).
+Requires **macOS 14+** and [Claude Code](https://claude.ai/claude-code) or [Codex](https://developers.openai.com/codex).
 
 Or download the latest `.dmg` from [Releases](https://github.com/brysonkbarney/kodomon/releases).
+
+Codex may ask you to review new hooks on first use. Open `/hooks` in Codex and trust the Kodomon commands.
 
 ## How it works
 
 ```
-Code with Claude Code → hooks fire → Kodomon gains XP → evolve & unlock
+Code with Claude Code or Codex → hooks fire → Kodomon gains XP → evolve & unlock
 ```
 
 **4 evolution stages:** Tamago (egg) → Kobito → Kani → Kamisama
@@ -45,7 +47,7 @@ Each stage is gated by XP + active days + a consecutive streak. Consistency beat
 
 ## Privacy
 
-All game data stays on your machine. Activity is tracked via Claude Code hooks writing to `~/.kodomon/events.jsonl`. State lives in `~/.kodomon/state.json`.
+All game data stays on your machine. Activity is tracked via Claude Code hooks in `~/.claude/settings.json` and Codex hooks in `~/.codex/hooks.json`; both write normalized events to `~/.kodomon/events.jsonl`. Current app state lives in `~/.kodomon/state.v2.json`; `state.json` is kept as a legacy v1 rollback/migration file.
 
 **Leaderboard (opt-in only):** If you choose to join the leaderboard, your pet name, XP, stage, streak, active days, and cosmetic loadout are synced once daily. No code, file paths, personal data, or machine info is ever sent. You can opt out anytime from the leaderboard panel.
 

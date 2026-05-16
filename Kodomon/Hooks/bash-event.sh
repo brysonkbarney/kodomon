@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kodomon — Claude Code PostToolUse hook (Bash)
+# Kodomon — Claude Code / Codex PostToolUse hook (Bash)
 # Detects git commits and captures diff stats
 
 KODOMON_DIR="$HOME/.kodomon"
@@ -12,7 +12,7 @@ COMMAND=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.command // empty' 2>/dev/n
 TS=$(date +%s)
 
 # Only track git commits
-if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+commit'; then
+if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+(-C\s+[^[:space:]]+\s+)?commit'; then
   CWD=$(echo "$INPUT" | "${JQ:-jq}" -r '.cwd // empty' 2>/dev/null)
   GIT_DIR="${CWD:-.}"
 

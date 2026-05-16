@@ -66,7 +66,7 @@ rm -f "$DMG_PATH"
 echo "  ${GREEN}Installed to /Applications${RESET}"
 
 # Install hooks
-echo "Setting up Claude Code hooks..."
+echo "Setting up Claude Code and Codex hooks..."
 KODOMON_DIR="$HOME/.kodomon"
 HOOKS_DIR="$KODOMON_DIR/hooks"
 mkdir -p "$HOOKS_DIR"
@@ -122,6 +122,58 @@ SETTINGS
     echo "  ${GREEN}Claude Code hooks configured${RESET}"
 fi
 
+# Merge Codex hooks into ~/.codex/hooks.json. Codex also supports hooks in
+# config.toml, but hooks.json avoids rewriting existing user configuration
+# such as notify commands, profiles, and trusted projects.
+CODEX_DIR="$HOME/.codex"
+CODEX_HOOKS="$CODEX_DIR/hooks.json"
+mkdir -p "$CODEX_DIR"
+
+if [[ -f "$CODEX_HOOKS" ]]; then
+    if command -v jq &>/dev/null; then
+        TMP=$(mktemp)
+        cp "$CODEX_HOOKS" "$CODEX_HOOKS.kodomon-backup-$(date +%s)"
+        if jq '
+          def without_kodomon:
+            map(select(((.hooks // []) | map(.command // "") | join(" ") | test("kodomon")) | not));
+          . // {} |
+          .hooks //= {} |
+          .hooks.SessionStart = ((.hooks.SessionStart // []) | without_kodomon) |
+          .hooks.PostToolUse = ((.hooks.PostToolUse // []) | without_kodomon) |
+          .hooks.Stop = ((.hooks.Stop // []) | without_kodomon) |
+          .hooks.SessionStart += [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-start.sh"}]}] |
+          .hooks.PostToolUse += [
+            {"matcher":"Edit|Write|apply_patch","hooks":[{"type":"command","command":"~/.kodomon/hooks/file-event.sh"}]},
+            {"matcher":"Bash","hooks":[{"type":"command","command":"~/.kodomon/hooks/bash-event.sh"}]}
+          ] |
+          .hooks.Stop += [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-stop.sh"}]}]
+        ' "$CODEX_HOOKS" > "$TMP"; then
+            mv "$TMP" "$CODEX_HOOKS"
+            echo "  ${GREEN}Codex hooks configured${RESET}"
+        else
+            rm -f "$TMP"
+            echo "  ${RED}Codex hooks merge failed; existing hooks.json was left unchanged.${RESET}"
+        fi
+    else
+        echo "  Please install jq (brew install jq) and re-run to merge Codex hooks."
+        echo "  Or add Kodomon hooks manually to $CODEX_HOOKS."
+    fi
+else
+    cat > "$CODEX_HOOKS" << 'SETTINGS'
+{
+  "hooks": {
+    "SessionStart": [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-start.sh"}]}],
+    "PostToolUse": [
+      {"matcher": "Edit|Write|apply_patch", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/file-event.sh"}]},
+      {"matcher": "Bash", "hooks": [{"type": "command", "command": "~/.kodomon/hooks/bash-event.sh"}]}
+    ],
+    "Stop": [{"hooks": [{"type": "command", "command": "~/.kodomon/hooks/session-stop.sh"}]}]
+  }
+}
+SETTINGS
+    echo "  ${GREEN}Codex hooks configured${RESET}"
+fi
+
 # Launch
 echo ""
 echo "Launching Kodomon..."
@@ -129,5 +181,6 @@ open /Applications/Kodomon.app
 
 echo ""
 echo "${GREEN}${BOLD}Kodomon is ready!${RESET}"
-echo "Open Claude Code to start feeding your pet."
+echo "Open Claude Code or Codex to start feeding your pet."
+echo "If Codex asks to review hooks, open /hooks and trust the Kodomon commands."
 echo ""

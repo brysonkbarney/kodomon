@@ -1,6 +1,6 @@
 # Kodomon (コードモン)
 
-A macOS desktop widget — a Tamagotchi-style virtual pet that lives and grows from real Claude Code activity. Built in Swift, 100% local, open source MIT.
+A macOS desktop widget — a Tamagotchi-style virtual pet that lives and grows from real Claude Code or Codex activity. Built in Swift, 100% local, open source MIT.
 
 ## Tech stack
 
@@ -11,15 +11,15 @@ A macOS desktop widget — a Tamagotchi-style virtual pet that lives and grows f
 - **DispatchSource** for file watching (`~/.kodomon/events.jsonl`)
 - **UserNotifications** for neglect alerts
 - **Sparkle** (SPM) for auto-updates
-- No CoreData, no SQLite — single JSON state file at `~/.kodomon/state.json`
+- No CoreData, no SQLite — single JSON state file at `~/.kodomon/state.v2.json` (`state.json` is the legacy v1 migration/rollback file)
 - No server, no network
 - LSUIElement = YES (no dock icon, menubar only)
 
 ## Architecture — 4 layers
 
-1. **Hooks (shell scripts)** — installed into `~/.claude/settings.json`. Fire on SessionStart, PostToolUse (Write/Edit/Bash), and Stop. Write JSON lines to `~/.kodomon/events.jsonl`.
+1. **Hooks (shell scripts)** — installed into `~/.claude/settings.json` for Claude Code and `~/.codex/hooks.json` for Codex. Fire on SessionStart, PostToolUse (Write/Edit/MultiEdit/apply_patch/Bash), and Stop. Write normalized JSON lines to `~/.kodomon/events.jsonl`.
 2. **Watcher (Swift)** — `DispatchSource` monitors the JSONL file. Parses new lines into typed `ActivityEvent` enums. Publishes via Combine `PassthroughSubject`.
-3. **Engine (Swift)** — Pure `ObservableObject`, no UI deps. Consumes events, applies XP math (diminishing returns, streak multiplier, mood multiplier), decay, evolution checks, random events. Persists `PetState` to JSON.
+3. **Engine (Swift)** — Pure `ObservableObject`, no UI deps. Consumes events, applies XP math (diminishing returns, streak multiplier, mood multiplier), decay, evolution checks, random events. Persists `PlayerState` / `KodomonState` to JSON.
 4. **UI (SwiftUI)** — Floating widget + menubar icon. Renders pet sprite, XP bar, mood indicator.
 
 ## Project structure
@@ -30,7 +30,7 @@ Kodomon/
   AppDelegate.swift             # NSWindow setup, menubar item, lifecycle
   PetEngine.swift               # Core ObservableObject, all game logic
   PetState.swift                # Codable struct — single source of truth
-  StateStore.swift              # Read/write ~/.kodomon/state.json
+  StateStore.swift              # Read/write ~/.kodomon/state.v2.json
   ActivityWatcher.swift         # DispatchSource watcher for JSONL
   ActivityEvent.swift           # JSONL → typed ActivityEvent enum
   XPCalculator.swift            # XP rules, diminishing returns, caps
@@ -52,7 +52,7 @@ Kodomon/
   Hooks/
     session-start.sh            # SessionStart hook
     session-stop.sh             # Stop hook
-    file-event.sh               # PostToolUse (Write/Edit) hook
+    file-event.sh               # PostToolUse (Write/Edit/MultiEdit/apply_patch) hook
     bash-event.sh               # PostToolUse (Bash) — captures git commits
     install-hooks.sh            # Hook installer
 scripts/
@@ -63,18 +63,18 @@ scripts/
 ## Key design rules
 
 - **Consistency beats intensity.** Day gates cannot be bypassed. Commits are the primary XP driver, not lines of code.
-- **Lines of code are nearly negligible as XP** — Claude Code writes thousands of lines per session. Raw line count gives ~1 XP per 10 lines. Commits represent intentional decisions.
+- **Lines of code are nearly negligible as XP** — AI coding agents write thousands of lines per session. Raw line count gives ~1 XP per 10 lines. Commits represent intentional decisions.
 - **No daily XP cap.** Diminishing returns after 90 min (75% rate), 180 min (50%), then 35%. Heavy coders earn more — day gates prevent rushing.
 - **Streak multiplier:** 1.0x → 1.2x (3d) → 1.5x (7d) → 1.8x (14d) → 2.0x (30+d). Breaks on zero-activity day.
 - **Evolution stages:** Tamago (0 XP) → Kobito (1000 XP, 2 days, 2-day streak) → Kani (10000 XP, 5 days, 5-day streak) → Kamisama (30000 XP, 14 days, 10-day streak).
-- **File write XP:** only unique files per day get +3 XP. Repeated edits to the same file give no XP (just +1 mood). This prevents Claude Code's rapid edits from inflating XP.
+- **File write XP:** only unique files per day get +3 XP. Repeated edits to the same file give no XP (just +1 mood). This prevents rapid AI edits from inflating XP.
 - **Session time XP:** +2 XP per active minute, capped at 120 min/day (240 XP max). Calculated from SessionStart/Stop hook timestamps.
 - **Decay:** miss 1 day = -3% XP. 2-4 days = -8%. 5-6 days = -15%. 7+ days = pet runs away (revival mechanic: code 30 min to bring it back one stage lower).
 
 ## Data flow
 
 ```
-Claude Code → shell hooks → ~/.kodomon/events.jsonl → ActivityWatcher → PetEngine → PetState → SwiftUI
+Claude Code / Codex → shell hooks → ~/.kodomon/events.jsonl → ActivityWatcher → PetEngine → PlayerState/KodomonState → SwiftUI
 ```
 
 ## Release process
@@ -100,7 +100,7 @@ Version format: `v1.0.X` where X is the build number (must increment each releas
 
 ## Working in worktrees
 
-This repo is often worked from Claude Code worktrees at `.claude/worktrees/*` (gitignored — don't `git add -f` them).
+This repo is often worked from agent worktrees such as `.claude/worktrees/*` or `.codex/worktrees/*` (gitignored — don't `git add -f` them).
 
 - **`release.sh` must run from the primary checkout** at `/Users/bryson/Documents/GitHub/kodomon` on `main`, never from a worktree. The script uses `git add -A` broadly.
 - Before running `release.sh`, verify `git status` on main is clean except for expected version-bump files.
@@ -109,7 +109,7 @@ This repo is often worked from Claude Code worktrees at `.claude/worktrees/*` (g
 ## Conventions
 
 - All data stays local. No telemetry, no accounts, no cloud sync.
-- Atomic writes for state.json to prevent corruption.
+- Atomic writes for `state.v2.json` to prevent corruption.
 - Handle sleep/wake for timers (midnight reset, decay) — check elapsed time on wake, don't rely on timers firing through sleep.
 - Buffer incomplete JSONL lines when reading from events file.
 - Thread safety: serialize PetState mutations via @MainActor or explicit dispatch.
