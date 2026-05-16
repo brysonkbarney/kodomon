@@ -10,11 +10,23 @@ JQ=$(command -v jq 2>/dev/null || echo /usr/bin/jq)
 INPUT=$(cat)
 COMMAND=$(echo "$INPUT" | "${JQ:-jq}" -r '.tool_input.command // empty' 2>/dev/null)
 TS=$(date +%s)
+GIT_COMMIT_RE='(^|[;&|])[[:space:]]*git[[:space:]]+((-C[[:space:]]+("[^"]+"|[^[:space:];&|]+)[[:space:]]+)?)commit'
+GIT_C_DOUBLE_RE='(^|[;&|])[[:space:]]*git[[:space:]]+-C[[:space:]]+"([^"]+)"[[:space:]]+commit'
+GIT_C_PLAIN_RE='(^|[;&|])[[:space:]]*git[[:space:]]+-C[[:space:]]+([^[:space:];&|]+)[[:space:]]+commit'
 
 # Only track git commits
-if echo "$COMMAND" | grep -qE '(^|[;&|])\s*git\s+(-C\s+[^[:space:]]+\s+)?commit'; then
+if [[ "$COMMAND" =~ $GIT_COMMIT_RE ]]; then
   CWD=$(echo "$INPUT" | "${JQ:-jq}" -r '.cwd // empty' 2>/dev/null)
   GIT_DIR="${CWD:-.}"
+  if [[ "$COMMAND" =~ $GIT_C_DOUBLE_RE ]]; then
+    GIT_DIR="${BASH_REMATCH[2]}"
+  elif [[ "$COMMAND" =~ $GIT_C_PLAIN_RE ]]; then
+    GIT_DIR="${BASH_REMATCH[2]}"
+  fi
+
+  if [[ "$GIT_DIR" != /* && -n "$CWD" ]]; then
+    GIT_DIR="$CWD/$GIT_DIR"
+  fi
 
   LINES_ADDED=0
   LINES_REMOVED=0
