@@ -1,6 +1,6 @@
 #!/bin/bash
 # Kodomon — one-time hook installer
-# Copies hook scripts and wires up Claude Code hooks
+# Copies hook scripts and wires up Claude Code + Codex hooks
 # Does NOT touch git config or any repos
 
 set -e
@@ -15,7 +15,7 @@ echo "Installing Kodomon hooks..."
 mkdir -p "$HOOKS_DIR"
 chmod 700 "$KODOMON_DIR"
 
-# Copy hook scripts (Claude Code only — no git hooks)
+# Copy hook scripts (agent hooks only — no git hooks)
 cp "$SCRIPT_DIR/session-start.sh" "$HOOKS_DIR/"
 cp "$SCRIPT_DIR/file-event.sh" "$HOOKS_DIR/"
 cp "$SCRIPT_DIR/bash-event.sh" "$HOOKS_DIR/"
@@ -121,5 +121,94 @@ SETTINGS
     echo "  ✓ Claude Code hooks configured"
 fi
 
+# Install Codex hooks into ~/.codex/hooks.json. Codex also supports hooks in
+# config.toml, but hooks.json lets us avoid touching existing user config.
+CODEX_DIR="$HOME/.codex"
+CODEX_HOOKS="$CODEX_DIR/hooks.json"
+KODOMON_CODEX_HOOKS=$(cat <<'JSON'
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.kodomon/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.kodomon/hooks/file-event.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.kodomon/hooks/bash-event.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.kodomon/hooks/session-stop.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+JSON
+)
+
+mkdir -p "$CODEX_DIR"
+if [ -f "$CODEX_HOOKS" ]; then
+    if command -v jq >/dev/null 2>&1; then
+        BACKUP="$CODEX_HOOKS.kodomon-backup-$(date +%s)"
+        TMP=$(mktemp)
+        cp "$CODEX_HOOKS" "$BACKUP"
+        if jq '
+          def without_kodomon:
+            map(select(((.hooks // []) | map(.command // "") | join(" ") | test("kodomon")) | not));
+          . // {} |
+          .hooks //= {} |
+          .hooks.SessionStart = ((.hooks.SessionStart // []) | without_kodomon) |
+          .hooks.PostToolUse = ((.hooks.PostToolUse // []) | without_kodomon) |
+          .hooks.Stop = ((.hooks.Stop // []) | without_kodomon) |
+          .hooks.SessionStart += [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-start.sh"}]}] |
+          .hooks.PostToolUse += [
+            {"matcher":"Edit|Write|apply_patch","hooks":[{"type":"command","command":"~/.kodomon/hooks/file-event.sh"}]},
+            {"matcher":"Bash","hooks":[{"type":"command","command":"~/.kodomon/hooks/bash-event.sh"}]}
+          ] |
+          .hooks.Stop += [{"hooks":[{"type":"command","command":"~/.kodomon/hooks/session-stop.sh"}]}]
+        ' "$CODEX_HOOKS" > "$TMP"; then
+            mv "$TMP" "$CODEX_HOOKS"
+            echo "  ✓ Codex hooks configured"
+        else
+            rm -f "$TMP"
+            echo "  ⚠ Codex hooks merge failed — original hooks.json left at $CODEX_HOOKS"
+        fi
+    else
+        echo "  ⚠ Codex hooks.json exists and jq is not installed."
+        echo "    Install jq (brew install jq) and re-run, or merge Kodomon hooks into $CODEX_HOOKS manually."
+    fi
+else
+    echo "$KODOMON_CODEX_HOOKS" > "$CODEX_HOOKS"
+    echo "  ✓ Codex hooks configured"
+fi
+
 echo ""
 echo "Kodomon hooks installed!"
+echo "If Codex asks to review hooks, open /hooks and trust the Kodomon commands."

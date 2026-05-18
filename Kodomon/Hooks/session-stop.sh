@@ -1,5 +1,5 @@
 #!/bin/bash
-# Kodomon — Claude Code Stop hook
+# Kodomon — Claude Code / Codex Stop hook
 # Reads JSON from stdin, writes session_stop event to JSONL
 
 KODOMON_DIR="$HOME/.kodomon"
