@@ -152,7 +152,7 @@ struct LeaderboardView: View {
     }
 
     private func leaderboardRow(rank: Int, entry: LeaderboardEntry) -> some View {
-        let isMe = entry.pet_name == engine.activeKodomon.name
+        let isMe = entry.id == leaderboard.kodomonId
 
         return HStack(alignment: .center, spacing: 8) {
             // Rank

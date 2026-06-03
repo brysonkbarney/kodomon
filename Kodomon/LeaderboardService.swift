@@ -2,7 +2,7 @@ import Foundation
 import Combine
 
 struct LeaderboardEntry: Codable, Identifiable {
-    var id: String { pet_name + stage + String(pet_hue) }
+    let id: String
     let pet_name: String
     let total_xp: Double
     let lifetime_xp: Double
@@ -21,6 +21,7 @@ struct LeaderboardEntry: Codable, Identifiable {
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
         pet_name = try c.decode(String.self, forKey: .pet_name)
         total_xp = try c.decode(Double.self, forKey: .total_xp)
         lifetime_xp = try c.decode(Double.self, forKey: .lifetime_xp)
@@ -47,7 +48,7 @@ class LeaderboardService: ObservableObject {
     @Published var isOptedIn: Bool = false
     @Published var isSyncing: Bool = false
 
-    private let endpoint = "https://iczwbhwfepgldhznbfjz.supabase.co/functions/v1/leaderboard-sync"
+    private let endpoint = "https://axpingiibngvttrjivkr.supabase.co/functions/v1/leaderboard-sync"
     private let kodomonIdKey = "kodomonLeaderboardId"
     private let optedInKey = "kodomonLeaderboardOptedIn"
 
@@ -71,9 +72,32 @@ class LeaderboardService: ObservableObject {
     }
 
     func optOut() {
+        deleteRemoteEntry()
         isOptedIn = false
         UserDefaults.standard.set(false, forKey: optedInKey)
+        entries = []
         NSLog("[Kodomon] Leaderboard opted out")
+    }
+
+    private func deleteRemoteEntry() {
+        var request = URLRequest(url: URL(string: endpoint)!)
+        request.httpMethod = "DELETE"
+        request.setValue(kodomonId, forHTTPHeaderField: "X-Kodomon-Id")
+        request.timeoutInterval = 10
+        isSyncing = true
+
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            DispatchQueue.main.async { self.isSyncing = false }
+            if let error = error {
+                NSLog("[Kodomon] Leaderboard opt-out delete failed: %@", error.localizedDescription)
+                return
+            }
+            if let http = response as? HTTPURLResponse, http.statusCode == 200 {
+                NSLog("[Kodomon] Leaderboard remote entry deleted")
+            } else if let http = response as? HTTPURLResponse {
+                NSLog("[Kodomon] Leaderboard opt-out delete error: %d", http.statusCode)
+            }
+        }.resume()
     }
 
     // MARK: - Sync stats to leaderboard
@@ -134,7 +158,7 @@ class LeaderboardService: ObservableObject {
 
     // MARK: - Fetch leaderboard
 
-    func fetch(sort: String = "total_xp") {
+    func fetch(sort: String = "lifetime_xp") {
         var components = URLComponents(string: endpoint)!
         components.queryItems = [
             URLQueryItem(name: "sort", value: sort),
